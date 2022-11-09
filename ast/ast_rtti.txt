@@ -1,0 +1,20 @@
+
+
+root class base_ast;
+abstract class Statement : AstNode;
+  class ExpressionStatement : Statement;
+  class Assign : Statement;
+  class VariableDefinition : Statement;
+  class If : Statement;
+  abstract class Return : Statement;
+    class ReturnVar : Return;
+    class ReturnExpression : Return;
+  class Block : Statement;
+  class Loop : Statement;
+  class Break : Statement;
+  class Continue : Statement;
+  class Match : Statement;
+  class Continuation : Statement;
+  class Run : Statement;
+  class Await : Statement;
+  class For : Statement;

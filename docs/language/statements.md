@@ -31,14 +31,16 @@ fun main(c8*[] args) void {
 
 8. atomic 与 synchronized 块。
 
+9. 声明语句 let;
+
 ### 标签
 
 通过在语句自身之前提供后随冒号的标签，任何语句都可*带有标签*。
 |      |      |
 | :--- | :--- |
 | `lable` 标识符 `:` 语句 | (1) |
-| `case` 常量表达式 `:` 语句 | (2) | 
-| `default :` 语句 | (3) | 
+| `case` 常量表达式 `:` 语句 | (2) |
+| `default :` 语句 | (3) |
 
 1. [goto](language/goto "language/goto") 的目标；
 
@@ -78,7 +80,7 @@ fun g() void {
 
 |      |      |
 | :--- | :--- |
-|  表达式(可选)  | (1) | 
+|  表达式(可选)  | (1) |
 
 |      |       |      |
 | :--- | :---: | :--- |
@@ -101,7 +103,7 @@ fun g() void {
 ```C++
 if x > 5 {
  auto n = 1
- println(out, n) 
+ println(out, n)
 }
 
 ```
@@ -125,7 +127,7 @@ fun main() {
 选择语句在数个控制流中选择一个。
 |      |      |
 | :--- | :--- |
-| `if constexpr`(可选)  初始化语句 (可选) `;` 条件  true分支复合语句 | (1) | 
+| `if constexpr`(可选)  初始化语句 (可选) `;` 条件  true分支复合语句 | (1) |
 | `if constexpr`(可选)  初始化语句(可选) `;` 条件  true分支复合语句 `else` false分支复合语句 | (2) |
 | `switch`  初始化语句(可选) `;` 条件  复合语句 |(3) |
 | `if !`(可选) `consteval` 复合语句 |(4)|
