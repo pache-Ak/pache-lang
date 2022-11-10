@@ -60,6 +60,15 @@ using namespace std;
   PERIOD                // .
   SLASH                 // /
   PERCENT               // %
+  THREE_WAY_COMPARISON  // <=>
+  LESS                  // <
+  LESS_EQUAL            // <=
+  GREATER               // >
+  GREATER_EQUAL         // >=
+  EQUAL                 // ==
+  NOT_EQUAL             // !=
+  AND                   // &&
+  OR                    // ||
 
   UNARY_STAR "unary *"
   PREFIX_STAR "prefix *"
@@ -74,6 +83,7 @@ using namespace std;
 %type <exp_val> additive_operand expression binary_plus_expression add_exp
 %type <stmt_p_list> statement_list
 %type <exp_val> additive_expression mul_expressions binary_minus_expression
+%type <exp_val> three_way_expression rel_expression eq_expression logical_and_expression logical_or_expression
 %type <str_val> designator
 %%
 
@@ -150,7 +160,7 @@ Number
   ;
 
 expression:
-  add_exp {
+  logical_or_expression {
     $$ = $1;
   }
 ;
@@ -242,6 +252,68 @@ binary_minus_expression:
     $$ = new pache::binary_minus_exp($1, $3);
   }
 ;
+
+three_way_expression:
+  add_exp {
+    $$ = $1;
+  }
+| three_way_expression THREE_WAY_COMPARISON add_exp {
+    $$ = new pache::three_way_exp($1, $3);
+}
+;
+
+rel_expression:
+  three_way_expression {
+    $$ = $1;
+  }
+| rel_expression LESS three_way_expression {
+    $$ = new pache::less_exp($1, $3);
+}
+| rel_expression LESS_EQUAL three_way_expression {
+  $$ = new pache::less_eq_exp($1, $3);
+}
+| rel_expression GREATER three_way_expression {
+  $$ = new pache::greater_exp($1, $3);
+}
+| rel_expression GREATER_EQUAL three_way_expression {
+  $$ = new pache::greater_eq_exp($1, $3);
+}
+;
+
+eq_expression:
+  rel_expression {
+    $$ = $1;
+  }
+| eq_expression EQUAL rel_expression {
+  $$ = new pache::eq_exp($1, $3);
+}
+| eq_expression NOT_EQUAL rel_expression {
+  $$ = new pache::not_eq_exp($1, $3);
+}
+;
+
+logical_and_expression:
+  eq_expression {
+    $$ = $1;
+  }
+| logical_and_expression AND eq_expression {
+  $$ = new pache::logical_and_exp($1, $3);
+}
+;
+
+logical_or_expression:
+  logical_and_expression {
+    $$ = $1;
+  }
+| logical_or_expression OR logical_and_expression {
+  $$ = new pache::logical_or_exp($1, $3);
+}
+;
+
+
+
+
+
 
 designator: PERIOD identifier { $$ = $2; }
 ;

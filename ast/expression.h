@@ -213,6 +213,185 @@ namespace pache {
     exp_ast *m_arg2;
   };
 
+  class three_way_exp : public exp_ast {
+  public:
+    explicit three_way_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
+
+    virtual std::string dump() const override {
+      std::string s1 = m_arg1->dump();
+      std::string s2 = m_arg2->dump();
+      std::cout << "%" << ssa_value << " = TODO " << s1 << ", " << s2 << "\n";
+      std::string s{"%"};
+      s += std::to_string(ssa_value);
+      ++ssa_value;
+      return s;
+    }
+
+    virtual ~three_way_exp() override = default;
+  private:
+    exp_ast *m_arg1;
+    exp_ast *m_arg2;
+  };
+
+  class less_exp : public exp_ast {
+  public:
+    explicit less_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
+
+    virtual std::string dump() const override {
+      std::string s1 = m_arg1->dump();
+      std::string s2 = m_arg2->dump();
+      std::cout << "%" << ssa_value << " = le " << s1 << ", " << s2 << "\n";
+      std::string s{"%"};
+      s += std::to_string(ssa_value);
+      ++ssa_value;
+      return s;
+    }
+
+    virtual ~less_exp() override = default;
+  private:
+    exp_ast *m_arg1;
+    exp_ast *m_arg2;
+  };
+
+  class less_eq_exp : public exp_ast {
+  public:
+    explicit less_eq_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
+
+    virtual std::string dump() const override {
+      std::string s1 = m_arg1->dump();
+      std::string s2 = m_arg2->dump();
+      std::cout << "%" << ssa_value << " = le_eq " << s1 << ", " << s2 << "\n";
+      std::string s{"%"};
+      s += std::to_string(ssa_value);
+      ++ssa_value;
+      return s;
+    }
+
+    virtual ~less_eq_exp() override = default;
+  private:
+    exp_ast *m_arg1;
+    exp_ast *m_arg2;
+  };
+
+  class greater_exp : public exp_ast {
+  public:
+    explicit greater_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
+
+    virtual std::string dump() const override {
+      std::string s1 = m_arg1->dump();
+      std::string s2 = m_arg2->dump();
+      std::cout << "%" << ssa_value << " = gr " << s1 << ", " << s2 << "\n";
+      std::string s{"%"};
+      s += std::to_string(ssa_value);
+      ++ssa_value;
+      return s;
+    }
+
+    virtual ~greater_exp() override = default;
+  private:
+    exp_ast *m_arg1;
+    exp_ast *m_arg2;
+  };
+
+  class greater_eq_exp : public exp_ast {
+  public:
+    explicit greater_eq_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
+
+    virtual std::string dump() const override {
+      std::string s1 = m_arg1->dump();
+      std::string s2 = m_arg2->dump();
+      std::cout << "%" << ssa_value << " = gr_eq " << s1 << ", " << s2 << "\n";
+      std::string s{"%"};
+      s += std::to_string(ssa_value);
+      ++ssa_value;
+      return s;
+    }
+
+    virtual ~greater_eq_exp() override = default;
+  private:
+    exp_ast *m_arg1;
+    exp_ast *m_arg2;
+  };
+
+  class eq_exp : public exp_ast {
+  public:
+    explicit eq_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
+
+    virtual std::string dump() const override {
+      std::string s1 = m_arg1->dump();
+      std::string s2 = m_arg2->dump();
+      std::cout << "%" << ssa_value << " = eq " << s1 << ", " << s2 << "\n";
+      std::string s{"%"};
+      s += std::to_string(ssa_value);
+      ++ssa_value;
+      return s;
+    }
+
+    virtual ~eq_exp() override = default;
+  private:
+    exp_ast *m_arg1;
+    exp_ast *m_arg2;
+  };
+
+  class not_eq_exp : public exp_ast {
+  public:
+    explicit not_eq_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
+
+    virtual std::string dump() const override {
+      std::string s1 = m_arg1->dump();
+      std::string s2 = m_arg2->dump();
+      std::cout << "%" << ssa_value << " = not_eq " << s1 << ", " << s2 << "\n";
+      std::string s{"%"};
+      s += std::to_string(ssa_value);
+      ++ssa_value;
+      return s;
+    }
+
+    virtual ~not_eq_exp() override = default;
+  private:
+    exp_ast *m_arg1;
+    exp_ast *m_arg2;
+  };
+
+  class logical_and_exp : public exp_ast {
+  public:
+    explicit logical_and_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
+
+    virtual std::string dump() const override {
+      std::string s1 = m_arg1->dump();
+      std::string s2 = m_arg2->dump();
+      std::cout << "%" << ssa_value << " = l_and " << s1 << ", " << s2 << "\n";
+      std::string s{"%"};
+      s += std::to_string(ssa_value);
+      ++ssa_value;
+      return s;
+    }
+
+    virtual ~logical_and_exp() override = default;
+  private:
+    exp_ast *m_arg1;
+    exp_ast *m_arg2;
+  };
+
+  class logical_or_exp : public exp_ast {
+  public:
+    explicit logical_or_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
+
+    virtual std::string dump() const override {
+      std::string s1 = m_arg1->dump();
+      std::string s2 = m_arg2->dump();
+      std::cout << "%" << ssa_value << " = l_or " << s1 << ", " << s2 << "\n";
+      std::string s{"%"};
+      s += std::to_string(ssa_value);
+      ++ssa_value;
+      return s;
+    }
+
+    virtual ~logical_or_exp() override = default;
+  private:
+    exp_ast *m_arg1;
+    exp_ast *m_arg2;
+  };
 }
 
 #endif

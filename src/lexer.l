@@ -35,6 +35,17 @@ RIGHT_CURLY_BRACE    "}"
 RIGHT_PARENTHESIS    ")"
 RIGHT_SQUARE_BRACKET "]"
 
+THREE_WAY_COMPARISON "<=>"
+LESS                 "<"
+LESS_EQUAL           "<="
+GREATER              ">"
+GREATER_EQUAL        ">="
+EQUAL                "=="
+NOT_EQUAL            "!="
+
+AND                  "&&"
+OR                   "||"
+
 
 /* 空白符和注释 */
 horizontal_whitespace [ \t\r]
@@ -72,15 +83,25 @@ Binary        0[bB][01]*
 {Hexadecimal}   { yylval.int_val = strtol(yytext, nullptr, 0); return INT_CONST; }
 {Binary}        { yylval.int_val = strtol(yytext, nullptr, 0); return INT_CONST; }
 
-{LEFT_CURLY_BRACE}    { return LEFT_CURLY_BRACE; }
-{LEFT_PARENTHESIS}    { return LEFT_PARENTHESIS; }
-{LEFT_SQUARE_BRACKET} { return LEFT_SQUARE_BRACKET; }
-{PLUS}                { return PLUS; }
-{MINUS}               { return MINUS; }
-{PERCENT}             { return PERCENT; }
-{SLASH}               { return SLASH; }
-{PERIOD}              { return PERIOD; }
+{LEFT_CURLY_BRACE}      { return LEFT_CURLY_BRACE; }
+{LEFT_PARENTHESIS}      { return LEFT_PARENTHESIS; }
+{LEFT_SQUARE_BRACKET}   { return LEFT_SQUARE_BRACKET; }
+{PLUS}                  { return PLUS; }
+{MINUS}                 { return MINUS; }
+{PERCENT}               { return PERCENT; }
+{SLASH}                 { return SLASH; }
+{PERIOD}                { return PERIOD; }
 
+{THREE_WAY_COMPARISON}  { return THREE_WAY_COMPARISON; }
+{LESS}                  { return LESS; }
+{LESS_EQUAL}            { return LESS_EQUAL; }
+{GREATER}               { return GREATER; }
+{GREATER_EQUAL}         { return GREATER_EQUAL; }
+{EQUAL}                 { return EQUAL; }
+{NOT_EQUAL}             { return NOT_EQUAL; }
+
+{AND}                   { return AND; }
+{OR}                    { return OR; }
 
 {RIGHT_PARENTHESIS} {
  // BEGIN(AFTER_OPERAND);
