@@ -77,14 +77,13 @@ using namespace std;
 
 // 非终结符的类型定义
 %type <ast_val> FuncDef FuncType
-%type <exp_val> Number unary_minus_expression unary_plus_expression primary_expression unary_expression
-%type <exp_val> binary_modulo_expression binary_multiplication_expression binary_division_expression
+%type <exp_val> Number   primary_expression unary_expression
 %type <stmt_val> stmt block return_stmt
-%type <exp_val> additive_operand expression binary_plus_expression add_exp
+%type <exp_val>  expression  add_exp
 %type <stmt_p_list> statement_list
-%type <exp_val> additive_expression mul_expressions binary_minus_expression
+%type <exp_val>  mul_expressions
 %type <exp_val> three_way_expression rel_expression eq_expression logical_and_expression logical_or_expression
-%type <str_val> designator
+
 %%
 
 // 开始符, CompUnit ::= FuncDef, 大括号后声明了解析完成后 parser 要做的事情
@@ -178,54 +177,27 @@ unary_expression:
   primary_expression {
     $$ = $1;
   }
-| unary_plus_expression {
-    $$ = $1;
+| PLUS unary_expression {
+    $$ = new pache::unary_plus($2);
   }
-| unary_minus_expression {
-    $$ = $1;
-  }
-;
-unary_minus_expression:
-  MINUS unary_expression {
+| MINUS unary_expression {
     $$ = new pache::unary_minus($2);
   }
 ;
-unary_plus_expression:
-  PLUS unary_expression {
-    $$ = new pache::unary_plus($2);
-  }
-;
+
 
 mul_expressions:
   unary_expression {
     $$ = $1;
   }
-| binary_multiplication_expression {
-  $$ = $1;
-}
-| binary_division_expression {
-  $$ = $1;
-}
-| binary_modulo_expression {
-  $$ = $1;
-}
-;
-
-binary_multiplication_expression:
-mul_expressions BINARY_STAR unary_expression {
+| mul_expressions BINARY_STAR unary_expression {
     $$ = new pache::binary_mul_exp($1, $3);
   }
-;
-
-binary_modulo_expression:
-  mul_expressions PERCENT unary_expression {
-    $$ = new pache::binary_mod_exp($1, $3);
-  }
-;
-
-binary_division_expression:
-  mul_expressions SLASH unary_expression {
+| mul_expressions SLASH unary_expression {
     $$ = new pache::binary_div_exp($1, $3);
+  }
+| mul_expressions PERCENT unary_expression {
+    $$ = new pache::binary_mod_exp($1, $3);
   }
 ;
 
@@ -233,22 +205,10 @@ add_exp:
   mul_expressions {
     $$ = $1;
   }
-| binary_plus_expression {
-    $$ = $1;
-  }
-| binary_minus_expression {
-    $$ = $1;
-  }
-;
-binary_plus_expression:
-  add_exp PLUS mul_expressions {
+| add_exp PLUS mul_expressions {
     $$ = new pache::binary_plus_exp($1, $3);
   }
-;
-
-
-binary_minus_expression:
-  add_exp MINUS mul_expressions {
+| add_exp MINUS mul_expressions {
     $$ = new pache::binary_minus_exp($1, $3);
   }
 ;
@@ -315,8 +275,6 @@ logical_or_expression:
 
 
 
-designator: PERIOD identifier { $$ = $2; }
-;
 %%
 
 // 定义错误处理函数, 其中第二个参数是错误信息

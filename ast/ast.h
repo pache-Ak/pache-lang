@@ -48,7 +48,6 @@ namespace pache {
     std::unique_ptr<base_ast> return_type;
     std::unique_ptr<base_ast> block;
     virtual std::string dump() const override {
-      std::ostringstream out;
       std::cout << "define "
           << return_type->dump()
           << " @" << ident << "("

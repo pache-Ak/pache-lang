@@ -43,24 +43,6 @@ namespace pache {
   Ptr,
 };
 
-  class operator_ast : public exp_ast {
-  public:
-    explicit operator_ast(Operator op, std::vector<exp_ast*> arguments)
-      : exp_ast(), m_operator(op), m_arguments(std::move(arguments)) {}
-
-    virtual std::string dump() const override {
-      std::ostringstream out;
-      return out.str();
-    }
-
-
-
-    virtual ~operator_ast() = 0;
-  private:
-    Operator m_operator;
-    std::vector<exp_ast*> m_arguments;
-  };
-
   class unary_plus : public exp_ast {
     public:
     explicit unary_plus(exp_ast* arguments)
@@ -173,7 +155,7 @@ namespace pache {
     exp_ast *m_arg2;
   };
 
-    class binary_plus_exp : public exp_ast {
+  class binary_plus_exp : public exp_ast {
   public:
     explicit binary_plus_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
