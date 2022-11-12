@@ -28,7 +28,7 @@ namespace pache {
 
 
     virtual ~block_ast() override = default;
-  private:
+  protected:
     std::vector<stmt_ast*> *m_statements;
   };
 
@@ -45,6 +45,22 @@ namespace pache {
 
   private:
     exp_ast* m_exp;
+  };
+
+  class let_stmt : public stmt_ast {
+  public:
+    explicit let_stmt(variable_ast *var) : m_var(var) { }
+
+    virtual std::string dump() const override {
+      std::string name = m_var->get_name();
+      m_var->set_name(name + m_father->get_prefix());
+      insert_dec(name, m_var);
+      std::cout << "@" << m_var->get_name() << " = alloc " << m_var->get_type()->dump() << "\n";
+      return "";
+    }
+
+  private:
+    variable_ast *m_var;
   };
 
   class for_ast : public stmt_ast {

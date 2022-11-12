@@ -40,6 +40,7 @@ using namespace std;
   pache::exp_ast *exp_val;
   std::vector<pache::stmt_ast*> *stmt_p_list;
   pache::stmt_ast *stmt_val;
+  pache::type_ast *type_val;
 }
 
 // lexer 返回的所有 token 种类的声明
@@ -49,6 +50,8 @@ using namespace std;
 %token <int_val> INT_CONST
 
 %token
+  whitespace
+                   // \n
   LEFT_CURLY_BRACE      // {
   LEFT_PARENTHESIS      // (
   LEFT_SQUARE_BRACKET   // [
@@ -69,6 +72,9 @@ using namespace std;
   NOT_EQUAL             // !=
   AND                   // &&
   OR                    // ||
+  MAIN                  // main
+  LET                   // let
+
 
   UNARY_STAR "unary *"
   PREFIX_STAR "prefix *"
@@ -76,9 +82,10 @@ using namespace std;
   BINARY_STAR "binary *"
 
 // 非终结符的类型定义
-%type <ast_val> FuncDef FuncType
+%type <ast_val> FuncDef main_func
+%type <type_val> type
 %type <exp_val> Number   primary_expression unary_expression
-%type <stmt_val> stmt block return_stmt
+%type <stmt_val> stmt block return_stmt let_stmt
 %type <exp_val>  expression  add_exp
 %type <stmt_p_list> statement_list
 %type <exp_val>  mul_expressions
@@ -92,24 +99,31 @@ using namespace std;
 // 此时我们应该把 FuncDef 返回的结果收集起来, 作为 AST 传给调用 parser 的函数
 // $1 指代规则里第一个符号的返回值, 也就是 FuncDef 的返回值
 CompUnit
-  : FuncDef {
+  : main_func {
     auto comp_unit = make_unique<pache::compunit_ast>();
     comp_unit->func_def = unique_ptr<pache::base_ast>($1);
+    comp_unit->func_def->set_father(comp_unit.get());
     ast = move(comp_unit);
   };
 
-// FuncDef ::= FuncType IDENT LEFT_PARENTHESIS RIGHT_PARENTHESIS block;
+main_func:
+  FUNC MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS I32 block {
+    auto ast = new pache::main_func_ast();
+    ast->block = unique_ptr<pache::base_ast>($6);
+    $$ = ast;
+  }
+// FuncDef ::= type IDENT LEFT_PARENTHESIS RIGHT_PARENTHESIS block;
 // 我们这里可以直接写 LEFT_PARENTHESIS 和 RIGHT_PARENTHESIS, 因为之前在 lexer 里已经处理了单个字符的情况
 // 解析完成后, 把这些符号的结果收集起来, 然后拼成一个新的字符串, 作为结果返回
 // $$ 表示非终结符的返回值, 我们可以通过给这个符号赋值的方法来返回结果
-// 你可能会问, FuncType, IDENT 之类的结果已经是字符串指针了
+// 你可能会问, type, IDENT 之类的结果已经是字符串指针了
 // 为什么还要用 unique_ptr 接住它们, 然后再解引用, 把它们拼成另一个字符串指针呢
 // 因为所有的字符串指针都是我们 new 出来的, new 出来的内存一定要 delete
 // 否则会发生内存泄漏, 而 unique_ptr 这种智能指针可以自动帮我们 delete
 // 虽然此处你看不出用 unique_ptr 和手动 delete 的区别, 但当我们定义了 AST 之后
 // 这种写法会省下很多内存管理的负担
 FuncDef
-  : FUNC identifier LEFT_PARENTHESIS RIGHT_PARENTHESIS FuncType block {
+  : FUNC identifier LEFT_PARENTHESIS RIGHT_PARENTHESIS type block {
     auto ast = new pache::func_ast();
     ast->return_type = unique_ptr<pache::base_ast>($5);
     ast->ident = *unique_ptr<string>($2);
@@ -118,7 +132,7 @@ FuncDef
   };
 
 // 同上, 不再解释
-FuncType
+type
   : I32 {
     $$ = new pache::type_ast("i32");
   }
@@ -135,6 +149,9 @@ statement_list:
 block
   : LEFT_CURLY_BRACE statement_list RIGHT_CURLY_BRACE {
     $$ = new pache::block_ast($2);
+    for (auto & ast : *$2) {
+      ast->set_father($$);
+    }
   }
   ;
 
@@ -143,14 +160,25 @@ stmt:
     { $$ = $1; }
 | block
     { $$ = $1; }
+| let_stmt {
+    $$ = $1;
+}
 ;
 
+
+
 return_stmt
-  : RETURN expression {
+  : RETURN expression  {
     auto ast =  new pache::return_ast($2);
     $$ = ast;
   }
   ;
+
+let_stmt:
+  LET type identifier  {
+    auto var = new pache::variable_ast($2, $3);
+    $$ = new pache::let_stmt(var);
+  }
 
 Number
   : INT_CONST {

@@ -15,18 +15,37 @@
 #include <memory>
 #include <string>
 #include <iostream>
-#include <sstream>
+#include <unordered_map>
 
 namespace pache {
   inline namespace {
     std::size_t ssa_value = 0;
   }
 
+  class variable_ast;
+  class type_ast;
 
   class base_ast {
   public:
     virtual ~base_ast() = default;
     virtual std::string dump() const = 0;
+    void set_father(base_ast *father) {
+      m_father = father;
+      return;
+    }
+
+    void insert_dec(std::string name, variable_ast * dec) const {
+      m_father->dec_name.insert(std::make_pair(name, dec));
+    }
+
+    std::string get_prefix() {
+      return name_prefix;
+    }
+  protected:
+    base_ast *m_father;
+    std::unordered_map<std::string, type_ast*> type_name;
+    std::unordered_map<std::string, variable_ast*> dec_name;
+    std::string name_prefix;
   };
 
   class compunit_ast : public base_ast {
@@ -42,15 +61,13 @@ namespace pache {
 
   };
 
-  class func_ast : public base_ast {
+  class main_func_ast : public base_ast {
   public:
-    std::string ident;
-    std::unique_ptr<base_ast> return_type;
     std::unique_ptr<base_ast> block;
     virtual std::string dump() const override {
       std::cout << "define "
-          << return_type->dump()
-          << " @" << ident << "("
+          << "i32"
+          << " @" << "main" << "("
       //  args
           << ") "
           << block->dump();
@@ -75,8 +92,48 @@ namespace pache {
 
 // ...
 
+  class variable_ast : public base_ast {
+  public:
+    explicit variable_ast(type_ast *type, std::string *name)
+      : m_type(type), real_name(name) { }
+
+    type_ast * get_type() {
+      return m_type;
+    }
+
+    std::string get_name() {
+      return *real_name;
+    }
+
+    void set_name(std::string name) {
+      *real_name = name;
+    }
+    virtual std::string dump() const override {
+      return "";
+    }
+  protected:
+    type_ast *m_type;
+    std::string *real_name;
+  };
+
+  class func_ast : public variable_ast {
+  public:
+    explicit func_ast(type_ast *type, std::string *name) : variable_ast(type, name) { }
+    std::unique_ptr<base_ast> return_type;
+    std::unique_ptr<base_ast> block;
+    virtual std::string dump() const override {
+      std::cout << "define "
+          << return_type->dump()
+          << " @" << real_name << "("
+      //  args
+          << ") "
+          << block->dump();
+
+      return std::string{};
+    }
 
 
+  };
 
 }
 

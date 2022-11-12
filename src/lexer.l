@@ -23,6 +23,10 @@ using namespace std;
  */
 %s AFTER_OPERAND
 
+MAIN                 "main"
+LET                  "let"
+
+
 LEFT_CURLY_BRACE     "{"
 LEFT_PARENTHESIS     "("
 LEFT_SQUARE_BRACKET  "["
@@ -52,6 +56,7 @@ horizontal_whitespace [ \t\r]
 whitespace            [ \t\r\n]
 LineComment   "//".*
 
+
 /* 标识符 */
 identifier    [a-zA-Z_][a-zA-Z0-9_]*
 operand_start         [(A-Za-z0-9_\"]
@@ -62,6 +67,10 @@ Hexadecimal   0[xX][0-9a-fA-F]+
 Binary        0[bB][01]*
 
 %%
+
+{MAIN}          { return MAIN; }
+{LET}           { return LET; }
+
 
 {LineComment}   { /* 忽略, 不做任何操作 */ }
 {horizontal_whitespace}+ {
