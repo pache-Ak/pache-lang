@@ -50,7 +50,7 @@ using namespace std;
 %token <int_val> INT_CONST
 
 %token
-                   // \n
+  ASSIGN                // :=
   LEFT_CURLY_BRACE      // {
   LEFT_PARENTHESIS      // (
   LEFT_SQUARE_BRACKET   // [
@@ -84,7 +84,7 @@ using namespace std;
 %type <ast_val> FuncDef main_func
 %type <type_val> type
 %type <exp_val> Number   primary_expression unary_expression
-%type <stmt_val> stmt block return_stmt let_stmt
+%type <stmt_val> stmt block return_stmt let_stmt assign_stmt
 %type <exp_val>  expression  add_exp
 %type <stmt_p_list> statement_list
 %type <exp_val>  mul_expressions
@@ -162,6 +162,9 @@ stmt:
 | let_stmt {
     $$ = $1;
 }
+| assign_stmt {
+  $$ = $1;
+}
 ;
 
 
@@ -174,11 +177,25 @@ return_stmt
   ;
 
 let_stmt:
-  LET type identifier  {
+  LET type identifier ASSIGN expression {
     auto var = new pache::variable_ast($2, $3);
-    $$ = new pache::let_stmt(var);
+    $$ = new pache::let_stmt(var, $5);
   }
+| LET type identifier LEFT_CURLY_BRACE expression RIGHT_CURLY_BRACE {
+    auto var = new pache::variable_ast($2, $3);
+    $$ = new pache::let_stmt(var, $5);
+}
+| LET type identifier  {
+    auto var = new pache::variable_ast($2, $3);
+    $$ = new pache::let_stmt(var, nullptr);
+  }
+;
 
+assign_stmt:
+  identifier ASSIGN expression {
+    auto exp = new pache::var_exp($1);
+    $$ = new pache::assign_stmt(exp, $3);
+  }
 Number
   : INT_CONST {
     $$ = new pache::i32_literal($1);

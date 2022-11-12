@@ -114,7 +114,7 @@ namespace pache {
       return m_type;
     }
 
-    std::string get_name() {
+    std::string &get_name() {
       return *real_name;
     }
 

@@ -26,6 +26,7 @@ using namespace std;
 MAIN                 "main"
 LET                  "let"
 
+ASSIGN               ":="
 
 LEFT_CURLY_BRACE     "{"
 LEFT_PARENTHESIS     "("
@@ -71,7 +72,7 @@ Binary        0[bB][01]*
 {MAIN}          { return MAIN; }
 {LET}           { return LET; }
 
-
+{ASSIGN}        { return ASSIGN; }
 {LineComment}   { /* 忽略, 不做任何操作 */ }
 {horizontal_whitespace}+ {
   ///   TODO:
