@@ -15,6 +15,7 @@ namespace pache {
 
   class block_ast : public stmt_ast {
   public:
+    block_ast() = default;
     block_ast(std::vector<stmt_ast*> *statements) : m_statements(statements) { }
     virtual std::string dump() const override {
       std::cout << "{\n";
@@ -95,6 +96,18 @@ namespace pache {
     exp_ast *m_init;
   };
 
+  class exp_stmt : public stmt_ast {
+  public:
+    explicit exp_stmt(exp_ast *exp) : m_exp(exp) { }
+
+    virtual std::string dump() const override {
+      m_exp->set_father(m_father);
+      m_exp->dump();
+      return "";
+    }
+  private:
+    exp_ast *m_exp;
+  };
 
   class for_ast : public stmt_ast {
 
@@ -103,6 +116,32 @@ namespace pache {
     block_ast m_block;
     // range    TODO
     // var      TODO
+  };
+
+  class if_stmt : public block_ast {
+  public:
+    explicit if_stmt(exp_ast *exp, block_ast *then, block_ast *elses)
+      : m_condition(exp), m_then_block(then), m_else_block(elses) { }
+
+    virtual std::string dump() const override {
+      m_condition->set_father(m_father);
+      m_then_block->set_father(m_father);
+      m_else_block->set_father(m_father);
+      std::string s1 = m_condition->dump();
+      m_then_block->set_prefix(m_father->get_prefix() + "block" + std::to_string(m_father->next_block_value()));
+      m_else_block->set_prefix(m_father->get_prefix() + "block" + std::to_string(m_father->next_block_value()));
+      std::cout << "br i1 " << s1 << ", label %" << m_then_block->get_prefix()
+                << ", label %" << m_else_block->get_prefix() << "\n"
+                << m_then_block->get_prefix() << ":\n"
+                << m_then_block->dump()
+                << m_else_block->get_prefix() << ":\n"
+                << m_else_block->dump();
+      return "";
+    }
+  private:
+    exp_ast *m_condition;
+    block_ast *m_then_block;
+    block_ast *m_else_block;
   };
 
   class loop_ast : public stmt_ast {

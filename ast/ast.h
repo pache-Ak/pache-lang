@@ -54,11 +54,20 @@ namespace pache {
     std::string get_prefix() {
       return name_prefix;
     }
+
+    void set_prefix(std::string pre) {
+      name_prefix = pre;
+    }
+
+    std::size_t next_block_value() {
+      return block_value++;
+    }
   protected:
     base_ast *m_father = nullptr;
     std::unordered_map<std::string, type_ast*> type_name;
     std::unordered_map<std::string, variable_ast*> dec_name;
     std::string name_prefix;
+    std::size_t block_value = 0;
   };
 
   class compunit_ast : public base_ast {

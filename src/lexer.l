@@ -26,6 +26,9 @@ using namespace std;
 MAIN                 "main"
 LET                  "let"
 
+IF                   "if"
+ELSE                 "else"
+
 ASSIGN               ":="
 
 LEFT_CURLY_BRACE     "{"
@@ -71,6 +74,9 @@ Binary        0[bB][01]*
 
 {MAIN}          { return MAIN; }
 {LET}           { return LET; }
+
+{IF}            { return IF; }
+{ELSE}          { return ELSE; }
 
 {ASSIGN}        { return ASSIGN; }
 {LineComment}   { /* 忽略, 不做任何操作 */ }

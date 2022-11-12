@@ -40,6 +40,7 @@ using namespace std;
   pache::exp_ast *exp_val;
   std::vector<pache::stmt_ast*> *stmt_p_list;
   pache::stmt_ast *stmt_val;
+  pache::block_ast *block_val;
   pache::type_ast *type_val;
 }
 
@@ -73,7 +74,8 @@ using namespace std;
   OR                    // ||
   MAIN                  // main
   LET                   // let
-
+  IF                    // if
+  ELSE                  // else
 
   UNARY_STAR "unary *"
   PREFIX_STAR "prefix *"
@@ -84,7 +86,8 @@ using namespace std;
 %type <ast_val> FuncDef main_func
 %type <type_val> type
 %type <exp_val> Number   primary_expression unary_expression
-%type <stmt_val> stmt block return_stmt let_stmt assign_stmt
+%type <block_val> block optional_else if_stmt
+%type <stmt_val> stmt return_stmt let_stmt assign_stmt
 %type <exp_val>  expression  add_exp
 %type <stmt_p_list> statement_list
 %type <exp_val>  mul_expressions
@@ -155,14 +158,20 @@ block
   ;
 
 stmt:
-  return_stmt
-    { $$ = $1; }
+  assign_stmt {
+  $$ = $1;
+}
+| expression {
+  $$ = new pache::exp_stmt($1);
+}
 | block
     { $$ = $1; }
 | let_stmt {
     $$ = $1;
 }
-| assign_stmt {
+| return_stmt
+    { $$ = $1; }
+| if_stmt {
   $$ = $1;
 }
 ;
@@ -195,6 +204,23 @@ assign_stmt:
   identifier ASSIGN expression {
     auto exp = new pache::var_exp($1);
     $$ = new pache::assign_stmt(exp, $3);
+  }
+;
+
+optional_else:
+  // Empty
+    { $$ = nullptr; }
+| ELSE if_stmt
+    {
+      $$ = $2;
+    }
+| ELSE block
+    { $$ = $2; }
+;
+
+if_stmt:
+  IF expression block optional_else {
+    $$ = new pache::if_stmt($2, $3, $4);
   }
 Number
   : INT_CONST {
