@@ -6,7 +6,7 @@
 #include <cstdint>
 
 namespace pache {
-  class exp_ast : base_ast {
+  class exp_ast : public base_ast {
   public:
     virtual std::string dump() const override = 0;
 
@@ -49,6 +49,7 @@ namespace pache {
       : exp_ast(), m_arguments(arguments) {}
 
     virtual std::string dump() const override {
+        m_arguments->set_father(m_father);
         return m_arguments->dump();
     }
 
@@ -65,6 +66,7 @@ namespace pache {
       : exp_ast(), m_arguments(arguments) {}
 
     virtual std::string dump() const override {
+      m_arguments->set_father(m_father);
       std::string s1 = m_arguments->dump();
       std::cout << "%" << ssa_value << " = sub, 0, " << s1 << "\n";
       std::string s{"%"};
@@ -95,11 +97,40 @@ namespace pache {
     int32_t m_value;
   };
 
+  class var_exp : public exp_ast {
+  public:
+    explicit var_exp(std::string *name) : m_name(name) { }
+    variable_ast *get_var() const {
+      return find_dec(m_father, *m_name);
+    }
+
+    virtual std::string dump() const override {
+      variable_ast *var = get_var();
+      if (var != nullptr) {
+        std::string s{"%"};
+        s += std::to_string(ssa_value);
+        std::cout << s << " = load "
+                  << var->get_type()->dump()
+                  << ", " << var->get_type()->dump()
+                  << "* @" << var->get_name() << "\n";
+        ++ssa_value;
+        return s;
+      } else {
+        std::cout << "error : name " << *m_name << "can't find.";
+        return "";
+      }
+    }
+  private:
+    std::string *m_name;
+  };
+
   class binary_mul_exp : public exp_ast {
   public:
     explicit binary_mul_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
     virtual std::string dump() const override {
+      m_arg1->set_father(m_father);
+      m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
       std::string s2 = m_arg2->dump();
       std::cout << "%" << ssa_value << " = mul " << s1 << ", " << s2 << "\n";
@@ -120,6 +151,8 @@ namespace pache {
     explicit binary_div_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
     virtual std::string dump() const override {
+      m_arg1->set_father(m_father);
+      m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
       std::string s2 = m_arg2->dump();
       std::cout << "%" << ssa_value << " = div " << s1 << ", " << s2 << "\n";
@@ -140,6 +173,8 @@ namespace pache {
     explicit binary_mod_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
     virtual std::string dump() const override {
+      m_arg1->set_father(m_father);
+      m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
       std::string s2 = m_arg2->dump();
       std::cout << "%" << ssa_value << " = mod " << s1 << ", " << s2 << "\n";
@@ -160,6 +195,8 @@ namespace pache {
     explicit binary_plus_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
     virtual std::string dump() const override {
+      m_arg1->set_father(m_father);
+      m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
       std::string s2 = m_arg2->dump();
       std::cout << "%" << ssa_value << " = add " << s1 << ", " << s2 << "\n";
@@ -180,6 +217,8 @@ namespace pache {
     explicit binary_minus_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
     virtual std::string dump() const override {
+      m_arg1->set_father(m_father);
+      m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
       std::string s2 = m_arg2->dump();
       std::cout << "%" << ssa_value << " = sub " << s1 << ", " << s2 << "\n";
@@ -200,6 +239,8 @@ namespace pache {
     explicit three_way_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
     virtual std::string dump() const override {
+      m_arg1->set_father(m_father);
+      m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
       std::string s2 = m_arg2->dump();
       std::cout << "%" << ssa_value << " = TODO " << s1 << ", " << s2 << "\n";
@@ -220,6 +261,8 @@ namespace pache {
     explicit less_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
     virtual std::string dump() const override {
+      m_arg1->set_father(m_father);
+      m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
       std::string s2 = m_arg2->dump();
       std::cout << "%" << ssa_value << " = le " << s1 << ", " << s2 << "\n";
@@ -240,6 +283,8 @@ namespace pache {
     explicit less_eq_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
     virtual std::string dump() const override {
+      m_arg1->set_father(m_father);
+      m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
       std::string s2 = m_arg2->dump();
       std::cout << "%" << ssa_value << " = le_eq " << s1 << ", " << s2 << "\n";
@@ -260,6 +305,8 @@ namespace pache {
     explicit greater_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
     virtual std::string dump() const override {
+      m_arg1->set_father(m_father);
+      m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
       std::string s2 = m_arg2->dump();
       std::cout << "%" << ssa_value << " = gr " << s1 << ", " << s2 << "\n";
@@ -280,6 +327,8 @@ namespace pache {
     explicit greater_eq_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
     virtual std::string dump() const override {
+      m_arg1->set_father(m_father);
+      m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
       std::string s2 = m_arg2->dump();
       std::cout << "%" << ssa_value << " = gr_eq " << s1 << ", " << s2 << "\n";
@@ -300,6 +349,8 @@ namespace pache {
     explicit eq_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
     virtual std::string dump() const override {
+      m_arg1->set_father(m_father);
+      m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
       std::string s2 = m_arg2->dump();
       std::cout << "%" << ssa_value << " = eq " << s1 << ", " << s2 << "\n";
@@ -320,6 +371,8 @@ namespace pache {
     explicit not_eq_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
     virtual std::string dump() const override {
+      m_arg1->set_father(m_father);
+      m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
       std::string s2 = m_arg2->dump();
       std::cout << "%" << ssa_value << " = not_eq " << s1 << ", " << s2 << "\n";
@@ -340,6 +393,8 @@ namespace pache {
     explicit logical_and_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
     virtual std::string dump() const override {
+      m_arg1->set_father(m_father);
+      m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
       std::string s2 = m_arg2->dump();
       std::cout << "%" << ssa_value << " = l_and " << s1 << ", " << s2 << "\n";
@@ -360,6 +415,8 @@ namespace pache {
     explicit logical_or_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
     virtual std::string dump() const override {
+      m_arg1->set_father(m_father);
+      m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
       std::string s2 = m_arg2->dump();
       std::cout << "%" << ssa_value << " = l_or " << s1 << ", " << s2 << "\n";

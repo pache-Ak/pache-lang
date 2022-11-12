@@ -50,7 +50,6 @@ using namespace std;
 %token <int_val> INT_CONST
 
 %token
-  whitespace
                    // \n
   LEFT_CURLY_BRACE      // {
   LEFT_PARENTHESIS      // (
@@ -199,6 +198,9 @@ primary_expression:
 | Number {
     $$ = $1;
   }
+| identifier {
+    $$ = new pache::var_exp($1);
+}
 ;
 
 unary_expression:

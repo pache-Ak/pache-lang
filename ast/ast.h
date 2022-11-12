@@ -38,11 +38,24 @@ namespace pache {
       m_father->dec_name.insert(std::make_pair(name, dec));
     }
 
+    variable_ast * find_dec(base_ast *father, std::string name) const {
+      if (father != nullptr) {
+        auto beg = father->dec_name.find(name);
+        if (beg != father->dec_name.end()) {
+          return beg->second;
+        } else {
+          return find_dec(father->m_father, name);
+        }
+      } else {
+        return nullptr;
+      }
+    }
+
     std::string get_prefix() {
       return name_prefix;
     }
   protected:
-    base_ast *m_father;
+    base_ast *m_father = nullptr;
     std::unordered_map<std::string, type_ast*> type_name;
     std::unordered_map<std::string, variable_ast*> dec_name;
     std::string name_prefix;
