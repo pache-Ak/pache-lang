@@ -31,8 +31,8 @@ $(BUILD_DIR)/main.o: $(SRC_DIR)/main.cpp
 $(BUILD_DIR)/lexer.cpp: $(SRC_DIR)/lexer.l
 		flex -o $(BUILD_DIR)/lexer.cpp $(SRC_DIR)/lexer.l
 
-$(BUILD_DIR)/parser.hpp: $(SRC_DIR)/parser.y $(AST_DIR)/ast.h
+$(BUILD_DIR)/parser.hpp: $(SRC_DIR)/parser.y $(AST_DIR)/*.h
 		bison -d -o $(BUILD_DIR)/parser.cpp $(SRC_DIR)/parser.y
 
-$(BUILD_DIR)/parser.cpp: $(SRC_DIR)/parser.y $(AST_DIR)/ast.h $(AST_DIR)/statement.h $(AST_DIR)/expression.h
+$(BUILD_DIR)/parser.cpp: $(SRC_DIR)/parser.y $(AST_DIR)/*.h
 		bison -d -o $(BUILD_DIR)/parser.cpp $(SRC_DIR)/parser.y

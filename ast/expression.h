@@ -4,7 +4,7 @@
 #include "ast.h"
 #include <vector>
 #include <cstdint>
-
+#include <memory>
 namespace pache {
   class exp_ast : public base_ast {
   public:
@@ -12,7 +12,15 @@ namespace pache {
 
     virtual ~exp_ast() override { }
 
+    void set_type(type_ast &type) {
+      m_type = &type;
+    }
 
+    type_ast *get_type() {
+      return m_type;
+    }
+  protected:
+    type_ast *m_type;
   };
 
   enum class Operator {
@@ -82,20 +90,7 @@ namespace pache {
     exp_ast* m_arguments;
   };
 
-  class i32_literal : public exp_ast {
-  public:
-    explicit i32_literal(int32_t value) : m_value(value) { }
 
-    virtual std::string dump() const override {
-      return std::to_string(m_value);
-    }
-
-
-
-    virtual ~i32_literal() override = default;
-  private:
-    int32_t m_value;
-  };
 
   class var_exp : public exp_ast {
   public:

@@ -14,6 +14,8 @@
 #include "../ast/ast.h"
 #include "../ast/expression.h"
 #include "../ast/statement.h"
+#include "../ast/type.h"
+#include "../ast/literal.h"
 
 // 声明 lexer 函数和错误处理函数
 int yylex();
@@ -136,7 +138,7 @@ FuncDef
 // 同上, 不再解释
 type
   : I32 {
-    $$ = new pache::type_ast("i32");
+    $$ = &pache::i32_type;
   }
   ;
 statement_list:
@@ -178,10 +180,12 @@ stmt:
 
 
 
-return_stmt
-  : RETURN expression  {
-    auto ast =  new pache::return_ast($2);
-    $$ = ast;
+return_stmt:
+  RETURN {
+    $$ = new pache::return_ast(&pache::void_l);
+  }
+| RETURN expression  {
+    $$ = new pache::return_ast($2);
   }
   ;
 

@@ -102,13 +102,10 @@ namespace pache {
 
   class type_ast : public base_ast {
   public:
-    type_ast(std::string s) : ident(s) { }
-    std::string ident;
-    virtual std::string dump() const override {
-      return ident;
-    }
+    virtual std::string dump() const = 0;
 
-
+  protected:
+    explicit type_ast() { }
   };
 
 

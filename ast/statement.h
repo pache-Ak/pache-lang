@@ -39,7 +39,7 @@ namespace pache {
     virtual std::string dump() const override {
       m_exp->set_father(m_father);
       std::string s1 = m_exp->dump();
-      std::cout << "ret i32 " << s1 << "\n";
+      std::cout << "ret " << m_exp->get_type()->dump() << " " << s1 << "\n";
       return std::string{};
     }
     virtual ~return_ast() override = default;
