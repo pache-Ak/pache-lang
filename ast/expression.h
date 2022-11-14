@@ -396,11 +396,26 @@ namespace pache {
       m_arg1->set_father(m_father);
       m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
+      std::size_t var = ssa_value++;
+
+      std::cout << "%" << var << " alloca i1\n";
+      std::size_t block1 = ssa_value++;
+      std::size_t block2 = ssa_value++;
+      std::cout << "br i1 " << s1 << ", label %" << block1
+                << ", label %" << block2 << "\n"
+                << block1 << ":\n";
+
       std::string s2 = m_arg2->dump();
-      std::cout << "%" << ssa_value << " = l_and " << s1 << ", " << s2 << "\n";
+      std::size_t block3 = ssa_value++;
+      std::cout << "store i1 " << s2 << ", i1* %" << var << ", align 1"
+                << "\nbr label %" << block3
+                << "\n\n" << block2 << ":\n";
+      std::cout << "store i1 " << s1 << ", i1* %" << var << ", align 1"
+                << "\nbr label %" << block3
+                << "\n\n" << block3 << ":\n";
+
       std::string s{"%"};
-      s += std::to_string(ssa_value);
-      ++ssa_value;
+      s += std::to_string(var);
       return s;
     }
 
@@ -418,11 +433,28 @@ namespace pache {
       m_arg1->set_father(m_father);
       m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
+
+      std::size_t var = ssa_value++;
+
+      std::cout << "%" << var << " = alloca i1\n";
+      std::size_t block1 = ssa_value++;
+      std::size_t block2 = ssa_value++;
+      std::cout << "br i1 " << s1 << ", label %" << block1
+                << ", label %" << block2 << "\n"
+                << block1 << ":\n";
+
+      std::size_t block3 = ssa_value++;
+      std::cout << "store i1 " << s1 << ", i1* %" << var << ", align 1"
+                << "\nbr label %" << block3
+                << "\n\n" << block2 << ":\n";
+
       std::string s2 = m_arg2->dump();
-      std::cout << "%" << ssa_value << " = l_or " << s1 << ", " << s2 << "\n";
+      std::cout << "store i1 " << s2 << ", i1* %" << var << ", align 1"
+                << "\nbr label %" << block3
+                << "\n\n" << block3 << ":\n";
+
       std::string s{"%"};
-      s += std::to_string(ssa_value);
-      ++ssa_value;
+      s += std::to_string(var);
       return s;
     }
 

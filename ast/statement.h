@@ -18,12 +18,12 @@ namespace pache {
     block_ast() = default;
     block_ast(std::vector<stmt_ast*> *statements) : m_statements(statements) { }
     virtual std::string dump() const override {
-      std::cout << "{\n";
+      std::cout << "\n";
       for (auto stmt : *m_statements) {
         // std::cout << "\t";
         std::cout << stmt->dump();
       }
-      std::cout << "}\n";
+      std::cout << "\n";
       return std::string{};
     }
 
@@ -128,14 +128,20 @@ namespace pache {
       m_then_block->set_father(m_father);
       m_else_block->set_father(m_father);
       std::string s1 = m_condition->dump();
-      m_then_block->set_prefix(m_father->get_prefix() + "block" + std::to_string(m_father->next_block_value()));
-      m_else_block->set_prefix(m_father->get_prefix() + "block" + std::to_string(m_father->next_block_value()));
-      std::cout << "br i1 " << s1 << ", label %" << m_then_block->get_prefix()
-                << ", label %" << m_else_block->get_prefix() << "\n"
-                << m_then_block->get_prefix() << ":\n"
-                << m_then_block->dump()
-                << m_else_block->get_prefix() << ":\n"
-                << m_else_block->dump();
+      std::size_t block1 = ssa_value++;
+      std::size_t block2 = ssa_value++;
+      std::cout << "br i1 " << s1 << ", label %" << block1
+                << ", label %" << block2 << "\n"
+                << block1 << ":\n";
+      std::string s2 = m_then_block->dump();
+      std::size_t block3 = ssa_value++;
+      std::cout << s2
+                << "\nbr label %" << block3 << "\n\n"
+                << block2 << ":\n";
+      std::string s3 = m_else_block->dump();
+      std::cout << s3
+                << "\nbr label %" << block3
+                << "\n\n" << block3 << ":\n";
       return "";
     }
   private:
