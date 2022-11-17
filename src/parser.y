@@ -48,9 +48,6 @@ using namespace std;
 
 // lexer 返回的所有 token 种类的声明
 // 注意 IDENT 和 INT_CONST 会返回 token 的值, 分别对应 str_val 和 int_val
-%token I32 RETURN FUNC
-%token <str_val> identifier
-%token <int_val> INT_CONST
 
 %token
   ASSIGN                // :=
@@ -78,18 +75,23 @@ using namespace std;
   LET                   // let
   IF                    // if
   ELSE                  // else
-
+  LOOP                  // loop
+  BREAK                 // break
+  CONTINUE              // continue
   UNARY_STAR "unary *"
   PREFIX_STAR "prefix *"
   POSTFIX_STAR "postfix *"
   BINARY_STAR "binary *"
+%token I32 RETURN FUNC
+%token <str_val> identifier
+%token <int_val> INT_CONST
 
 // 非终结符的类型定义
 %type <ast_val> FuncDef main_func
 %type <type_val> type
 %type <exp_val> Number   primary_expression unary_expression
-%type <block_val> block optional_else if_stmt
-%type <stmt_val> stmt return_stmt let_stmt assign_stmt
+%type <block_val> block optional_else if_stmt loop_stmt
+%type <stmt_val> stmt return_stmt let_stmt assign_stmt break_stmt continue_stmt
 %type <exp_val>  expression  add_exp
 %type <stmt_p_list> statement_list
 %type <exp_val>  mul_expressions
@@ -141,6 +143,8 @@ type
     $$ = &pache::i32_type;
   }
   ;
+
+
 statement_list:
   // Empty
     { $$ = new std::vector<pache::stmt_ast*>(); }
@@ -176,13 +180,22 @@ stmt:
 | if_stmt {
   $$ = $1;
 }
+| loop_stmt {
+  $$ = $1;
+}
+| break_stmt {
+  $$ = $1;
+}
+| continue_stmt {
+  $$ = $1;
+}
 ;
 
 
 
 return_stmt:
   RETURN {
-    $$ = new pache::return_ast(&pache::void_l);
+    $$ = new pache::return_ast(&pache::void_literal);
   }
 | RETURN expression  {
     $$ = new pache::return_ast($2);
@@ -211,6 +224,15 @@ assign_stmt:
   }
 ;
 
+break_stmt:
+  BREAK {
+    $$ = new pache::break_stmt();
+  };
+
+continue_stmt:
+  CONTINUE {
+    $$ = new pache::continue_stmt();
+  };
 optional_else:
   // Empty
     { $$ = nullptr; }
@@ -232,6 +254,12 @@ Number
   }
   ;
 
+loop_stmt:
+  LOOP block {
+    $$ = new pache::loop_stmt($2);
+
+  }
+;
 expression:
   logical_or_expression {
     $$ = $1;

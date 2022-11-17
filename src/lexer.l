@@ -29,13 +29,17 @@ LET                  "let"
 IF                   "if"
 ELSE                 "else"
 
+LOOP                 "loop"
+BREAK                "break"
+CONTINUE             "continue"
+
 ASSIGN               ":="
 
 LEFT_CURLY_BRACE     "{"
 LEFT_PARENTHESIS     "("
 LEFT_SQUARE_BRACKET  "["
-PLUS  "+"
-MINUS "-"
+PLUS                 "+"
+MINUS                "-"
 PERCENT              "%"
 SLASH                "/"
 PERIOD               "."
@@ -58,7 +62,7 @@ OR                   "||"
 /* 空白符和注释 */
 horizontal_whitespace [ \t\r]
 whitespace            [ \t\r\n]
-LineComment   "//".*
+one_line_comment      \/\/[^\n]*\n
 
 
 /* 标识符 */
@@ -79,25 +83,23 @@ Binary        0[bB][01]*
 {ELSE}          { return ELSE; }
 
 {ASSIGN}        { return ASSIGN; }
-{LineComment}   { /* 忽略, 不做任何操作 */ }
+{one_line_comment}   { /* 忽略, 不做任何操作 */ }
 {horizontal_whitespace}+ {
-  ///   TODO:
+  // Make the span empty by setting start to end.
+  //context.current_token_position.step();
+  BEGIN(AFTER_WHITESPACE);
 }
-{whitespace}    {  }
 
 \n+ {
-  /// TODO:
+  // Advance end by yyleng lines, resetting the column to zero.
+  //context.current_token_position.lines(yyleng);
+  // Make the span empty by setting start to end.
+  //context.current_token_position.step();
+  BEGIN(AFTER_WHITESPACE);
 }
-
 "i32"           { return I32; }
 "return"        { return RETURN; }
 "func"          { return FUNC; }
-{identifier}    { yylval.str_val = new string(yytext); return identifier; }
-
-{Decimal}       { yylval.int_val = strtol(yytext, nullptr, 0); return INT_CONST; }
-{Octal}         { yylval.int_val = strtol(yytext, nullptr, 0); return INT_CONST; }
-{Hexadecimal}   { yylval.int_val = strtol(yytext, nullptr, 0); return INT_CONST; }
-{Binary}        { yylval.int_val = strtol(yytext, nullptr, 0); return INT_CONST; }
 
 {LEFT_CURLY_BRACE}      { return LEFT_CURLY_BRACE; }
 {LEFT_PARENTHESIS}      { return LEFT_PARENTHESIS; }
@@ -119,16 +121,28 @@ Binary        0[bB][01]*
 {AND}                   { return AND; }
 {OR}                    { return OR; }
 
+{LOOP}                  { return LOOP; }
+{BREAK}                 { return BREAK; }
+{CONTINUE}              { return CONTINUE; }
+
+{identifier}    { yylval.str_val = new string(yytext); return identifier; }
+
+{Decimal}       { yylval.int_val = strtol(yytext, nullptr, 0); return INT_CONST; }
+{Octal}         { yylval.int_val = strtol(yytext, nullptr, 0); return INT_CONST; }
+{Hexadecimal}   { yylval.int_val = strtol(yytext, nullptr, 0); return INT_CONST; }
+{Binary}        { yylval.int_val = strtol(yytext, nullptr, 0); return INT_CONST; }
+
+
 {RIGHT_PARENTHESIS} {
- // BEGIN(AFTER_OPERAND);
+  BEGIN(AFTER_OPERAND);
   return RIGHT_PARENTHESIS;
 }
 {RIGHT_CURLY_BRACE} {
- // BEGIN(AFTER_OPERAND);
+  BEGIN(AFTER_OPERAND);
   return RIGHT_CURLY_BRACE;
 }
 {RIGHT_SQUARE_BRACKET} {
- // BEGIN(AFTER_OPERAND);
+  BEGIN(AFTER_OPERAND);
   return RIGHT_SQUARE_BRACKET;
 }
 

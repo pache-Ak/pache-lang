@@ -28,29 +28,26 @@ namespace pache {
   class base_ast {
   public:
     virtual ~base_ast() = default;
-    virtual std::string dump() const = 0;
+    virtual std::string dump() = 0;
     void set_father(base_ast *father) {
       m_father = father;
       return;
     }
 
-    void insert_dec(std::string name, variable_ast * dec) const {
-      m_father->dec_name.insert(std::make_pair(name, dec));
+    virtual void insert_dec(std::string name, variable_ast * dec)  {
+      m_father->insert_dec(name, dec);
     }
 
-    variable_ast * find_dec(base_ast *father, std::string name) const {
-      if (father != nullptr) {
-        auto beg = father->dec_name.find(name);
-        if (beg != father->dec_name.end()) {
-          return beg->second;
-        } else {
-          return find_dec(father->m_father, name);
-        }
-      } else {
-        return nullptr;
-      }
+    virtual variable_ast * find_dec(std::string name) const {
+      return m_father->find_dec(name);
+    }
+    virtual std::string begin_lable() const {
+      return m_father->begin_lable();
     }
 
+    virtual std::string end_lable() const {
+      return m_father->end_lable();
+    }
     std::string get_prefix() {
       return name_prefix;
     }
@@ -65,7 +62,6 @@ namespace pache {
   protected:
     base_ast *m_father = nullptr;
     std::unordered_map<std::string, type_ast*> type_name;
-    std::unordered_map<std::string, variable_ast*> dec_name;
     std::string name_prefix;
     std::size_t block_value = 0;
   };
@@ -73,7 +69,7 @@ namespace pache {
   class compunit_ast : public base_ast {
   public:
     std::unique_ptr<base_ast> func_def;
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       std::cout << "target datalayout = \"e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128\"\n";
       std::cout << "target triple = \"x86_64-pc-linux-gnu\"\n\n";
 
@@ -86,7 +82,7 @@ namespace pache {
   class main_func_ast : public base_ast {
   public:
     std::unique_ptr<base_ast> block;
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       std::cout << "define "
           << "i32"
           << " @" << "main" << "("
@@ -102,7 +98,7 @@ namespace pache {
 
   class type_ast : public base_ast {
   public:
-    virtual std::string dump() const = 0;
+    virtual std::string dump() = 0;
 
   protected:
     explicit type_ast() { }
@@ -127,7 +123,7 @@ namespace pache {
     void set_name(std::string name) {
       *real_name = name;
     }
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       return "";
     }
   protected:
@@ -140,7 +136,7 @@ namespace pache {
     explicit func_ast(type_ast *type, std::string *name) : variable_ast(type, name) { }
     std::unique_ptr<base_ast> return_type;
     std::unique_ptr<base_ast> block;
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       std::cout << "define "
           << return_type->dump()
           << " @" << real_name << "("

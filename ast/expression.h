@@ -2,13 +2,14 @@
 #define EXPRESSION_H
 
 #include "ast.h"
+#include "type.h"
 #include <vector>
 #include <cstdint>
 #include <memory>
 namespace pache {
   class exp_ast : public base_ast {
   public:
-    virtual std::string dump() const override = 0;
+    virtual std::string dump() override = 0;
 
     virtual ~exp_ast() override { }
 
@@ -56,7 +57,7 @@ namespace pache {
     explicit unary_plus(exp_ast* arguments)
       : exp_ast(), m_arguments(arguments) {}
 
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
         m_arguments->set_father(m_father);
         return m_arguments->dump();
     }
@@ -73,7 +74,7 @@ namespace pache {
     explicit unary_minus(exp_ast* arguments)
       : exp_ast(), m_arguments(arguments) {}
 
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       m_arguments->set_father(m_father);
       std::string s1 = m_arguments->dump();
       std::cout << "%" << ssa_value << " = sub, 0, " << s1 << "\n";
@@ -96,10 +97,10 @@ namespace pache {
   public:
     explicit var_exp(std::string *name) : m_name(name) { }
     variable_ast *get_var() const {
-      return find_dec(m_father, *m_name);
+      return find_dec(*m_name);
     }
 
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       variable_ast *var = get_var();
       if (var != nullptr) {
         std::string s{"%"};
@@ -123,7 +124,7 @@ namespace pache {
   public:
     explicit binary_mul_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       m_arg1->set_father(m_father);
       m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
@@ -145,7 +146,7 @@ namespace pache {
   public:
     explicit binary_div_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       m_arg1->set_father(m_father);
       m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
@@ -167,7 +168,7 @@ namespace pache {
   public:
     explicit binary_mod_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       m_arg1->set_father(m_father);
       m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
@@ -189,7 +190,7 @@ namespace pache {
   public:
     explicit binary_plus_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       m_arg1->set_father(m_father);
       m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
@@ -211,7 +212,7 @@ namespace pache {
   public:
     explicit binary_minus_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       m_arg1->set_father(m_father);
       m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
@@ -233,7 +234,7 @@ namespace pache {
   public:
     explicit three_way_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       m_arg1->set_father(m_father);
       m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
@@ -255,7 +256,7 @@ namespace pache {
   public:
     explicit less_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       m_arg1->set_father(m_father);
       m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
@@ -277,7 +278,7 @@ namespace pache {
   public:
     explicit less_eq_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       m_arg1->set_father(m_father);
       m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
@@ -299,7 +300,8 @@ namespace pache {
   public:
     explicit greater_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
+      set_type(bool_type);
       m_arg1->set_father(m_father);
       m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
@@ -321,7 +323,7 @@ namespace pache {
   public:
     explicit greater_eq_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       m_arg1->set_father(m_father);
       m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
@@ -343,7 +345,7 @@ namespace pache {
   public:
     explicit eq_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       m_arg1->set_father(m_father);
       m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
@@ -365,7 +367,7 @@ namespace pache {
   public:
     explicit not_eq_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       m_arg1->set_father(m_father);
       m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
@@ -387,7 +389,7 @@ namespace pache {
   public:
     explicit logical_and_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       m_arg1->set_father(m_father);
       m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();
@@ -424,7 +426,7 @@ namespace pache {
   public:
     explicit logical_or_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       m_arg1->set_father(m_father);
       m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();

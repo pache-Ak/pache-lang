@@ -14,25 +14,25 @@ namespace pache {
 
   };
 
-  class void_literal : public exp_ast {
+  class void_literal_t : public literal {
   public:
 
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       return "";
     }
 
-    static void_literal make_void_literal() {
-      return void_literal();
+    static void_literal_t make_void_literal_t() {
+      return void_literal_t();
     }
 
-    virtual ~void_literal() override = default;
+    virtual ~void_literal_t() override = default;
   private:
-    explicit void_literal() {
+    explicit void_literal_t() {
       set_type(void_type);
     }
   };
 
-  inline void_literal void_l = void_literal::make_void_literal();
+  inline void_literal_t void_literal = void_literal_t::make_void_literal_t();
 
   class i32_literal : public exp_ast {
   public:
@@ -40,7 +40,7 @@ namespace pache {
       set_type(i32_type);
      }
 
-    virtual std::string dump() const override {
+    virtual std::string dump() override {
       return std::to_string(m_value);
     }
 
