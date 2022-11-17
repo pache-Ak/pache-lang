@@ -94,7 +94,7 @@ namespace pache {
   class continue_stmt : public stmt_ast {
   public:
     virtual std::string dump() override {
-      return "br lable %" + begin_lable() + "\n";
+      return std::string("br lable %") + begin_lable() + "\n";
     }
 
 

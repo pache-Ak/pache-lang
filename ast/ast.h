@@ -42,11 +42,21 @@ namespace pache {
       return m_father->find_dec(name);
     }
     virtual std::string begin_lable() const {
-      return m_father->begin_lable();
+      if (m_father != nullptr) {
+        return m_father->begin_lable();
+      } else {
+        std::cout << "error : not in loop block.\n";
+        return "";
+      }
     }
 
     virtual std::string end_lable() const {
-      return m_father->end_lable();
+      if (m_father != nullptr) {
+        return m_father->end_lable();
+      } else {
+        std::cout << "error : not in loop block.\n";
+        return "";
+      }
     }
     std::string get_prefix() {
       return name_prefix;
