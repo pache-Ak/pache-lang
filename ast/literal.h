@@ -28,7 +28,7 @@ namespace pache {
     virtual ~void_literal_t() override = default;
   private:
     explicit void_literal_t() {
-      set_type(void_type);
+      set_type(void_type_t::get_void_type());
     }
   };
 
@@ -37,7 +37,7 @@ namespace pache {
   class i32_literal : public exp_ast {
   public:
     explicit i32_literal(int32_t value) : m_value(value) {
-      set_type(i32_type);
+      set_type(i32_type_t::get_i32_type());
      }
 
     virtual std::string dump() override {

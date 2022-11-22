@@ -13,15 +13,15 @@ namespace pache {
 
     virtual ~exp_ast() override { }
 
-    void set_type(type_ast &type) {
-      m_type = &type;
+    void set_type(type_ast const *type) {
+      m_type = type;
     }
 
-    type_ast *get_type() {
+    const type_ast *get_type() {
       return m_type;
     }
   protected:
-    type_ast *m_type;
+    const type_ast *m_type;
   };
 
   enum class Operator {
@@ -90,6 +90,52 @@ namespace pache {
   private:
     exp_ast* m_arguments;
   };
+  class func_call_exp : public exp_ast {
+  public:
+    explicit func_call_exp(std::string *name, std::vector<exp_ast*> *args)
+      : m_name(name), m_args(args) { }
+
+    virtual std::string dump() override {
+      variable_ast *var = find_dec(*m_name);
+      if (var != nullptr) {
+        std::vector<std::string> ss;
+        for (auto exp : *m_args) {
+          ss.push_back(exp->dump());
+        }
+        std::string s{"%"};
+        s += std::to_string(ssa_value);
+        std::cout << s << " = call " << var->get_type()->dump()
+                  << " @" << var->get_name() << "(";
+
+
+
+        auto beg1 = m_args->begin();
+        auto beg2 = ss.begin();
+        if (beg1 != m_args->end()) {
+          std::cout << (*beg1)->get_type()->dump() << " "
+                    << *beg2;
+          ++beg1;
+          ++beg2;
+        }
+        while(beg1 !=  m_args->end()) {
+          std::cout << ", " << (*beg1)->get_type()->dump() << " "
+                    << *beg2;
+          ++beg1;
+          ++beg2;
+        }
+
+        std::cout << ")\n";
+        return s;
+      } else {
+        std::cout << "error : name " << *m_name << "can't find.";
+        return "";
+      }
+    }
+
+  private:
+    std::string *m_name;
+    std::vector<exp_ast*> *m_args;
+  };
 
 
 
@@ -103,6 +149,8 @@ namespace pache {
     virtual std::string dump() override {
       variable_ast *var = get_var();
       if (var != nullptr) {
+
+      set_type(var->get_type());
         std::string s{"%"};
         s += std::to_string(ssa_value);
         std::cout << s << " = load "
@@ -301,7 +349,7 @@ namespace pache {
     explicit greater_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
     virtual std::string dump() override {
-      set_type(bool_type);
+      set_type(bool_type_t::get_bool_type());
       m_arg1->set_father(m_father);
       m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();

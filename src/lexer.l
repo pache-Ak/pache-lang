@@ -58,6 +58,7 @@ NOT_EQUAL            "!="
 AND                  "&&"
 OR                   "||"
 
+COMMA                ","
 
 /* 空白符和注释 */
 horizontal_whitespace [ \t\r]
@@ -124,6 +125,8 @@ Binary        0[bB][01]*
 {LOOP}                  { return LOOP; }
 {BREAK}                 { return BREAK; }
 {CONTINUE}              { return CONTINUE; }
+
+{COMMA}                 { return COMMA; }
 
 {identifier}    { yylval.str_val = new string(yytext); return identifier; }
 

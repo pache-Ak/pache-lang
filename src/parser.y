@@ -43,7 +43,11 @@ using namespace std;
   std::vector<pache::stmt_ast*> *stmt_p_list;
   pache::stmt_ast *stmt_val;
   pache::block_ast *block_val;
-  pache::type_ast *type_val;
+  pache::type_ast const*type_val;
+  pache::func_arg *FuncFParam;
+  std::vector<pache::func_arg*> *FuncFParam_p_list;
+  std::vector<pache::exp_ast*> *FuncRParam_p_list;
+  pache::variable_ast *var_val;
 }
 
 // lexer 返回的所有 token 种类的声明
@@ -78,6 +82,7 @@ using namespace std;
   LOOP                  // loop
   BREAK                 // break
   CONTINUE              // continue
+  COMMA                 // ,
   UNARY_STAR "unary *"
   PREFIX_STAR "prefix *"
   POSTFIX_STAR "postfix *"
@@ -87,7 +92,8 @@ using namespace std;
 %token <int_val> INT_CONST
 
 // 非终结符的类型定义
-%type <ast_val> FuncDef main_func
+%type <ast_val>   CompUnit
+%type <var_val> FuncDef main_func
 %type <type_val> type
 %type <exp_val> Number   primary_expression unary_expression
 %type <block_val> block optional_else if_stmt loop_stmt
@@ -96,7 +102,9 @@ using namespace std;
 %type <stmt_p_list> statement_list
 %type <exp_val>  mul_expressions
 %type <exp_val> three_way_expression rel_expression eq_expression logical_and_expression logical_or_expression
-
+%type <FuncFParam> FuncFParam
+%type <FuncFParam_p_list> FuncFParams
+%type <FuncRParam_p_list> FuncRParams
 %%
 
 // 开始符, CompUnit ::= FuncDef, 大括号后声明了解析完成后 parser 要做的事情
@@ -105,19 +113,42 @@ using namespace std;
 // 此时我们应该把 FuncDef 返回的结果收集起来, 作为 AST 传给调用 parser 的函数
 // $1 指代规则里第一个符号的返回值, 也就是 FuncDef 的返回值
 CompUnit
-  : main_func {
-    auto comp_unit = make_unique<pache::compunit_ast>();
-    comp_unit->func_def = unique_ptr<pache::base_ast>($1);
-    comp_unit->func_def->set_father(comp_unit.get());
-    ast = move(comp_unit);
+  : FuncDef {
+    ast = make_unique<pache::compunit_ast>();
+    ast->insert_dec($1);
+  }
+| CompUnit FuncDef {
+      ast->insert_dec($2);
+};
+
+FuncFParam:
+  type identifier {
+    $$ = new pache::func_arg($1, $2);
   };
 
-main_func:
-  FUNC MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS I32 block {
-    auto ast = new pache::main_func_ast();
-    ast->block = unique_ptr<pache::base_ast>($6);
-    $$ = ast;
+FuncFParams:
+  // empty
+
+  { $$ = new std::vector<pache::func_arg*>();
   }
+  | FuncFParam {
+    $$ = new std::vector<pache::func_arg*>();
+    $$->push_back($1);
+  }
+| FuncFParams COMMA FuncFParam {
+      $$ = $1;
+      $$->push_back($3);
+
+};
+main_func:
+  FUNC MAIN LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS I32 block {
+    auto ast = new pache::main_func_ast(pache::i32_type_t::get_i32_type(), new string("main"), $4);
+    ast->block = unique_ptr<pache::base_ast>($7);
+     // for (auto arg : *$4) {
+     //   arg->set_father($$);
+     // }
+    $$ = ast;
+  };
 // FuncDef ::= type IDENT LEFT_PARENTHESIS RIGHT_PARENTHESIS block;
 // 我们这里可以直接写 LEFT_PARENTHESIS 和 RIGHT_PARENTHESIS, 因为之前在 lexer 里已经处理了单个字符的情况
 // 解析完成后, 把这些符号的结果收集起来, 然后拼成一个新的字符串, 作为结果返回
@@ -129,18 +160,22 @@ main_func:
 // 虽然此处你看不出用 unique_ptr 和手动 delete 的区别, 但当我们定义了 AST 之后
 // 这种写法会省下很多内存管理的负担
 FuncDef
-  : FUNC identifier LEFT_PARENTHESIS RIGHT_PARENTHESIS type block {
-    auto ast = new pache::func_ast();
-    ast->return_type = unique_ptr<pache::base_ast>($5);
-    ast->ident = *unique_ptr<string>($2);
-    ast->block = unique_ptr<pache::base_ast>($6);
+  : FUNC identifier LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS type block {
+    auto ast = new pache::func_ast($6, $2, $4);
+    ast->block = unique_ptr<pache::base_ast>($7);
+    //      for (auto arg : *$4) {
+     //   arg->set_father($$);
+     // }
     $$ = ast;
-  };
+  }
+| main_func {
+  $$ = $1;
+};
 
 // 同上, 不再解释
 type
   : I32 {
-    $$ = &pache::i32_type;
+    $$ = pache::i32_type_t::get_i32_type();
   }
   ;
 
@@ -266,6 +301,20 @@ expression:
   }
 ;
 
+FuncRParams:
+  // empty
+  {
+    $$ = new std::vector<pache::exp_ast*>();
+  }|
+  expression {
+    $$ = new std::vector<pache::exp_ast*>{};
+    $$->push_back($1);
+  }
+| FuncRParams COMMA expression {
+  $$ = $1;
+  $$->push_back($3);
+};
+
 primary_expression:
   LEFT_PARENTHESIS expression RIGHT_PARENTHESIS {
     $$ = $2;
@@ -282,6 +331,9 @@ unary_expression:
   primary_expression {
     $$ = $1;
   }
+| identifier LEFT_PARENTHESIS FuncRParams RIGHT_PARENTHESIS {
+  $$ = new pache::func_call_exp($1, $3);
+}
 | PLUS unary_expression {
     $$ = new pache::unary_plus($2);
   }

@@ -143,12 +143,12 @@ namespace pache {
     explicit let_stmt(variable_ast *var, exp_ast * init) : m_var(var), m_init(init) { }
 
     virtual std::string dump() override {
-      std::string name = m_var->get_name();
+      std::string name = *(m_var->get_name());
       m_var->set_name(name + m_father->get_prefix());
       insert_dec(name, m_var);
       std::cout << "@" << m_var->get_name() << " = alloc " << m_var->get_type()->dump() << "\n";
       if (m_init != nullptr) {
-        var_exp var(&(m_var->get_name()));
+        var_exp var((m_var->get_name()));
         assign_stmt assign(&var, m_init);
         assign.set_father(m_father);
         return assign.dump();
