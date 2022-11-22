@@ -32,7 +32,7 @@ ELSE                 "else"
 LOOP                 "loop"
 BREAK                "break"
 CONTINUE             "continue"
-
+SEMICOLON            ";"
 ASSIGN               ":="
 
 LEFT_CURLY_BRACE     "{"
@@ -63,8 +63,8 @@ COMMA                ","
 /* 空白符和注释 */
 horizontal_whitespace [ \t\r]
 whitespace            [ \t\r\n]
-one_line_comment      \/\/[^\n]*\n
 
+one_line_comment      \/\/[^\n]*\n
 
 /* 标识符 */
 identifier    [a-zA-Z_][a-zA-Z0-9_]*
@@ -91,13 +91,7 @@ Binary        0[bB][01]*
   BEGIN(AFTER_WHITESPACE);
 }
 
-\n+ {
-  // Advance end by yyleng lines, resetting the column to zero.
-  //context.current_token_position.lines(yyleng);
-  // Make the span empty by setting start to end.
-  //context.current_token_position.step();
-  BEGIN(AFTER_WHITESPACE);
-}
+
 "i32"           { return I32; }
 "return"        { return RETURN; }
 "func"          { return FUNC; }
@@ -127,7 +121,7 @@ Binary        0[bB][01]*
 {CONTINUE}              { return CONTINUE; }
 
 {COMMA}                 { return COMMA; }
-
+{SEMICOLON}           { return SEMICOLON; }
 {identifier}    { yylval.str_val = new string(yytext); return identifier; }
 
 {Decimal}       { yylval.int_val = strtol(yytext, nullptr, 0); return INT_CONST; }
@@ -135,7 +129,12 @@ Binary        0[bB][01]*
 {Hexadecimal}   { yylval.int_val = strtol(yytext, nullptr, 0); return INT_CONST; }
 {Binary}        { yylval.int_val = strtol(yytext, nullptr, 0); return INT_CONST; }
 
-
+\n+    {   // Advance end by yyleng lines, resetting the column to zero.
+  //context.current_token_position.lines(yyleng);
+  // Make the span empty by setting start to end.
+  //context.current_token_position.step();
+  BEGIN(AFTER_WHITESPACE);
+   }
 {RIGHT_PARENTHESIS} {
   BEGIN(AFTER_OPERAND);
   return RIGHT_PARENTHESIS;

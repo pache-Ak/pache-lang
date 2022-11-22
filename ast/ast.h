@@ -26,7 +26,7 @@ namespace pache {
 
   class variable_ast;
   class func_ast;
-
+  class stmt_ast;
   class base_ast {
   public:
     virtual ~base_ast() = default;
@@ -39,7 +39,7 @@ namespace pache {
     virtual void insert_dec(std::string name, variable_ast * dec)  {
       m_father->insert_dec(name, dec);
     }
-
+    virtual void insert_dec(stmt_ast *let) { }
     virtual variable_ast * find_dec(std::string name) const {
       return m_father->find_dec(name);
     }
@@ -173,24 +173,6 @@ namespace pache {
   };
 
 
-  class compunit_ast : public base_ast {
-  public:
-    virtual std::string dump() override {
-      std::cout << "target datalayout = \"e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128\"\n";
-      std::cout << "target triple = \"x86_64-pc-linux-gnu\"\n\n";
-
-      for (auto  func : m_symbpol_table) {
-        func->dump();
-      }
-      return "";
-    }
-    virtual void insert_dec(variable_ast *func) override {
-      m_symbpol_table.push_back(func);
-      func->set_father(this);
-    }
-  private:
-    std::vector<variable_ast*> m_symbpol_table;
-  };
 
 }
 

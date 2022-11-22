@@ -4,6 +4,7 @@
   #include "../ast/ast.h"
   #include "../ast/expression.h"
   #include "../ast/statement.h"
+  #include "../ast/compunit.h"
 }
 
 %{
@@ -83,6 +84,8 @@ using namespace std;
   BREAK                 // break
   CONTINUE              // continue
   COMMA                 // ,
+  SEMICOLON             // ;
+  NEW_LINE              // \n
   UNARY_STAR "unary *"
   PREFIX_STAR "prefix *"
   POSTFIX_STAR "postfix *"
@@ -95,7 +98,7 @@ using namespace std;
 %type <ast_val>   CompUnit
 %type <var_val> FuncDef main_func
 %type <type_val> type
-%type <exp_val> Number   primary_expression unary_expression
+%type <exp_val> Number   primary_expression unary_expression call_expression
 %type <block_val> block optional_else if_stmt loop_stmt
 %type <stmt_val> stmt return_stmt let_stmt assign_stmt break_stmt continue_stmt
 %type <exp_val>  expression  add_exp
@@ -199,15 +202,15 @@ block
   ;
 
 stmt:
-  assign_stmt {
+  assign_stmt  {
   $$ = $1;
 }
-| expression {
+| expression  {
   $$ = new pache::exp_stmt($1);
 }
 | block
     { $$ = $1; }
-| let_stmt {
+| let_stmt  {
     $$ = $1;
 }
 | return_stmt
@@ -218,10 +221,10 @@ stmt:
 | loop_stmt {
   $$ = $1;
 }
-| break_stmt {
+| break_stmt  {
   $$ = $1;
 }
-| continue_stmt {
+| continue_stmt  {
   $$ = $1;
 }
 ;
@@ -327,13 +330,18 @@ primary_expression:
 }
 ;
 
-unary_expression:
+call_expression:
   primary_expression {
     $$ = $1;
   }
 | identifier LEFT_PARENTHESIS FuncRParams RIGHT_PARENTHESIS {
   $$ = new pache::func_call_exp($1, $3);
 }
+
+unary_expression:
+  call_expression {
+    $$ = $1;
+  }
 | PLUS unary_expression {
     $$ = new pache::unary_plus($2);
   }
