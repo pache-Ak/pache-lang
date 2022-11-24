@@ -6,10 +6,10 @@
 
 ```c++
 fun main(c8*[] args) void {
- let auto n = 1                  // 声明语句
- n = n + 1                       // 表达式语句
- printf(out, "n = {}\n", n)      // 表达式语句
- return                          // return 语句
+ let auto n = 1;                 // 声明语句
+ n = n + 1;                       // 赋值语句
+ printf(out, "n = {}\n", n);      // 表达式语句
+ return;                          // return 语句
 }
 ```
 
@@ -59,28 +59,26 @@ fun main(c8*[] args) void {
 ```c++
 func f() void {
  {
-  goto Label // Label 在作用域内，尽管它在后面才声明
+  goto Label; // Label 在作用域内，尽管它在后面才声明
   lable Label:
  }
- goto Label // Label 忽略块作用域
+ goto Label; // Label 忽略块作用域
 }
 
 fun g() void {
- goto Label // 错误： label 不在 g() 的作用域内
+ goto Label; // 错误： label 不在 g() 的作用域内
 }
 ```
 
 ### 表达式语句
 
-一行表达式是一条语句。
-
-将多个语句写在同一行，它们则必须使用 ; 人为区分，
+表达式后跟一个分号是一条语句。
 
 不鼓励，或禁止将多个语句放在一行  TODO
 
 |      |      |
 | :--- | :--- |
-|  表达式(可选)  | (1) |
+|  表达式;  | (1) |
 
 |      |       |      |
 | :--- | :---: | :--- |
@@ -157,11 +155,11 @@ fun main() {
 跳转语句无条件地转移控制流。
 |      |      |
 | :--- | :--- |
-| `break` | (1)  |
-| `continue` | (2)  |
-| `return` 表达式(可选) | (3)  |
-| `return` 花括号初始化器列表 | (4) |
-| `goto` 标识符 | (5) |
+| `break;` | (1)  |
+| `continue;` | (2)  |
+| `return` 表达式(可选)`;` | (3)  |
+| `return` 花括号初始化器列表`;` | (4) |
+| `goto` 标识符 `;`| (5) |
 
 1. [break](/language/break.md "language/break") 语句；
 2. [continue](/language/continue.md "language/continue") 语句；

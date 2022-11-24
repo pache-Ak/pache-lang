@@ -202,18 +202,18 @@ block
   ;
 
 stmt:
-  assign_stmt  {
+  assign_stmt SEMICOLON {
   $$ = $1;
 }
-| expression  {
+| expression SEMICOLON {
   $$ = new pache::exp_stmt($1);
 }
 | block
     { $$ = $1; }
-| let_stmt  {
+| let_stmt SEMICOLON {
     $$ = $1;
 }
-| return_stmt
+| return_stmt SEMICOLON
     { $$ = $1; }
 | if_stmt {
   $$ = $1;
@@ -221,10 +221,10 @@ stmt:
 | loop_stmt {
   $$ = $1;
 }
-| break_stmt  {
+| break_stmt SEMICOLON {
   $$ = $1;
 }
-| continue_stmt  {
+| continue_stmt SEMICOLON {
   $$ = $1;
 }
 ;
