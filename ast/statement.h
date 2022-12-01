@@ -140,27 +140,32 @@ namespace pache {
 
   class let_stmt : public stmt_ast {
   public:
-    explicit let_stmt(variable_ast *var, exp_ast * init) : m_var(var), m_init(init) { }
+    explicit let_stmt(variable_ast *var, exp_ast * init)
+      : m_var(var), m_init(init) {
+        m_var->set_father(this);
+        m_init->set_father(this);
+      }
 
     virtual std::string dump() override {
-      std::string name = *(m_var->get_name());
-      m_var->set_name(name + m_father->get_prefix());
-      insert_dec(name, m_var);
+      insert_dec(*(m_var->get_name()), m_var.get());
       std::cout << "@" << m_var->get_name() << " = alloc " << m_var->get_type()->dump() << "\n";
       if (m_init != nullptr) {
-        var_exp var((m_var->get_name()));
-        assign_stmt assign(&var, m_init);
-        assign.set_father(m_father);
-        return assign.dump();
+        std::string s = m_init->dump();
+        std::cout << "store " << m_var->get_type()->dump()
+                << " " << s << ", "
+                << m_var->get_type()->dump() << "* @"
+                << *(m_var->get_name()) << "\n";
+
+      return "";
       } else {
         return "";
       }
-
+      return "";
     }
 
   private:
-    variable_ast *m_var;
-    exp_ast *m_init;
+    std::unique_ptr<variable_ast> m_var;
+    std::unique_ptr<exp_ast> m_init;
   };
 
   class exp_stmt : public stmt_ast {

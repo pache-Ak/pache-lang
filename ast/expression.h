@@ -9,6 +9,7 @@
 namespace pache {
   class exp_ast : public base_ast {
   public:
+    explicit exp_ast() = default;
     virtual std::string dump() override = 0;
 
     virtual ~exp_ast() override { }
@@ -21,6 +22,7 @@ namespace pache {
       return m_type;
     }
   protected:
+    explicit exp_ast(const type_ast *type) : m_type(type) { }
     const type_ast *m_type;
   };
 
@@ -346,10 +348,10 @@ namespace pache {
 
   class greater_exp : public exp_ast {
   public:
-    explicit greater_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
+    explicit greater_exp(exp_ast *arg1, exp_ast *arg2)
+    : exp_ast(bool_type_t::get()), m_arg1(arg1), m_arg2(arg2) { }
 
     virtual std::string dump() override {
-      set_type(bool_type_t::get_bool_type());
       m_arg1->set_father(m_father);
       m_arg2->set_father(m_father);
       std::string s1 = m_arg1->dump();

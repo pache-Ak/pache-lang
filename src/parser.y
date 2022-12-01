@@ -97,7 +97,7 @@ using namespace std;
 // 非终结符的类型定义
 %type <ast_val>   CompUnit
 %type <var_val> FuncDef main_func
-%type <type_val> type
+%type <type_val> type arr_type
 %type <exp_val> Number   primary_expression unary_expression call_expression
 %type <block_val> block optional_else if_stmt loop_stmt
 %type <stmt_val> stmt return_stmt let_stmt assign_stmt break_stmt continue_stmt
@@ -120,8 +120,15 @@ CompUnit
     ast = make_unique<pache::compunit_ast>();
     ast->insert_dec($1);
   }
+| let_stmt {
+    ast = make_unique<pache::compunit_ast>();
+    ast->insert_dec($1);
+}
 | CompUnit FuncDef {
       ast->insert_dec($2);
+}
+| CompUnit let_stmt {
+    ast->insert_dec($2);
 };
 
 FuncFParam:
@@ -145,7 +152,7 @@ FuncFParams:
 };
 main_func:
   FUNC MAIN LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS I32 block {
-    auto ast = new pache::main_func_ast(pache::i32_type_t::get_i32_type(), new string("main"), $4);
+    auto ast = new pache::main_func_ast(pache::i32_type_t::get(), new string("main"), $4);
     ast->block = unique_ptr<pache::base_ast>($7);
      // for (auto arg : *$4) {
      //   arg->set_father($$);
@@ -178,10 +185,17 @@ FuncDef
 // 同上, 不再解释
 type
   : I32 {
-    $$ = pache::i32_type_t::get_i32_type();
+    $$ = pache::i32_type_t::get();
   }
+| arr_type {
+  $$ = $1;
+}
   ;
 
+arr_type:
+  type LEFT_SQUARE_BRACKET INT_CONST RIGHT_SQUARE_BRACKET {
+    $$ = new pache::arr_type_t($1, $3);
+  }
 
 statement_list:
   // Empty
@@ -202,7 +216,7 @@ block
   ;
 
 stmt:
-  assign_stmt SEMICOLON {
+  assign_stmt {
   $$ = $1;
 }
 | expression SEMICOLON {
@@ -210,10 +224,10 @@ stmt:
 }
 | block
     { $$ = $1; }
-| let_stmt SEMICOLON {
+| let_stmt {
     $$ = $1;
 }
-| return_stmt SEMICOLON
+| return_stmt
     { $$ = $1; }
 | if_stmt {
   $$ = $1;
@@ -221,10 +235,10 @@ stmt:
 | loop_stmt {
   $$ = $1;
 }
-| break_stmt SEMICOLON {
+| break_stmt {
   $$ = $1;
 }
-| continue_stmt SEMICOLON {
+| continue_stmt {
   $$ = $1;
 }
 ;
@@ -232,43 +246,42 @@ stmt:
 
 
 return_stmt:
-  RETURN {
+  RETURN SEMICOLON {
     $$ = new pache::return_ast(&pache::void_literal);
   }
-| RETURN expression  {
+| RETURN expression SEMICOLON {
     $$ = new pache::return_ast($2);
   }
   ;
 
 let_stmt:
-  LET type identifier ASSIGN expression {
-    auto var = new pache::variable_ast($2, $3);
-    $$ = new pache::let_stmt(var, $5);
+  LET type identifier ASSIGN expression SEMICOLON {
+    $$ = new pache::let_stmt(new pache::variable_ast($2, $3), $5);
   }
-| LET type identifier LEFT_CURLY_BRACE expression RIGHT_CURLY_BRACE {
+| LET type identifier LEFT_CURLY_BRACE expression RIGHT_CURLY_BRACE SEMICOLON {
     auto var = new pache::variable_ast($2, $3);
     $$ = new pache::let_stmt(var, $5);
 }
-| LET type identifier  {
+| LET type identifier SEMICOLON {
     auto var = new pache::variable_ast($2, $3);
     $$ = new pache::let_stmt(var, nullptr);
   }
 ;
 
 assign_stmt:
-  identifier ASSIGN expression {
+  identifier ASSIGN expression SEMICOLON {
     auto exp = new pache::var_exp($1);
     $$ = new pache::assign_stmt(exp, $3);
   }
 ;
 
 break_stmt:
-  BREAK {
+  BREAK SEMICOLON {
     $$ = new pache::break_stmt();
   };
 
 continue_stmt:
-  CONTINUE {
+  CONTINUE SEMICOLON {
     $$ = new pache::continue_stmt();
   };
 optional_else:
