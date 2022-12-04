@@ -2,6 +2,9 @@
 #define TYPE_H
 
 #include <string>
+#include <vector>
+#include <algorithm>
+#include <iterator>
 
 namespace pache {
   enum class value_category {
@@ -68,19 +71,36 @@ namespace pache {
 
   class arr_type_t : public type_ast {
   public:
-    explicit arr_type_t(const type_ast * element_type, std::size_t size)
+    explicit arr_type_t(const type_ast * element_type, const std::size_t size)
       : m_element_type(element_type), m_size(size) { }
     virtual std::string dump() const override {
       return "";
     }
 
-    const arr_type_t *get() {
+    const arr_type_t *get() const {
       return this;
     }
 
   private:
     const type_ast *m_element_type;
-    std::size_t m_size;
+    const std::size_t m_size;
+  };
+  class variable_ast;
+  class func_type : public type_ast {
+  public:
+    explicit func_type(const std::vector<variable_ast*> &args, const type_ast* return_type);
+
+
+    virtual std::string dump() const override {
+      return "";
+    }
+
+    const func_type *get() const {
+      return this;
+    }
+  private:
+    std::vector<const type_ast*> m_args_type;
+    const type_ast *m_return_type;
   };
 }
 

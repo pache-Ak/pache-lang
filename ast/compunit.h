@@ -32,7 +32,7 @@ namespace pache {
       dec_name.insert(std::make_pair(name, dec));
     }
 
-    virtual variable_ast * find_dec(std::string name) const override {
+    virtual variable_ast * find_dec(const std::string &name) const override {
       auto beg = this->dec_name.find(name);
         if (beg != this->dec_name.end()) {
           return beg->second;

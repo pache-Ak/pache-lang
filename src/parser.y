@@ -1,3 +1,12 @@
+%require "3.2"
+%language "c++"
+
+%define api.token.raw
+
+%define api.token.constructor
+%define api.value.type variant
+%define parse.assert
+
 %code requires {
   #include <memory>
   #include <string>
@@ -7,8 +16,26 @@
   #include "../ast/compunit.h"
 }
 
-%{
+%parse-param { std::unique_ptr<pache::base_ast> &ast }
 
+%locations
+
+%define api.token.prefix {TOK_}
+// Generate the parser as `::pache::parser`.
+%define api.namespace { pache }
+%define api.parser.class { parser }
+
+// Make parse error messages more detailed
+//%define parse.error verbose
+
+// Enable support for parser debugging
+%define parse.trace
+%define parse.error detailed
+%define parse.lac full
+
+
+
+%code {
 #include <iostream>
 #include <memory>
 #include <string>
@@ -16,43 +43,15 @@
 #include "../ast/expression.h"
 #include "../ast/statement.h"
 #include "../ast/type.h"
+#include "../src/driver.h"
 #include "../ast/literal.h"
 
 // 声明 lexer 函数和错误处理函数
-int yylex();
-void yyerror(std::unique_ptr<pache::base_ast> &ast , const char *s);
 
 using namespace std;
 
-%}
-
-// 定义 parser 函数和错误处理函数的附加参数
-// 我们需要返回一个字符串作为 AST, 所以我们把附加参数定义成字符串的智能指针
-// 解析完成后, 我们要手动修改这个参数, 把它设置成解析得到的字符串
-%parse-param { std::unique_ptr<pache::base_ast> &ast }
-
-// yylval 的定义, 我们把它定义成了一个联合体 (union)
-// 因为 token 的值有的是字符串指针, 有的是整数
-// 之前我们在 lexer 中用到的 str_val 和 int_val 就是在这里被定义的
-// 至于为什么要用字符串指针而不直接用 string 或者 unique_ptr<string>?
-// 请自行 STFW 在 union 里写一个带析构函数的类会出现什么情况
-%union {
-  std::string *str_val;
-  int int_val;
-  pache::base_ast *ast_val;
-  pache::exp_ast *exp_val;
-  std::vector<pache::stmt_ast*> *stmt_p_list;
-  pache::stmt_ast *stmt_val;
-  pache::block_ast *block_val;
-  pache::type_ast const*type_val;
-  pache::func_arg *FuncFParam;
-  std::vector<pache::func_arg*> *FuncFParam_p_list;
-  std::vector<pache::exp_ast*> *FuncRParam_p_list;
-  pache::variable_ast *var_val;
 }
 
-// lexer 返回的所有 token 种类的声明
-// 注意 IDENT 和 INT_CONST 会返回 token 的值, 分别对应 str_val 和 int_val
 
 %token
   ASSIGN                // :=
@@ -91,23 +90,23 @@ using namespace std;
   POSTFIX_STAR "postfix *"
   BINARY_STAR "binary *"
 %token I32 RETURN FUNC
-%token <str_val> identifier
-%token <int_val> INT_CONST
-
+%token <std::string> IDENTIFIER
+%token <int> INTEGER
+%token EOF 0;
 // 非终结符的类型定义
-%type <ast_val>   CompUnit
-%type <var_val> FuncDef main_func
-%type <type_val> type arr_type
-%type <exp_val> Number   primary_expression unary_expression call_expression
-%type <block_val> block optional_else if_stmt loop_stmt
-%type <stmt_val> stmt return_stmt let_stmt assign_stmt break_stmt continue_stmt
-%type <exp_val>  expression  add_exp
-%type <stmt_p_list> statement_list
-%type <exp_val>  mul_expressions
-%type <exp_val> three_way_expression rel_expression eq_expression logical_and_expression logical_or_expression
-%type <FuncFParam> FuncFParam
-%type <FuncFParam_p_list> FuncFParams
-%type <FuncRParam_p_list> FuncRParams
+%type <pache::base_ast*>   CompUnit
+%type <pache::variable_ast*> FuncDef main_func
+%type <pache::type_ast const*> type arr_type
+%type <pache::exp_ast*> Number   primary_expression unary_expression call_expression
+%type <pache::block_ast*> block optional_else if_stmt loop_stmt
+%type <pache::stmt_ast*> stmt return_stmt let_stmt assign_stmt break_stmt continue_stmt
+%type <pache::exp_ast*>  expression  add_exp
+%type <std::vector<pache::stmt_ast*>> statement_list
+%type <pache::exp_ast*>  mul_expressions
+%type <pache::exp_ast*> three_way_expression rel_expression eq_expression logical_and_expression logical_or_expression
+%type <pache::func_arg*> FuncFParam
+%type <std::vector<pache::func_arg*>> FuncFParams
+%type <std::vector<pache::exp_ast*>> FuncRParams
 %%
 
 // 开始符, CompUnit ::= FuncDef, 大括号后声明了解析完成后 parser 要做的事情
@@ -132,47 +131,37 @@ CompUnit
 };
 
 FuncFParam:
-  type identifier {
-    $$ = new pache::func_arg($1, $2);
+  type IDENTIFIER {
+    $$ = new pache::func_arg($1, std::move($2));
   };
 
 FuncFParams:
   // empty
 
-  { $$ = new std::vector<pache::func_arg*>();
+  { $$ = std::vector<pache::func_arg*>();
   }
   | FuncFParam {
-    $$ = new std::vector<pache::func_arg*>();
-    $$->push_back($1);
+    $$ = std::vector<pache::func_arg*>();
+    $$.push_back($1);
   }
 | FuncFParams COMMA FuncFParam {
       $$ = $1;
-      $$->push_back($3);
+      $$.push_back($3);
 
 };
 main_func:
   FUNC MAIN LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS I32 block {
-    auto ast = new pache::main_func_ast(pache::i32_type_t::get(), new string("main"), $4);
-    ast->block = unique_ptr<pache::base_ast>($7);
+    auto ast = new pache::main_func_ast("main"s, $4, pache::i32_type_t::get(), $7);
+
      // for (auto arg : *$4) {
      //   arg->set_father($$);
      // }
     $$ = ast;
   };
-// FuncDef ::= type IDENT LEFT_PARENTHESIS RIGHT_PARENTHESIS block;
-// 我们这里可以直接写 LEFT_PARENTHESIS 和 RIGHT_PARENTHESIS, 因为之前在 lexer 里已经处理了单个字符的情况
-// 解析完成后, 把这些符号的结果收集起来, 然后拼成一个新的字符串, 作为结果返回
-// $$ 表示非终结符的返回值, 我们可以通过给这个符号赋值的方法来返回结果
-// 你可能会问, type, IDENT 之类的结果已经是字符串指针了
-// 为什么还要用 unique_ptr 接住它们, 然后再解引用, 把它们拼成另一个字符串指针呢
-// 因为所有的字符串指针都是我们 new 出来的, new 出来的内存一定要 delete
-// 否则会发生内存泄漏, 而 unique_ptr 这种智能指针可以自动帮我们 delete
-// 虽然此处你看不出用 unique_ptr 和手动 delete 的区别, 但当我们定义了 AST 之后
-// 这种写法会省下很多内存管理的负担
+
 FuncDef
-  : FUNC identifier LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS type block {
-    auto ast = new pache::func_ast($6, $2, $4);
-    ast->block = unique_ptr<pache::base_ast>($7);
+  : FUNC IDENTIFIER LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS type block {
+    auto ast = new pache::func_ast(std::move($2), $4, $6, $7);
     //      for (auto arg : *$4) {
      //   arg->set_father($$);
      // }
@@ -193,23 +182,23 @@ type
   ;
 
 arr_type:
-  type LEFT_SQUARE_BRACKET INT_CONST RIGHT_SQUARE_BRACKET {
+  type LEFT_SQUARE_BRACKET INTEGER RIGHT_SQUARE_BRACKET {
     $$ = new pache::arr_type_t($1, $3);
   }
 
 statement_list:
   // Empty
-    { $$ = new std::vector<pache::stmt_ast*>(); }
+    { $$ = std::vector<pache::stmt_ast*>{}; }
 | statement_list stmt
     {
       $$ = $1;;
-      $$->push_back($2);
+      $$.push_back($2);
     }
 ;
 block
   : LEFT_CURLY_BRACE statement_list RIGHT_CURLY_BRACE {
-    $$ = new pache::block_ast($2);
-    for (auto & ast : *$2) {
+    $$ = new pache::block_ast(std::move($2));
+    for (auto & ast : $2) {
       ast->set_father($$);
     }
   }
@@ -255,22 +244,22 @@ return_stmt:
   ;
 
 let_stmt:
-  LET type identifier ASSIGN expression SEMICOLON {
+  LET type IDENTIFIER ASSIGN expression SEMICOLON {
     $$ = new pache::let_stmt(new pache::variable_ast($2, $3), $5);
   }
-| LET type identifier LEFT_CURLY_BRACE expression RIGHT_CURLY_BRACE SEMICOLON {
+| LET type IDENTIFIER LEFT_CURLY_BRACE expression RIGHT_CURLY_BRACE SEMICOLON {
     auto var = new pache::variable_ast($2, $3);
     $$ = new pache::let_stmt(var, $5);
 }
-| LET type identifier SEMICOLON {
+| LET type IDENTIFIER SEMICOLON {
     auto var = new pache::variable_ast($2, $3);
     $$ = new pache::let_stmt(var, nullptr);
   }
 ;
 
 assign_stmt:
-  identifier ASSIGN expression SEMICOLON {
-    auto exp = new pache::var_exp($1);
+  IDENTIFIER ASSIGN expression SEMICOLON {
+    auto exp = new pache::var_exp(std::move($1));
     $$ = new pache::assign_stmt(exp, $3);
   }
 ;
@@ -300,7 +289,7 @@ if_stmt:
     $$ = new pache::if_stmt($2, $3, $4);
   }
 Number
-  : INT_CONST {
+  : INTEGER {
     $$ = new pache::i32_literal($1);
   }
   ;
@@ -320,15 +309,15 @@ expression:
 FuncRParams:
   // empty
   {
-    $$ = new std::vector<pache::exp_ast*>();
+    $$ = std::vector<pache::exp_ast*>();
   }|
   expression {
-    $$ = new std::vector<pache::exp_ast*>{};
-    $$->push_back($1);
+    $$ = std::vector<pache::exp_ast*>{};
+    $$.push_back($1);
   }
 | FuncRParams COMMA expression {
   $$ = $1;
-  $$->push_back($3);
+  $$.push_back($3);
 };
 
 primary_expression:
@@ -338,8 +327,8 @@ primary_expression:
 | Number {
     $$ = $1;
   }
-| identifier {
-    $$ = new pache::var_exp($1);
+| IDENTIFIER {
+    $$ = new pache::var_exp(std::move($1));
 }
 ;
 
@@ -347,8 +336,8 @@ call_expression:
   primary_expression {
     $$ = $1;
   }
-| identifier LEFT_PARENTHESIS FuncRParams RIGHT_PARENTHESIS {
-  $$ = new pache::func_call_exp($1, $3);
+| IDENTIFIER LEFT_PARENTHESIS FuncRParams RIGHT_PARENTHESIS {
+  $$ = new pache::func_call_exp(std::move($1), std::move($3));
 }
 
 unary_expression:
@@ -457,6 +446,11 @@ logical_or_expression:
 
 // 定义错误处理函数, 其中第二个参数是错误信息
 // parser 如果发生错误 (例如输入的程序出现了语法错误), 就会调用这个函数
-void yyerror(std::unique_ptr<pache::base_ast> &ast, const char *s) {
-  cerr << "error: " << s << endl;
+namespace pache
+{
+  // Report an error to the user.
+  auto parser::error (const location& l, const std::string& msg) -> void
+  {
+    std::cerr << msg << '\n';
+  }
 }

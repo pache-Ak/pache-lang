@@ -17,12 +17,12 @@ namespace pache {
   public:
     block_ast() = default;
     block_ast(block_ast && other) = default;
-    block_ast(std::vector<stmt_ast*> *statements) : m_statements(statements) { }
+    block_ast(std::vector<stmt_ast*> &&statements) : m_statements(std::move(statements)) { }
     virtual void insert_dec(std::string name, variable_ast *dec) override {
       dec_name.insert(std::make_pair(name, dec));
     }
 
-    virtual variable_ast * find_dec(std::string name) const override {
+    virtual variable_ast * find_dec(const std::string& name) const override {
       auto beg = this->dec_name.find(name);
         if (beg != this->dec_name.end()) {
           return beg->second;
@@ -36,7 +36,7 @@ namespace pache {
 
     virtual std::string dump() override {
       std::cout << "\n";
-      for (auto stmt : *m_statements) {
+      for (auto stmt : m_statements) {
         // std::cout << "\t";
         std::cout << stmt->dump();
       }
@@ -47,7 +47,7 @@ namespace pache {
 
     virtual ~block_ast() override = default;
   protected:
-    std::vector<stmt_ast*> *m_statements;
+    std::vector<stmt_ast*> m_statements;
 
     std::unordered_map<std::string, variable_ast*> dec_name;
   };
@@ -119,19 +119,25 @@ namespace pache {
 
   class assign_stmt : public stmt_ast {
   public:
-    explicit assign_stmt(var_exp *var, exp_ast *val) : m_var(var), m_val(val) { }
-
-    virtual std::string dump() override {
+    explicit assign_stmt(var_exp *var, exp_ast *val)
+      : m_var(var), m_val(val) {
       m_var->set_father(m_father);
       m_val->set_father(m_father);
+    }
+
+    virtual std::string dump() override {
       variable_ast * var = m_var->get_var();
+      if (var != nullptr) {
       std::string s = m_val->dump();
       std::cout << "store " << var->get_type()->dump()
                 << " " << s << ", "
                 << var->get_type()->dump() << "* @"
-                << var->get_name() << "\n";
+               << var->get_name() << "\n";
 
       return "";
+      } else {
+        return "";
+      }
     }
   private:
     var_exp *m_var;
@@ -147,14 +153,14 @@ namespace pache {
       }
 
     virtual std::string dump() override {
-      insert_dec(*(m_var->get_name()), m_var.get());
-      std::cout << "@" << m_var->get_name() << " = alloc " << m_var->get_type()->dump() << "\n";
+      //insert_dec(m_var->get_name(), m_var.get());
+      //std::cout << "@" << m_var->get_name() << " = alloc " << m_var->get_type()->dump() << "\n";
       if (m_init != nullptr) {
-        std::string s = m_init->dump();
-        std::cout << "store " << m_var->get_type()->dump()
-                << " " << s << ", "
-                << m_var->get_type()->dump() << "* @"
-                << *(m_var->get_name()) << "\n";
+        //std::string s = m_init->dump();
+        //std::cout << "store " << m_var->get_type()->dump()
+              //  << " " << s << ", "
+          //      << m_var->get_type()->dump() << "* @"
+            //    << m_var->get_name() << "\n";
 
       return "";
       } else {
@@ -193,17 +199,18 @@ namespace pache {
   class if_stmt : public block_ast {
   public:
     explicit if_stmt(exp_ast *exp, block_ast *then, block_ast *elses)
-      : m_condition(exp), m_then_block(then), m_else_block(elses) { }
+      : m_condition(exp), m_then_block(then), m_else_block(elses) {
+        m_condition->set_father(m_father);
+        m_then_block->set_father(m_father);
+        if (m_else_block != nullptr) {
+          m_else_block->set_father(m_father);
+        }
+      }
 
-    virtual variable_ast * find_dec(std::string name) const override {
+    virtual variable_ast * find_dec(const std::string &name) const override {
       return m_father->find_dec(name);
     }
     virtual std::string dump() override {
-      m_condition->set_father(m_father);
-      m_then_block->set_father(m_father);
-      if (m_else_block != nullptr) {
-        m_else_block->set_father(m_father);
-      }
       std::string s1 = m_condition->dump();
       std::size_t block1 = ssa_value++;
       std::size_t block2 = ssa_value++;

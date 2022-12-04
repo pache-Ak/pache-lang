@@ -94,14 +94,14 @@ namespace pache {
   };
   class func_call_exp : public exp_ast {
   public:
-    explicit func_call_exp(std::string *name, std::vector<exp_ast*> *args)
+    explicit func_call_exp(std::string &&name, std::vector<exp_ast*> &&args)
       : m_name(name), m_args(args) { }
 
     virtual std::string dump() override {
-      variable_ast *var = find_dec(*m_name);
+      variable_ast *var = find_dec(m_name);
       if (var != nullptr) {
         std::vector<std::string> ss;
-        for (auto exp : *m_args) {
+        for (auto exp : m_args) {
           ss.push_back(exp->dump());
         }
         std::string s{"%"};
@@ -111,15 +111,15 @@ namespace pache {
 
 
 
-        auto beg1 = m_args->begin();
+        auto beg1 = m_args.begin();
         auto beg2 = ss.begin();
-        if (beg1 != m_args->end()) {
+        if (beg1 != m_args.end()) {
           std::cout << (*beg1)->get_type()->dump() << " "
                     << *beg2;
           ++beg1;
           ++beg2;
         }
-        while(beg1 !=  m_args->end()) {
+        while(beg1 !=  m_args.end()) {
           std::cout << ", " << (*beg1)->get_type()->dump() << " "
                     << *beg2;
           ++beg1;
@@ -129,23 +129,23 @@ namespace pache {
         std::cout << ")\n";
         return s;
       } else {
-        std::cout << "error : name " << *m_name << "can't find.";
+        std::cout << "error : name " << m_name << "can't find.";
         return "";
       }
     }
 
   private:
-    std::string *m_name;
-    std::vector<exp_ast*> *m_args;
+    std::string m_name;
+    std::vector<exp_ast*> m_args;
   };
 
 
 
   class var_exp : public exp_ast {
   public:
-    explicit var_exp(std::string *name) : m_name(name) { }
+    explicit var_exp(std::string &&name) : m_name(name) { }
     variable_ast *get_var() const {
-      return find_dec(*m_name);
+      return find_dec(m_name);
     }
 
     virtual std::string dump() override {
@@ -162,12 +162,12 @@ namespace pache {
         ++ssa_value;
         return s;
       } else {
-        std::cout << "error : name " << *m_name << "can't find.";
+        std::cout << "error : name " << m_name << "can't find.";
         return "";
       }
     }
   private:
-    std::string *m_name;
+    std::string m_name;
   };
 
   class binary_mul_exp : public exp_ast {
