@@ -102,6 +102,17 @@ namespace pache {
     std::vector<const type_ast*> m_args_type;
     const type_ast *m_return_type;
   };
+  class class_ast;
+  class class_type : public type_ast {
+  public:
+    explicit class_type(const class_ast *class_def) : m_def(class_def) { }
+
+    const class_type *get() const {
+      return this;
+    }
+  private:
+    const class_ast *m_def;
+  };
 }
 
 

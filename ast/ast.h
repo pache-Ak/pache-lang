@@ -48,6 +48,9 @@ namespace pache {
 
       return nullptr;
     }
+    void insert_class_def(class_ast *p) {
+
+    }
     virtual std::string begin_lable() const {
       if (m_father != nullptr) {
         return m_father->begin_lable();
@@ -188,7 +191,26 @@ namespace pache {
 
   };
 
+  class class_ast : public base_ast {
+  public:
+    explicit class_ast(std::string &&name, std::vector<base_ast*> &&class_body)
+      : m_name(std::move(name)), m_body(std::move(class_body)) {
+        for (auto & p : m_body) {
+          p->set_father(this);
+        }
+      }
 
+    std::string const get_name() const {
+      return m_name;
+    }
+
+    virtual std::string dump() override {
+      return "";
+    }
+  private:
+    std::string const m_name;
+    std::vector<base_ast*> m_body;
+  };
 
 }
 

@@ -22,7 +22,7 @@ using namespace std;
 
 MAIN                 "main"
 LET                  "let"
-
+CLASS                "class"
 IF                   "if"
 ELSE                 "else"
 
@@ -100,6 +100,8 @@ Binary        0[bB][01]*
 "i32"           { return pache::parser::make_I32(loc); }
 "return"        { return pache::parser::make_RETURN(loc); }
 "func"          { return pache::parser::make_FUNC(loc); }
+{CLASS}                 { return pache::parser::make_CLASS(loc); }
+
 
 {LEFT_CURLY_BRACE}      { return pache::parser::make_LEFT_CURLY_BRACE(loc); }
 {LEFT_PARENTHESIS}      { return pache::parser::make_LEFT_PARENTHESIS(loc); }
@@ -124,6 +126,8 @@ Binary        0[bB][01]*
 {LOOP}                  { return pache::parser::make_LOOP(loc); }
 {BREAK}                 { return pache::parser::make_BREAK(loc); }
 {CONTINUE}              { return pache::parser::make_CONTINUE(loc); }
+
+
 
 {COMMA}                 { return pache::parser::make_COMMA(loc); }
 {SEMICOLON}           { return pache::parser::make_SEMICOLON(loc); }

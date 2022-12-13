@@ -41,3 +41,6 @@ $(BUILD_DIR)/parser.hpp: $(SRC_DIR)/parser.y $(AST_DIR)/*.h
 
 $(BUILD_DIR)/parser.cpp: $(SRC_DIR)/parser.y $(AST_DIR)/*.h $(AST_DIR)/*.cpp
 		bison -d -o $(BUILD_DIR)/parser.cpp $(SRC_DIR)/parser.y
+
+clean:
+	-rm $(BUILD_DIR)/*

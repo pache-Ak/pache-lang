@@ -149,7 +149,9 @@ namespace pache {
     explicit let_stmt(variable_ast *var, exp_ast * init)
       : m_var(var), m_init(init) {
         m_var->set_father(this);
-        m_init->set_father(this);
+        if (m_init != nullptr) {
+          m_init->set_father(this);
+        }
       }
 
     virtual std::string dump() override {

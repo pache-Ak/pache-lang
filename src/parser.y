@@ -45,7 +45,7 @@
 #include "../ast/type.h"
 #include "../src/driver.h"
 #include "../ast/literal.h"
-
+#include "../ast/compunit.h"
 // 声明 lexer 函数和错误处理函数
 
 using namespace std;
@@ -89,12 +89,12 @@ using namespace std;
   PREFIX_STAR "prefix *"
   POSTFIX_STAR "postfix *"
   BINARY_STAR "binary *"
-%token I32 RETURN FUNC
+%token I32 RETURN FUNC CLASS
 %token <std::string> IDENTIFIER
 %token <int> INTEGER
 %token EOF 0;
 // 非终结符的类型定义
-%type <pache::base_ast*>   CompUnit
+%type <pache::compunit_ast*>   CompUnit
 %type <pache::variable_ast*> FuncDef main_func
 %type <pache::type_ast const*> type arr_type
 %type <pache::exp_ast*> Number   primary_expression unary_expression call_expression
@@ -107,6 +107,8 @@ using namespace std;
 %type <pache::func_arg*> FuncFParam
 %type <std::vector<pache::func_arg*>> FuncFParams
 %type <std::vector<pache::exp_ast*>> FuncRParams
+%type <pache::class_ast*> class_def
+%type <std::vector<pache::base_ast*>> class_body
 %%
 
 // 开始符, CompUnit ::= FuncDef, 大括号后声明了解析完成后 parser 要做的事情
@@ -123,11 +125,18 @@ CompUnit
     ast = make_unique<pache::compunit_ast>();
     ast->insert_dec($1);
 }
+| class_def {
+    ast = make_unique<pache::compunit_ast>();
+    ast->insert_class_def($1);
+}
 | CompUnit FuncDef {
       ast->insert_dec($2);
 }
 | CompUnit let_stmt {
     ast->insert_dec($2);
+}
+| CompUnit class_def {
+  ast->insert_class_def($2);
 };
 
 FuncFParam:
@@ -171,6 +180,23 @@ FuncDef
   $$ = $1;
 };
 
+class_body:
+  // Empty
+  { $$ = {}; }
+| class_body let_stmt {
+  $$ = $1;
+  $$.push_back($2);
+}
+| class_body FuncDef {
+  $$ = $1;
+  $$.push_back($2);
+};
+
+class_def:
+  CLASS IDENTIFIER LEFT_CURLY_BRACE class_body RIGHT_CURLY_BRACE
+  {
+    $$ = new class_ast(std::move($2), std::move($4));
+  };
 // 同上, 不再解释
 type
   : I32 {

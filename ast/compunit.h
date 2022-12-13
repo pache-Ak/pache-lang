@@ -42,9 +42,15 @@ namespace pache {
           return nullptr;
         }
     }
+
+    void insert_class_def(class_ast *p) {
+      p->set_father(this);
+      class_def.insert(std::make_pair(p->get_name(), p));
+    }
   private:
     std::vector<std::unique_ptr<base_ast>> m_var_table;
     std::unordered_map<std::string, variable_ast*> dec_name;
+    std::unordered_map<std::string, class_ast*> class_def;
   };
 
 }
