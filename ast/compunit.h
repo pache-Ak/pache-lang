@@ -8,16 +8,7 @@
 namespace pache {
   class compunit_ast : public base_ast {
   public:
-    virtual std::string dump() override {
-      set_father(nullptr);
-      std::cout << "target datalayout = \"e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128\"\n";
-      std::cout << "target triple = \"x86_64-pc-linux-gnu\"\n\n";
 
-      for (auto &var : m_var_table) {
-        var->dump();
-      }
-      return "";
-    }
     virtual void insert_dec(stmt_ast *let) override {
       let->set_father(this);
       m_var_table.push_back(std::unique_ptr<stmt_ast>(let));

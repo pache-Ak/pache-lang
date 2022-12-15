@@ -17,9 +17,7 @@ namespace pache {
   class void_literal_t : public literal {
   public:
 
-    virtual std::string dump() override {
-      return "";
-    }
+
 
     static void_literal_t make_void_literal_t() {
       return void_literal_t();
@@ -37,9 +35,7 @@ namespace pache {
     explicit i32_literal(int32_t value)
       : literal(i32_type_t::get()), m_value(value) { }
 
-    virtual std::string dump() override {
-      return std::to_string(m_value);
-    }
+
 
 
 

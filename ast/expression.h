@@ -10,7 +10,6 @@ namespace pache {
   class exp_ast : public base_ast {
   public:
     explicit exp_ast() = default;
-    virtual std::string dump() override = 0;
 
     virtual ~exp_ast() override { }
 
@@ -59,10 +58,7 @@ namespace pache {
     explicit unary_plus(exp_ast* arguments)
       : exp_ast(), m_arguments(arguments) {}
 
-    virtual std::string dump() override {
-        m_arguments->set_father(m_father);
-        return m_arguments->dump();
-    }
+
 
 
 
@@ -76,15 +72,7 @@ namespace pache {
     explicit unary_minus(exp_ast* arguments)
       : exp_ast(), m_arguments(arguments) {}
 
-    virtual std::string dump() override {
-      m_arguments->set_father(m_father);
-      std::string s1 = m_arguments->dump();
-      std::cout << "%" << ssa_value << " = sub, 0, " << s1 << "\n";
-      std::string s{"%"};
-      s += std::to_string(ssa_value);
-      ++ssa_value;
-      return s;
-    }
+
 
 
 
@@ -97,42 +85,7 @@ namespace pache {
     explicit func_call_exp(std::string &&name, std::vector<exp_ast*> &&args)
       : m_name(name), m_args(args) { }
 
-    virtual std::string dump() override {
-      variable_ast *var = find_dec(m_name);
-      if (var != nullptr) {
-        std::vector<std::string> ss;
-        for (auto exp : m_args) {
-          ss.push_back(exp->dump());
-        }
-        std::string s{"%"};
-        s += std::to_string(ssa_value);
-        std::cout << s << " = call " << var->get_type()->dump()
-                  << " @" << var->get_name() << "(";
 
-
-
-        auto beg1 = m_args.begin();
-        auto beg2 = ss.begin();
-        if (beg1 != m_args.end()) {
-          std::cout << (*beg1)->get_type()->dump() << " "
-                    << *beg2;
-          ++beg1;
-          ++beg2;
-        }
-        while(beg1 !=  m_args.end()) {
-          std::cout << ", " << (*beg1)->get_type()->dump() << " "
-                    << *beg2;
-          ++beg1;
-          ++beg2;
-        }
-
-        std::cout << ")\n";
-        return s;
-      } else {
-        std::cout << "error : name " << m_name << "can't find.";
-        return "";
-      }
-    }
 
   private:
     std::string m_name;
@@ -148,24 +101,7 @@ namespace pache {
       return find_dec(m_name);
     }
 
-    virtual std::string dump() override {
-      variable_ast *var = get_var();
-      if (var != nullptr) {
 
-      set_type(var->get_type());
-        std::string s{"%"};
-        s += std::to_string(ssa_value);
-        std::cout << s << " = load "
-                  << var->get_type()->dump()
-                  << ", " << var->get_type()->dump()
-                  << "* @" << var->get_name() << "\n";
-        ++ssa_value;
-        return s;
-      } else {
-        std::cout << "error : name " << m_name << "can't find.";
-        return "";
-      }
-    }
   private:
     std::string m_name;
   };
@@ -174,17 +110,7 @@ namespace pache {
   public:
     explicit binary_mul_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() override {
-      m_arg1->set_father(m_father);
-      m_arg2->set_father(m_father);
-      std::string s1 = m_arg1->dump();
-      std::string s2 = m_arg2->dump();
-      std::cout << "%" << ssa_value << " = mul " << s1 << ", " << s2 << "\n";
-      std::string s{"%"};
-      s += std::to_string(ssa_value);
-      ++ssa_value;
-      return s;
-    }
+
 
     virtual ~binary_mul_exp() override = default;
   private:
@@ -196,17 +122,7 @@ namespace pache {
   public:
     explicit binary_div_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() override {
-      m_arg1->set_father(m_father);
-      m_arg2->set_father(m_father);
-      std::string s1 = m_arg1->dump();
-      std::string s2 = m_arg2->dump();
-      std::cout << "%" << ssa_value << " = div " << s1 << ", " << s2 << "\n";
-      std::string s{"%"};
-      s += std::to_string(ssa_value);
-      ++ssa_value;
-      return s;
-    }
+
 
     virtual ~binary_div_exp() override = default;
   private:
@@ -218,17 +134,7 @@ namespace pache {
   public:
     explicit binary_mod_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() override {
-      m_arg1->set_father(m_father);
-      m_arg2->set_father(m_father);
-      std::string s1 = m_arg1->dump();
-      std::string s2 = m_arg2->dump();
-      std::cout << "%" << ssa_value << " = mod " << s1 << ", " << s2 << "\n";
-      std::string s{"%"};
-      s += std::to_string(ssa_value);
-      ++ssa_value;
-      return s;
-    }
+
 
     virtual ~binary_mod_exp() override = default;
   private:
@@ -240,17 +146,7 @@ namespace pache {
   public:
     explicit binary_plus_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() override {
-      m_arg1->set_father(m_father);
-      m_arg2->set_father(m_father);
-      std::string s1 = m_arg1->dump();
-      std::string s2 = m_arg2->dump();
-      std::cout << "%" << ssa_value << " = add " << s1 << ", " << s2 << "\n";
-      std::string s{"%"};
-      s += std::to_string(ssa_value);
-      ++ssa_value;
-      return s;
-    }
+
 
     virtual ~binary_plus_exp() override = default;
   private:
@@ -262,17 +158,7 @@ namespace pache {
   public:
     explicit binary_minus_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() override {
-      m_arg1->set_father(m_father);
-      m_arg2->set_father(m_father);
-      std::string s1 = m_arg1->dump();
-      std::string s2 = m_arg2->dump();
-      std::cout << "%" << ssa_value << " = sub " << s1 << ", " << s2 << "\n";
-      std::string s{"%"};
-      s += std::to_string(ssa_value);
-      ++ssa_value;
-      return s;
-    }
+
 
     virtual ~binary_minus_exp() override = default;
   private:
@@ -284,17 +170,7 @@ namespace pache {
   public:
     explicit three_way_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() override {
-      m_arg1->set_father(m_father);
-      m_arg2->set_father(m_father);
-      std::string s1 = m_arg1->dump();
-      std::string s2 = m_arg2->dump();
-      std::cout << "%" << ssa_value << " = TODO " << s1 << ", " << s2 << "\n";
-      std::string s{"%"};
-      s += std::to_string(ssa_value);
-      ++ssa_value;
-      return s;
-    }
+
 
     virtual ~three_way_exp() override = default;
   private:
@@ -306,17 +182,7 @@ namespace pache {
   public:
     explicit less_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() override {
-      m_arg1->set_father(m_father);
-      m_arg2->set_father(m_father);
-      std::string s1 = m_arg1->dump();
-      std::string s2 = m_arg2->dump();
-      std::cout << "%" << ssa_value << " = le " << s1 << ", " << s2 << "\n";
-      std::string s{"%"};
-      s += std::to_string(ssa_value);
-      ++ssa_value;
-      return s;
-    }
+
 
     virtual ~less_exp() override = default;
   private:
@@ -328,17 +194,7 @@ namespace pache {
   public:
     explicit less_eq_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() override {
-      m_arg1->set_father(m_father);
-      m_arg2->set_father(m_father);
-      std::string s1 = m_arg1->dump();
-      std::string s2 = m_arg2->dump();
-      std::cout << "%" << ssa_value << " = le_eq " << s1 << ", " << s2 << "\n";
-      std::string s{"%"};
-      s += std::to_string(ssa_value);
-      ++ssa_value;
-      return s;
-    }
+
 
     virtual ~less_eq_exp() override = default;
   private:
@@ -351,17 +207,7 @@ namespace pache {
     explicit greater_exp(exp_ast *arg1, exp_ast *arg2)
     : exp_ast(bool_type_t::get()), m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() override {
-      m_arg1->set_father(m_father);
-      m_arg2->set_father(m_father);
-      std::string s1 = m_arg1->dump();
-      std::string s2 = m_arg2->dump();
-      std::cout << "%" << ssa_value << " = gr " << s1 << ", " << s2 << "\n";
-      std::string s{"%"};
-      s += std::to_string(ssa_value);
-      ++ssa_value;
-      return s;
-    }
+
 
     virtual ~greater_exp() override = default;
   private:
@@ -373,17 +219,7 @@ namespace pache {
   public:
     explicit greater_eq_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() override {
-      m_arg1->set_father(m_father);
-      m_arg2->set_father(m_father);
-      std::string s1 = m_arg1->dump();
-      std::string s2 = m_arg2->dump();
-      std::cout << "%" << ssa_value << " = gr_eq " << s1 << ", " << s2 << "\n";
-      std::string s{"%"};
-      s += std::to_string(ssa_value);
-      ++ssa_value;
-      return s;
-    }
+
 
     virtual ~greater_eq_exp() override = default;
   private:
@@ -395,17 +231,7 @@ namespace pache {
   public:
     explicit eq_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() override {
-      m_arg1->set_father(m_father);
-      m_arg2->set_father(m_father);
-      std::string s1 = m_arg1->dump();
-      std::string s2 = m_arg2->dump();
-      std::cout << "%" << ssa_value << " = eq " << s1 << ", " << s2 << "\n";
-      std::string s{"%"};
-      s += std::to_string(ssa_value);
-      ++ssa_value;
-      return s;
-    }
+
 
     virtual ~eq_exp() override = default;
   private:
@@ -417,17 +243,7 @@ namespace pache {
   public:
     explicit not_eq_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() override {
-      m_arg1->set_father(m_father);
-      m_arg2->set_father(m_father);
-      std::string s1 = m_arg1->dump();
-      std::string s2 = m_arg2->dump();
-      std::cout << "%" << ssa_value << " = not_eq " << s1 << ", " << s2 << "\n";
-      std::string s{"%"};
-      s += std::to_string(ssa_value);
-      ++ssa_value;
-      return s;
-    }
+
 
     virtual ~not_eq_exp() override = default;
   private:
@@ -439,32 +255,7 @@ namespace pache {
   public:
     explicit logical_and_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() override {
-      m_arg1->set_father(m_father);
-      m_arg2->set_father(m_father);
-      std::string s1 = m_arg1->dump();
-      std::size_t var = ssa_value++;
 
-      std::cout << "%" << var << " alloca i1\n";
-      std::size_t block1 = ssa_value++;
-      std::size_t block2 = ssa_value++;
-      std::cout << "br i1 " << s1 << ", label %" << block1
-                << ", label %" << block2 << "\n"
-                << block1 << ":\n";
-
-      std::string s2 = m_arg2->dump();
-      std::size_t block3 = ssa_value++;
-      std::cout << "store i1 " << s2 << ", i1* %" << var << ", align 1"
-                << "\nbr label %" << block3
-                << "\n\n" << block2 << ":\n";
-      std::cout << "store i1 " << s1 << ", i1* %" << var << ", align 1"
-                << "\nbr label %" << block3
-                << "\n\n" << block3 << ":\n";
-
-      std::string s{"%"};
-      s += std::to_string(var);
-      return s;
-    }
 
     virtual ~logical_and_exp() override = default;
   private:
@@ -476,34 +267,7 @@ namespace pache {
   public:
     explicit logical_or_exp(exp_ast *arg1, exp_ast *arg2) : m_arg1(arg1), m_arg2(arg2) { }
 
-    virtual std::string dump() override {
-      m_arg1->set_father(m_father);
-      m_arg2->set_father(m_father);
-      std::string s1 = m_arg1->dump();
 
-      std::size_t var = ssa_value++;
-
-      std::cout << "%" << var << " = alloca i1\n";
-      std::size_t block1 = ssa_value++;
-      std::size_t block2 = ssa_value++;
-      std::cout << "br i1 " << s1 << ", label %" << block1
-                << ", label %" << block2 << "\n"
-                << block1 << ":\n";
-
-      std::size_t block3 = ssa_value++;
-      std::cout << "store i1 " << s1 << ", i1* %" << var << ", align 1"
-                << "\nbr label %" << block3
-                << "\n\n" << block2 << ":\n";
-
-      std::string s2 = m_arg2->dump();
-      std::cout << "store i1 " << s2 << ", i1* %" << var << ", align 1"
-                << "\nbr label %" << block3
-                << "\n\n" << block3 << ":\n";
-
-      std::string s{"%"};
-      s += std::to_string(var);
-      return s;
-    }
 
     virtual ~logical_or_exp() override = default;
   private:

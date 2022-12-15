@@ -15,7 +15,6 @@ namespace pache {
 
   class type_ast {
   public:
-    virtual std::string dump() const { return ""; };
 
   protected:
     explicit type_ast() = default;
@@ -31,9 +30,6 @@ namespace pache {
 
   class i8_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "i8";
-    }
 
     static i8_type_t const *get() {
       return &i8_type;
@@ -45,9 +41,6 @@ namespace pache {
 
   class i16_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "i16";
-    }
 
     static i16_type_t const *get() {
       return &i16_type;
@@ -58,9 +51,6 @@ namespace pache {
   };
   class i32_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "i32";
-    }
 
     static i32_type_t const *get() {
       return &i32_type;
@@ -72,9 +62,6 @@ namespace pache {
 
   class i64_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "i64";
-    }
 
     static i64_type_t const *get() {
       return &i64_type;
@@ -86,9 +73,7 @@ namespace pache {
 
   class i128_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "i128";
-    }
+
 
     static i128_type_t const *get() {
       return &i128_type;
@@ -100,9 +85,7 @@ namespace pache {
 
   class u8_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "u8";
-    }
+
 
     static u8_type_t const *get() {
       return &u8_type;
@@ -114,9 +97,7 @@ namespace pache {
 
   class u16_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "u16";
-    }
+
 
     static u16_type_t const *get() {
       return &u16_type;
@@ -127,9 +108,7 @@ namespace pache {
   };
   class u32_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "u32";
-    }
+
 
     static u32_type_t const *get() {
       return &u32_type;
@@ -141,9 +120,7 @@ namespace pache {
 
   class u64_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "u64";
-    }
+
 
     static u64_type_t const *get() {
       return &u64_type;
@@ -155,9 +132,7 @@ namespace pache {
 
   class u128_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "u128";
-    }
+
 
     static u128_type_t const *get() {
       return &u128_type;
@@ -169,9 +144,7 @@ namespace pache {
 
   class f16_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "f16";
-    }
+
 
     static f16_type_t const *get() {
       return &f16_type;
@@ -182,9 +155,7 @@ namespace pache {
   };
   class f32_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "f32";
-    }
+
 
     static f32_type_t const *get() {
       return &f32_type;
@@ -196,9 +167,7 @@ namespace pache {
 
   class f64_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "f64";
-    }
+
 
     static f64_type_t const *get() {
       return &f64_type;
@@ -210,9 +179,7 @@ namespace pache {
 
   class f128_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "f128";
-    }
+
 
     static f128_type_t const *get() {
       return &f128_type;
@@ -224,9 +191,7 @@ namespace pache {
 
   class d32_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "d32";
-    }
+
 
     static d32_type_t const *get() {
       return &d32_type;
@@ -238,9 +203,7 @@ namespace pache {
 
   class d64_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "d64";
-    }
+
 
     static d64_type_t const *get() {
       return &d64_type;
@@ -252,9 +215,7 @@ namespace pache {
 
   class c8_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "c8";
-    }
+
 
     static c8_type_t const *get() {
       return &c8_type;
@@ -266,9 +227,7 @@ namespace pache {
 
   class c16_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "c16";
-    }
+
 
     static c16_type_t const *get() {
       return &c16_type;
@@ -279,9 +238,7 @@ namespace pache {
   };
   class c32_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "c32";
-    }
+
 
     static c32_type_t const *get() {
       return &c32_type;
@@ -293,9 +250,7 @@ namespace pache {
 
   class void_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "void";
-    }
+
     static void_type_t const *get() {
       return &void_type;
     }
@@ -306,9 +261,7 @@ namespace pache {
 
   class bool_type_t : public primary_type {
   public:
-    virtual std::string dump() const override {
-      return "i1";
-    }
+
     static bool_type_t const *get() {
       return &bool_type;
     }
@@ -332,9 +285,7 @@ namespace pache {
   public:
     explicit arr_type_t(const type_ast * element_type, const std::size_t size)
       : m_element_type(element_type), m_size(size) { }
-    virtual std::string dump() const override {
-      return "";
-    }
+
 
     const arr_type_t *get() const {
       return this;
@@ -349,10 +300,6 @@ namespace pache {
   public:
     explicit func_type(const std::vector<variable_ast*> &args, const type_ast* return_type);
 
-
-    virtual std::string dump() const override {
-      return "";
-    }
 
     const func_type *get() const {
       return this;

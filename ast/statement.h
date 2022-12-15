@@ -9,7 +9,6 @@
 namespace pache {
   class stmt_ast : public base_ast {
   public:
-    virtual std::string dump() override = 0;
     virtual ~stmt_ast() override { }
   };
 
@@ -34,15 +33,7 @@ namespace pache {
     }
 
 
-    virtual std::string dump() override {
-      std::cout << "\n";
-      for (auto stmt : m_statements) {
-        // std::cout << "\t";
-        std::cout << stmt->dump();
-      }
-      std::cout << "\n";
-      return std::string{};
-    }
+
 
 
     virtual ~block_ast() override = default;
@@ -56,18 +47,7 @@ namespace pache {
   public:
     explicit loop_stmt(block_ast *block) : m_block(block) { }
 
-    virtual std::string dump() override {
-      m_block->set_father(this);
-      begin = std::to_string(ssa_value++);
-      end = std::to_string(ssa_value++);
-      std::cout << "\n";
-      std::cout << begin <<  ":\n";
-      m_block->dump();
-      std::cout << "br lable %" << begin << "\n";
-      std::cout << end_lable() << ":\n";
-      std::cout << "\n";
-      return std::string{};
-    }
+
     virtual std::string begin_lable() const override {
       return begin;
     }
@@ -84,18 +64,14 @@ namespace pache {
 
   class break_stmt : public stmt_ast {
   public:
-    virtual std::string dump() override {
-      return "br lable %" + end_lable() + "\n";
-    }
+
 
 
   };
 
   class continue_stmt : public stmt_ast {
   public:
-    virtual std::string dump() override {
-      return std::string("br lable %") + begin_lable() + "\n";
-    }
+
 
 
   };
@@ -103,12 +79,7 @@ namespace pache {
   class return_ast : public stmt_ast {
   public:
     explicit return_ast(exp_ast* exp) : m_exp(exp) { }
-    virtual std::string dump() override {
-      m_exp->set_father(m_father);
-      std::string s1 = m_exp->dump();
-      std::cout << "ret " << m_exp->get_type()->dump() << " " << s1 << "\n";
-      return std::string{};
-    }
+
     virtual ~return_ast() override = default;
 
 
@@ -125,20 +96,7 @@ namespace pache {
       m_val->set_father(m_father);
     }
 
-    virtual std::string dump() override {
-      variable_ast * var = m_var->get_var();
-      if (var != nullptr) {
-      std::string s = m_val->dump();
-      std::cout << "store " << var->get_type()->dump()
-                << " " << s << ", "
-                << var->get_type()->dump() << "* @"
-               << var->get_name() << "\n";
 
-      return "";
-      } else {
-        return "";
-      }
-    }
   private:
     var_exp *m_var;
     exp_ast *m_val;
@@ -154,22 +112,7 @@ namespace pache {
         }
       }
 
-    virtual std::string dump() override {
-      //insert_dec(m_var->get_name(), m_var.get());
-      //std::cout << "@" << m_var->get_name() << " = alloc " << m_var->get_type()->dump() << "\n";
-      if (m_init != nullptr) {
-        //std::string s = m_init->dump();
-        //std::cout << "store " << m_var->get_type()->dump()
-              //  << " " << s << ", "
-          //      << m_var->get_type()->dump() << "* @"
-            //    << m_var->get_name() << "\n";
 
-      return "";
-      } else {
-        return "";
-      }
-      return "";
-    }
 
   private:
     std::unique_ptr<variable_ast> m_var;
@@ -180,11 +123,7 @@ namespace pache {
   public:
     explicit exp_stmt(exp_ast *exp) : m_exp(exp) { }
 
-    virtual std::string dump() override {
-      m_exp->set_father(m_father);
-      m_exp->dump();
-      return "";
-    }
+
   private:
     exp_ast *m_exp;
   };
@@ -212,24 +151,7 @@ namespace pache {
     virtual variable_ast * find_dec(const std::string &name) const override {
       return m_father->find_dec(name);
     }
-    virtual std::string dump() override {
-      std::string s1 = m_condition->dump();
-      std::size_t block1 = ssa_value++;
-      std::size_t block2 = ssa_value++;
-      std::cout << "br i1 " << s1 << ", label %" << block1
-                << ", label %" << block2 << "\n"
-                << block1 << ":\n";
-      std::string s2 = m_then_block->dump();
-      std::size_t block3 = ssa_value++;
-      std::cout << s2
-                << "\nbr label %" << block3 << "\n\n"
-                << block2 << ":\n";
-      std::string s3 = m_else_block ? m_else_block->dump() : "";
-      std::cout << s3
-                << "\nbr label %" << block3
-                << "\n\n" << block3 << ":\n";
-      return "";
-    }
+
   private:
     exp_ast *m_condition;
     block_ast *m_then_block;

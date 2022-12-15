@@ -33,7 +33,6 @@ namespace pache {
   class base_ast {
   public:
     virtual ~base_ast() = default;
-    virtual std::string dump() = 0;
     void set_father(base_ast *father) {
       m_father = father;
       return;
@@ -102,9 +101,7 @@ namespace pache {
     void set_name(std::string name) {
       real_name = name;
     }
-    virtual std::string dump() override {
-      return "";
-    }
+
   protected:
     const type_ast *m_type;
     std::string real_name;
@@ -120,9 +117,7 @@ namespace pache {
     class func_arg : public variable_ast {
   public:
     explicit func_arg(const type_ast *type, std::string &&str) : variable_ast(type, std::move(str)) { }
-    virtual std::string dump() {
-      return get_type()->dump() + "%" + get_name();
-    }
+
 
   private:
   };
@@ -148,21 +143,7 @@ namespace pache {
         return m_father->find_dec(name);
       }
     }
-    virtual std::string dump() override {
-      std::cout << "define "
-          << get_type()->dump()
-          << " @" << real_name << "(";
-      for (auto arg : m_args) {
-        std::cout << arg->get_type()->dump()
-                  << " %" << arg->get_name()
-                  << ", ";
-      }
-      std::cout    << ") {"
-          << m_block->dump()
-          << "}\n";
 
-      return std::string{};
-    }
   protected:
     std::vector<func_arg*> m_args;
     std::unique_ptr<base_ast> m_block;
@@ -176,18 +157,7 @@ namespace pache {
              base_ast *block)
       : func_ast(std::move(name), args, return_type, block){}
 
-    virtual std::string dump() override {
-      std::cout << "define "
-          << "i32"
-          << " @" << "main" << "("
-    //  for (auto arg : m_args) {
-      //  std::cout << arg->
-      //}
-          << ") "
-          << m_block->dump();
 
-      return std::string{};
-    }
 
 
   };
@@ -205,9 +175,6 @@ namespace pache {
       return m_name;
     }
 
-    virtual std::string dump() override {
-      return "";
-    }
   private:
     std::string const m_name;
     std::vector<base_ast*> m_body;
