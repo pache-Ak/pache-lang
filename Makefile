@@ -17,7 +17,7 @@ CPP := clang++
 FLEX := flex
 BISON := bison
 
-$(BUILD_DIR)/compiler: $(BUILD_DIR)/type.o $(BUILD_DIR)/parser.o $(BUILD_DIR)/main.o $(BUILD_DIR)/lexer.o
+$(BUILD_DIR)/compiler: clean $(BUILD_DIR)/type.o $(BUILD_DIR)/parser.o $(BUILD_DIR)/main.o $(BUILD_DIR)/lexer.o
 		$(CPP) $(CPPFLAGS) $(BUILD_DIR)/type.o $(BUILD_DIR)/parser.o $(BUILD_DIR)/main.o $(BUILD_DIR)/lexer.o -ldl -o $(BUILD_DIR)/compiler
 
 
@@ -43,4 +43,5 @@ $(BUILD_DIR)/parser.cpp: $(SRC_DIR)/parser.y $(AST_DIR)/*.h $(AST_DIR)/*.cpp
 		bison -d -o $(BUILD_DIR)/parser.cpp $(SRC_DIR)/parser.y
 
 clean:
-	-rm $(BUILD_DIR)/*
+	-rm -rf $(BUILD_DIR)/
+	mkdir $(BUILD_DIR)
