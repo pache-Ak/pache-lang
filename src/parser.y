@@ -52,7 +52,36 @@ using namespace std;
 
 }
 
+%token
+  VOID                 "void"
 
+  BOOL                 "bool"
+
+  SIZE                 "size"
+
+  I8                   "i8"
+  I16                  "i16"
+  I32                  "i32"
+  I64                  "i64"
+  I128                 "i128"
+
+  U8                   "u8"
+  U16                  "u16"
+  U32                  "u32"
+  U64                  "u64"
+  U128                 "u128"
+
+  F16                  "f16"
+  F32                  "f32"
+  F64                  "f64"
+  F128                 "f128"
+
+  D32                  "d32"
+  D64                  "d64"
+
+  C8                   "c8"
+  C16                  "c16"
+  C32                  "c32"
 %token
   ASSIGN                // :=
   LEFT_CURLY_BRACE      // {
@@ -89,7 +118,7 @@ using namespace std;
   PREFIX_STAR "prefix *"
   POSTFIX_STAR "postfix *"
   BINARY_STAR "binary *"
-%token I32 RETURN FUNC CLASS
+%token RETURN FUNC CLASS
 %token <std::string> IDENTIFIER
 %token <int> INTEGER
 %token EOF 0;
@@ -198,12 +227,58 @@ class_def:
     $$ = new class_ast(std::move($2), std::move($4));
   };
 // 同上, 不再解释
-type
-  : I32 {
-    $$ = pache::i32_type_t::get();
+type:
+  VOID
+  { $$ = pache::void_type_t::get(); }
+| BOOL {
+    $$ = pache::bool_type_t::get();
   }
+| SIZE {
+  $$ = pache::size_type_t::get();
+}
+| I8
+{ $$ = pache::i8_type_t::get();}
+| I16
+{ $$ = pache::i16_type_t::get(); }
+| I32
+{ $$ = pache::i32_type_t::get(); }
+| I64
+{ $$ = pache::i64_type_t::get();}
+| I128
+{ $$ = pache::i128_type_t::get(); }
+| U8
+{ $$ = pache::u8_type_t::get();}
+| U16
+{ $$ = pache::u16_type_t::get(); }
+| U32
+{ $$ = pache::u32_type_t::get(); }
+| U64
+{ $$ = pache::u64_type_t::get();}
+| U128
+{ $$ = pache::u128_type_t::get(); }
+| F16
+{ $$ = pache::f16_type_t::get(); }
+| F32
+{ $$ = pache::f32_type_t::get(); }
+| F64
+{ $$ = pache::f64_type_t::get();}
+| F128
+{ $$ = pache::f128_type_t::get(); }
+| D32
+{ $$ = pache::d32_type_t::get(); }
+| D64
+{ $$ = pache::d64_type_t::get();}
+| C8
+{ $$ = pache::c8_type_t::get();}
+| C16
+{ $$ = pache::c16_type_t::get(); }
+| C32
+{ $$ = pache::c32_type_t::get(); }
 | arr_type {
   $$ = $1;
+}
+| IDENTIFIER {
+  $$ = new pache::user_def_type(std::move($1));
 }
   ;
 

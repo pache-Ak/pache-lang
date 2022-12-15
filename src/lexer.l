@@ -20,6 +20,36 @@ using namespace std;
  */
 %s AFTER_OPERAND
 
+VOID                 "void"
+
+BOOL                 "bool"
+
+SIZE                 "size"
+
+I8                   "i8"
+I16                  "i16"
+I32                  "i32"
+I64                  "i64"
+I128                 "i128"
+
+U8                   "u8"
+U16                  "u16"
+U32                  "u32"
+U64                  "u64"
+U128                 "u128"
+
+F16                  "f16"
+F32                  "f32"
+F64                  "f64"
+F128                 "f128"
+
+D32                  "d32"
+D64                  "d64"
+
+C8                   "c8"
+C16                  "c16"
+C32                  "c32"
+
 MAIN                 "main"
 LET                  "let"
 CLASS                "class"
@@ -96,8 +126,36 @@ Binary        0[bB][01]*
   BEGIN(AFTER_WHITESPACE);
 }
 
+{VOID}          { return pache::parser::make_VOID(loc); }
 
-"i32"           { return pache::parser::make_I32(loc); }
+{BOOL}          { return pache::parser::make_BOOL(loc); }
+
+{SIZE}          { return pache::parser::make_SIZE(loc); }
+
+{I8}            { return pache::parser::make_I8(loc); }
+{I16}           { return pache::parser::make_I16(loc); }
+{I32}           { return pache::parser::make_I32(loc); }
+{I64}           { return pache::parser::make_I64(loc); }
+{I128}          { return pache::parser::make_I128(loc); }
+
+{U8}            { return pache::parser::make_U8(loc); }
+{U16}           { return pache::parser::make_U16(loc); }
+{U32}           { return pache::parser::make_U32(loc); }
+{U64}           { return pache::parser::make_U64(loc); }
+{U128}          { return pache::parser::make_U128(loc); }
+
+{F16}           { return pache::parser::make_F16(loc); }
+{F32}           { return pache::parser::make_F32(loc); }
+{F64}           { return pache::parser::make_F64(loc); }
+{F128}          { return pache::parser::make_F128(loc); }
+
+{D32}           { return pache::parser::make_D32(loc); }
+{D64}           { return pache::parser::make_D64(loc); }
+
+{C8}            { return pache::parser::make_C8(loc); }
+{C16}           { return pache::parser::make_C16(loc); }
+{C32}           { return pache::parser::make_C32(loc); }
+
 "return"        { return pache::parser::make_RETURN(loc); }
 "func"          { return pache::parser::make_FUNC(loc); }
 {CLASS}                 { return pache::parser::make_CLASS(loc); }

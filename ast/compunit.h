@@ -47,6 +47,11 @@ namespace pache {
       p->set_father(this);
       class_def.insert(std::make_pair(p->get_name(), p));
     }
+
+    class_ast *find_class_def(std::string const & iden) {
+      return class_def.find(iden) != class_def.end() ?
+             class_def.find(iden)->second : nullptr;
+    }
   private:
     std::vector<std::unique_ptr<base_ast>> m_var_table;
     std::unordered_map<std::string, variable_ast*> dec_name;

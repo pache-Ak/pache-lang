@@ -29,6 +29,7 @@ namespace pache {
   class variable_ast;
   class func_ast;
   class stmt_ast;
+  class class_ast;
   class base_ast {
   public:
     virtual ~base_ast() = default;
@@ -44,7 +45,7 @@ namespace pache {
     virtual void insert_dec(stmt_ast *let) { }
     virtual variable_ast * find_dec(const std::string& name) const {
       if (m_father != nullptr)
-      return m_father->find_dec(name);
+        return m_father->find_dec(name);
 
       return nullptr;
     }
