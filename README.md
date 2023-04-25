@@ -1,3 +1,5 @@
+[![Security Status](https://s.murphysec.com/badge/pache-Ak/pache-lang.svg)](https://www.murphysec.com/p/pache-Ak/pache-lang)
+
 # A new compiler language project
 
 ---
