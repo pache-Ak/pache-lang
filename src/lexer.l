@@ -61,7 +61,9 @@ BREAK                "break"
 CONTINUE             "continue"
 SEMICOLON            ";"
 ASSIGN               ":="
-
+B_AND                "&"
+B_XOR                "^"
+B_OR                 "|"
 LEFT_CURLY_BRACE     "{"
 LEFT_PARENTHESIS     "("
 LEFT_SQUARE_BRACKET  "["
@@ -114,7 +116,9 @@ Binary        0[bB][01]*
 %}
 {MAIN}          { return pache::parser::make_MAIN(loc); }
 {LET}           { return pache::parser::make_LET(loc); }
-
+{B_AND}         { return pache::parser::make_B_AND(loc); }
+{B_XOR}         { return pache::parser::make_B_XOR(loc); }
+{B_OR}         { return pache::parser::make_B_OR(loc); }
 {IF}            { return pache::parser::make_IF(loc); }
 {ELSE}          { return pache::parser::make_ELSE(loc); }
 

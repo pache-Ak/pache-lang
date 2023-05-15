@@ -83,6 +83,10 @@ using namespace std;
   C16                  "c16"
   C32                  "c32"
 %token
+  B_AND                "&"
+  B_XOR                "^"
+  B_OR                 "|"
+
   ASSIGN                // :=
   LEFT_CURLY_BRACE      // {
   LEFT_PARENTHESIS      // (
@@ -138,6 +142,11 @@ using namespace std;
 %type <std::vector<pache::exp_ast*>> FuncRParams
 %type <pache::class_ast*> class_def
 %type <std::vector<pache::base_ast*>> class_body
+%type <pache::exp_ast*> bitwise_and_expression
+%type <pache::exp_ast*> bitwise_xor_expression
+%type <pache::exp_ast*> bitwise_or_expression
+
+
 %%
 
 // 开始符, CompUnit ::= FuncDef, 大括号后声明了解析完成后 parser 要做的事情
@@ -520,11 +529,35 @@ eq_expression:
 }
 ;
 
-logical_and_expression:
+bitwise_and_expression:
   eq_expression {
     $$ = $1;
   }
-| logical_and_expression AND eq_expression {
+| bitwise_and_expression B_AND eq_expression {
+  $$ = new pache::bitwise_and_exp($1, $3);
+};
+
+bitwise_xor_expression:
+  bitwise_and_expression {
+    $$ = $1;
+  }
+| bitwise_xor_expression B_XOR bitwise_and_expression {
+  $$ = new pache::bitwise_xor_exp($1, $3);
+}
+;
+bitwise_or_expression:
+  bitwise_xor_expression {
+    $$ = $1;
+  }
+| bitwise_or_expression B_OR bitwise_xor_expression {
+  $$ = new pache::bitwise_or_exp($1, $3);
+}
+;
+logical_and_expression:
+  bitwise_or_expression {
+    $$ = $1;
+  }
+| logical_and_expression AND bitwise_or_expression {
   $$ = new pache::logical_and_exp($1, $3);
 }
 ;
