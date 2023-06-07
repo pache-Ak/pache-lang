@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <memory>
+#include <vector>
 
 namespace pache {
 class compunit_ast : public base_ast {
@@ -30,7 +31,7 @@ public:
     let->set_father(get_father());
     m_var_table.push_back(std::unique_ptr<stmt_ast>(let));
   }
-  void insert_dec(func_ast *func) {}
+  void insert_dec(func_ast *func) { m_func_asts.push_back(func); }
   void insert_dec(variable_ast *func) {
     m_var_table.push_back(std::unique_ptr<variable_ast>(func));
     func->set_father(get_father());
@@ -93,6 +94,7 @@ private:
   std::unordered_map<std::string, variable_ast *> m_symbol_table;
   std::vector<class_ast *> class_def;
   std::unordered_map<std::string, llvm::AllocaInst *> m_named_values;
+  std::vector<func_ast *> m_func_asts;
   std::unordered_multimap<std::string, std::unique_ptr<callable_ast>>
       m_func_table;
 };

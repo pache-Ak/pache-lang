@@ -117,6 +117,13 @@ public:
   std::vector<std::string> const &get_args_name() const { return m_args_name; }
   type_ast *const get_return_type() const { return m_type; }
   std::string const &get_name() const { return m_name; }
+  std::string const get_encoding_name() const {
+    std::string s = "_N" + m_father->encoding_name() + get_name();
+    for (auto &type : m_args_type) {
+      s += type->encoding_name();
+    }
+    return s;
+  }
 
 protected:
   std::string m_name;
