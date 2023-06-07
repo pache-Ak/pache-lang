@@ -1,186 +1,146 @@
 #ifndef AST_H
 #define AST_H
 
+#include "type.h"
 // #include "llvm/ADT/APFloat.h"
 // #include "llvm/ADT/STLExtras.h"
 // #include "llvm/IR/BasicBlock.h"
 // #include "llvm/IR/Constants.h"
 // #include "llvm/IR/DerivedTypes.h"
 // #include "llvm/IR/Function.h"
-// #include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/IRBuilder.h"
+// #include "llvm/IR/Instructions.h"
 // #include "llvm/IR/LLVMContext.h"
+// #include "llvm/IR/LegacyPassManager.h"
 // #include "llvm/IR/Module.h"
 // #include "llvm/IR/Type.h"
 // #include "llvm/IR/Verifier.h"
+// #include "llvm/Support/TargetSelect.h"
+// #include "llvm/Target/TargetMachine.h"
+// #include "llvm/Transforms/InstCombine/InstCombine.h"
+// #include "llvm/Transforms/Scalar.h"
+// #include "llvm/Transforms/Scalar/GVN.h"
 #include <algorithm>
+#include <iostream>
 #include <memory>
-#include <vector>
 #include <string>
 #include <string_view>
-#include <iostream>
 #include <unordered_map>
-#include "type.h"
+#include <vector>
 
 namespace pache {
-  inline namespace {
-    std::size_t ssa_value = 0;
+
+inline namespace {
+static std::unique_ptr<llvm::LLVMContext> TheContext;
+static std::unique_ptr<llvm::Module> TheModule;
+// Create a new builder for the module.
+static std::unique_ptr<llvm::IRBuilder<>> Builder;
+
+} // namespace
+
+class variable_ast;
+class stmt_ast;
+class base_ast {
+public:
+  virtual ~base_ast() = default;
+  virtual llvm::Value *codegen() = 0;
+  // void print() { TheModule->print(llvm::errs(), nullptr); }
+  void set_father(base_ast *father);
+  base_ast *get_father();
+  // virtual llvm::AllocaInst *find_named_Value(std::string const &name) const;
+  //  virtual void insert_named_Value(std::string const &name,
+  //                                  llvm::AllocaInst *val);
+  virtual std::string const encoding_name() const {
+    using namespace std::literals;
+    return ""s;
   }
 
-  class variable_ast;
-  class func_ast;
-  class stmt_ast;
-  class class_ast;
-  class base_ast {
-  public:
-    virtual ~base_ast() = default;
-    void set_father(base_ast *father) {
-      m_father = father;
-      return;
-    }
-    virtual void insert_dec(variable_ast *dec ) { };
-    virtual void insert_dec(std::string name, variable_ast * dec)  {
-      m_father->insert_dec(name, dec);
-    }
-    virtual void insert_dec(stmt_ast *let) { }
-    virtual variable_ast * find_dec(const std::string& name) const {
-      if (m_father != nullptr)
-        return m_father->find_dec(name);
+  // virtual variable_ast *find_dec(const std::string &name) const {
+  //    return nullptr;
+  //  }
 
-      return nullptr;
-    }
-    void insert_class_def(class_ast *p) {
+protected:
+  base_ast *m_father;
 
-    }
-    virtual std::string begin_lable() const {
-      if (m_father != nullptr) {
-        return m_father->begin_lable();
-      } else {
-        std::cout << "error : not in loop block.\n";
-        return "";
-      }
-    }
+  // void insert_class_def(class_ast *p) {}
+};
 
-    virtual std::string end_lable() const {
-      if (m_father != nullptr) {
-        return m_father->end_lable();
-      } else {
-        std::cout << "error : not in loop block.\n";
-        return "";
-      }
-    }
-    std::string get_prefix() {
-      return name_prefix;
-    }
+class callable_ast : public base_ast {};
 
-    void set_prefix(std::string pre) {
-      name_prefix = pre;
-    }
+class variable_ast : public callable_ast {
+public:
+  explicit variable_ast(type_ast *type, std::string name)
+      : m_type(type), real_name(name) {}
 
-    std::size_t next_block_value() {
-      return block_value++;
-    }
-  protected:
-    base_ast *m_father = nullptr;
-    std::unordered_map<std::string, type_ast*> type_name;
-    std::string name_prefix;
-    std::size_t block_value = 0;
-  };
-  class variable_ast : public base_ast {
-  public:
-    explicit variable_ast(const type_ast *type, std::string name)
-      : m_type(type), real_name(name) { }
+  type_ast *get_type() { return m_type; }
+  virtual llvm::Value *codegen() { return nullptr; } // TODO
+  std::string const &get_name() const { return real_name; }
 
-    const type_ast * get_type() {
-      return m_type;
-    }
+  void set_name(std::string name) { real_name = name; }
 
-    std::string &get_name() {
-      return real_name;
-    }
-
-    void set_name(std::string name) {
-      real_name = name;
-    }
-
-  protected:
-    const type_ast *m_type;
-    std::string real_name;
-  };
-
-
-
-
-
-
+protected:
+  type_ast *m_type;
+  std::string real_name;
+};
 
 // ...
-    class func_arg : public variable_ast {
-  public:
-    explicit func_arg(const type_ast *type, std::string &&str) : variable_ast(type, std::move(str)) { }
+class func_arg : public variable_ast {
+public:
+  explicit func_arg(type_ast *type, std::string &&str)
+      : variable_ast(type, std::move(str)) {}
 
+private:
+};
 
-  private:
-  };
+class func_ast : public callable_ast {
+public:
+  explicit func_ast(std::string &&name,
+                    std::pair<std::vector<pache::type_ast *>,
+                              std::vector<std::string>> &&args,
+                    type_ast *return_type, base_ast *block)
+      : m_name(std::move(name)), m_type(return_type),
+        m_args_type(std::move(args.first)), m_args_name(std::move(args.second)),
+        m_block(block) {}
 
-
-  class func_ast : public variable_ast {
-  public:
-    explicit
-    func_ast(std::string &&name,
-             std::vector<func_arg*> args,
-             const type_ast* return_type,
-             base_ast *block)
-      : variable_ast(return_type, std::move(name)),
-        m_args(args),
-        m_block(block) { }
-
-    virtual variable_ast* find_dec(const std::string &name) const override {
-      auto beg = std::find_if(m_args.begin(), m_args.end(),
-                              [=](func_arg* arg) { return (arg->get_name() == name); });
-      if (beg != m_args.end()) {
-        return *beg;
-      } else {
-        return m_father->find_dec(name);
-      }
+  virtual llvm::Value *codegen() override;
+  /*virtual variable_ast *find_dec(const std::string &name) const override {
+    auto beg = std::find_if(m_args.begin(), m_args.end(), [=](func_arg *arg) {
+      return (arg->get_name() == name);
+    });
+    if (beg != m_args.end()) {
+      return *beg;
+    } else {
+      return m_father->find_dec(name);
     }
+  }*/
+  std::vector<type_ast *> const &get_args_type() const { return m_args_type; }
+  std::vector<std::string> const &get_args_name() const { return m_args_name; }
+  type_ast *const get_return_type() const { return m_type; }
+  std::string const &get_name() const { return m_name; }
 
-  protected:
-    std::vector<func_arg*> m_args;
-    std::unique_ptr<base_ast> m_block;
-  };
-    class main_func_ast : public func_ast {
-  public:
-    explicit
-    main_func_ast(std::string &&name,
-             std::vector<func_arg*> args,
-             const type_ast* return_type,
-             base_ast *block)
-      : func_ast(std::move(name), args, return_type, block){}
-
-
-
-
-  };
-
-  class class_ast : public base_ast {
-  public:
-    explicit class_ast(std::string &&name, std::vector<base_ast*> &&class_body)
-      : m_name(std::move(name)), m_body(std::move(class_body)) {
-        for (auto & p : m_body) {
-          p->set_father(this);
-        }
-      }
-
-    std::string const get_name() const {
-      return m_name;
+protected:
+  std::string m_name;
+  type_ast *m_type;
+  std::vector<type_ast *> m_args_type;
+  std::vector<std::string> m_args_name;
+  std::unique_ptr<base_ast> m_block;
+  std::string name_mangling() {
+    std::string s{};
+    s += get_father()->encoding_name();
+    s += this->m_name;
+    for (auto arg : m_args_type) {
+      s += arg->encoding_name();
     }
+    return s;
+  }
+};
+/* class main_func_ast : public func_ast {
+public:
+  explicit main_func_ast(std::string &&name, std::vector<func_arg *> args,
+                         type_ast *return_type, base_ast *block)
+      : func_ast(std::move(name), std::move(args), return_type, block) {}
+}; */
 
-  private:
-    std::string const m_name;
-    std::vector<base_ast*> m_body;
-  };
-
-}
-
+} // namespace pache
 
 #endif

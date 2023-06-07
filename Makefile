@@ -5,7 +5,7 @@ AST_DIR		:= ast
 
 # Flags
 CFLAGS := -Wall -std=c11
-CPPFLAGS := -Wall -Wno-register -std=c++17
+CPPFLAGS := -Wall -Wno-register -std=c++17 `llvm-config --cxxflags --ldflags --system-libs --libs core`
 #`llvm-config --cxxflags --ldflags --system-libs --libs core`
 FFLAGS :=
 BFLAGS := -d
@@ -17,8 +17,8 @@ CPP := clang++
 FLEX := flex
 BISON := bison
 
-$(BUILD_DIR)/compiler: clean $(BUILD_DIR)/type.o $(BUILD_DIR)/parser.o $(BUILD_DIR)/main.o $(BUILD_DIR)/lexer.o
-		$(CPP) $(CPPFLAGS) $(BUILD_DIR)/type.o $(BUILD_DIR)/parser.o $(BUILD_DIR)/main.o $(BUILD_DIR)/lexer.o -ldl -o $(BUILD_DIR)/compiler
+$(BUILD_DIR)/compiler:  $(BUILD_DIR)/libast.a $(BUILD_DIR)/parser.o $(BUILD_DIR)/main.o $(BUILD_DIR)/lexer.o
+		$(CPP) $(CPPFLAGS) $(BUILD_DIR)/parser.o $(BUILD_DIR)/main.o $(BUILD_DIR)/lexer.o  $(BUILD_DIR)/libast.a -ldl -o $(BUILD_DIR)/compiler
 
 
 $(BUILD_DIR)/lexer.o: $(BUILD_DIR)/lexer.cpp $(BUILD_DIR)/parser.hpp
@@ -27,14 +27,16 @@ $(BUILD_DIR)/lexer.o: $(BUILD_DIR)/lexer.cpp $(BUILD_DIR)/parser.hpp
 $(BUILD_DIR)/parser.o: $(BUILD_DIR)/parser.cpp
 		$(CPP) $(CPPFLAGS) $(BUILD_DIR)/parser.cpp -c -o $(BUILD_DIR)/parser.o
 
-$(BUILD_DIR)/main.o: $(SRC_DIR)/main.cpp $(BUILD_DIR)/type.o
-		$(CPP) $(CPPFLAGS) $(SRC_DIR)/main.cpp $(BUILD_DIR)/type.o -c -o $(BUILD_DIR)/main.o
+$(BUILD_DIR)/main.o: $(SRC_DIR)/main.cpp $(BUILD_DIR)/libast.a
+		$(CPP) $(CPPFLAGS) $(SRC_DIR)/main.cpp $(BUILD_DIR)/libast.a -c -o $(BUILD_DIR)/main.o
 
-$(BUILD_DIR)/type.o: $(AST_DIR)/type.cpp
-		$(CPP) $(CPPFLAGS) $(AST_DIR)/type.cpp -c -o $(BUILD_DIR)/type.o
+$(BUILD_DIR)/libast.a: $(AST_DIR)/*.cpp
+		$(CPP) $(CPPFLAGS) -c $(AST_DIR)/*.cpp  $(AST_DIR)/
+		mv ./*.o $(BUILD_DIR)/
+		ar -r $(BUILD_DIR)/libast.a $(BUILD_DIR)/*.o
 
-$(BUILD_DIR)/lexer.cpp: $(SRC_DIR)/lexer.l
-		flex -o $(BUILD_DIR)/lexer.cpp $(SRC_DIR)/lexer.l
+$(BUILD_DIR)/lexer.cpp: $(SRC_DIR)/lexer.lpp
+		flex -o $(BUILD_DIR)/lexer.cpp $(SRC_DIR)/lexer.lpp
 
 $(BUILD_DIR)/parser.hpp: $(SRC_DIR)/parser.y $(AST_DIR)/*.h
 		bison -d -o $(BUILD_DIR)/parser.cpp $(SRC_DIR)/parser.y

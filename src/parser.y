@@ -16,7 +16,7 @@
   #include "../ast/compunit.h"
 }
 
-%parse-param { std::unique_ptr<pache::base_ast> &ast }
+%parse-param { std::unique_ptr<pache::compunit_ast> &ast }
 
 %locations
 
@@ -128,24 +128,24 @@ using namespace std;
 %token EOF 0;
 // 非终结符的类型定义
 %type <pache::compunit_ast*>   CompUnit
-%type <pache::variable_ast*> FuncDef main_func
-%type <pache::type_ast const*> type arr_type
+%type <pache::type_ast*> type arr_type
 %type <pache::exp_ast*> Number   primary_expression unary_expression call_expression
-%type <pache::block_ast*> block optional_else if_stmt loop_stmt
-%type <pache::stmt_ast*> stmt return_stmt let_stmt assign_stmt break_stmt continue_stmt
+%type <pache::block_ast*> block optional_else  loop_stmt
+%type <pache::let_stmt*> let_stmt
+%type <pache::stmt_ast*> stmt return_void_stmt return_stmt if_stmt  assign_stmt break_stmt continue_stmt
 %type <pache::exp_ast*>  expression  add_exp
 %type <std::vector<pache::stmt_ast*>> statement_list
 %type <pache::exp_ast*>  mul_expressions
 %type <pache::exp_ast*> three_way_expression rel_expression eq_expression logical_and_expression logical_or_expression
-%type <pache::func_arg*> FuncFParam
-%type <std::vector<pache::func_arg*>> FuncFParams
+%type <std::pair<pache::type_ast*, std::string>> FuncFParam
+%type <std::pair<std::vector<pache::type_ast*>, std::vector<std::string>>> FuncFParams
 %type <std::vector<pache::exp_ast*>> FuncRParams
 %type <pache::class_ast*> class_def
-%type <std::vector<pache::base_ast*>> class_body
+%type <pache::class_body> class_body
 %type <pache::exp_ast*> bitwise_and_expression
 %type <pache::exp_ast*> bitwise_xor_expression
 %type <pache::exp_ast*> bitwise_or_expression
-
+%type <pache::func_ast*> FuncDef  // main_func
 
 %%
 
@@ -179,55 +179,63 @@ CompUnit
 
 FuncFParam:
   type IDENTIFIER {
-    $$ = new pache::func_arg($1, std::move($2));
+    $$ = std::make_pair<pache::type_ast*,std::string>(std::move($1), std::move($2));
   };
 
 FuncFParams:
   // empty
 
-  { $$ = std::vector<pache::func_arg*>();
+  { $$ = std::make_pair<std::vector<pache::type_ast*>, std::vector<std::string>>({}, {});
   }
   | FuncFParam {
-    $$ = std::vector<pache::func_arg*>();
-    $$.push_back($1);
+    $$ = std::make_pair<std::vector<pache::type_ast*>, std::vector<std::string>>({}, {});
+    $$.first.push_back($1.first);
+    $$.second.push_back($1.second);
   }
 | FuncFParams COMMA FuncFParam {
       $$ = $1;
-      $$.push_back($3);
+      $$.first.push_back($3.first);
+    $$.second.push_back($3.second);
 
 };
-main_func:
-  FUNC MAIN LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS I32 block {
-    auto ast = new pache::main_func_ast("main"s, $4, pache::i32_type_t::get(), $7);
+//main_func:
+//  FUNC MAIN LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS I32 block {
+//    auto ast = new pache::main_func_ast("main"s, $4, pache::i32_type_t::get(), $7);
 
      // for (auto arg : *$4) {
      //   arg->set_father($$);
      // }
-    $$ = ast;
-  };
+ //   $$ = ast;
+  //};
 
 FuncDef
   : FUNC IDENTIFIER LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS type block {
-    auto ast = new pache::func_ast(std::move($2), $4, $6, $7);
+    auto ast = new pache::func_ast(std::move($2), std::move($4), $6, $7);
     //      for (auto arg : *$4) {
      //   arg->set_father($$);
      // }
     $$ = ast;
   }
-| main_func {
-  $$ = $1;
-};
+//| main_func {
+//  $$ = $1;
+//}
+;
 
 class_body:
   // Empty
-  { $$ = {}; }
+  { $$; }
 | class_body let_stmt {
-  $$ = $1;
-  $$.push_back($2);
+  $$ = std::move($1);
+  $$.var_def.push_back(std::unique_ptr<pache::let_stmt>{$2});
 }
 | class_body FuncDef {
-  $$ = $1;
-  $$.push_back($2);
+  $$ = std::move($1);
+  $$.func_def.push_back(std::unique_ptr<pache::func_ast>{$2});
+}
+| class_body class_def {
+  $$ = std::move($1);
+  $$.class_def.push_back(std::unique_ptr<pache::class_ast>{$2});
+
 };
 
 class_def:
@@ -309,7 +317,7 @@ block
   : LEFT_CURLY_BRACE statement_list RIGHT_CURLY_BRACE {
     $$ = new pache::block_ast(std::move($2));
     for (auto & ast : $2) {
-      ast->set_father($$);
+      ast->set_father($$->get_father());
     }
   }
   ;
@@ -325,6 +333,9 @@ stmt:
     { $$ = $1; }
 | let_stmt {
     $$ = $1;
+}
+| return_void_stmt {
+  $$ = $1;
 }
 | return_stmt
     { $$ = $1; }
@@ -342,28 +353,27 @@ stmt:
 }
 ;
 
-
+return_void_stmt:
+  RETURN SEMICOLON {
+    $$ = new pache::return_void_stmt();
+  }
+  ;
 
 return_stmt:
-  RETURN SEMICOLON {
-    $$ = new pache::return_ast(&pache::void_literal);
-  }
-| RETURN expression SEMICOLON {
+  RETURN expression SEMICOLON {
     $$ = new pache::return_ast($2);
   }
   ;
 
 let_stmt:
   LET type IDENTIFIER ASSIGN expression SEMICOLON {
-    $$ = new pache::let_stmt(new pache::variable_ast($2, $3), $5);
+    $$ = new pache::let_stmt($2, $3, $5);
   }
 | LET type IDENTIFIER LEFT_CURLY_BRACE expression RIGHT_CURLY_BRACE SEMICOLON {
-    auto var = new pache::variable_ast($2, $3);
-    $$ = new pache::let_stmt(var, $5);
+    $$ = new pache::let_stmt($2, $3, $5);
 }
 | LET type IDENTIFIER SEMICOLON {
-    auto var = new pache::variable_ast($2, $3);
-    $$ = new pache::let_stmt(var, nullptr);
+    $$ = new pache::let_stmt($2, $3, nullptr);
   }
 ;
 
@@ -386,10 +396,10 @@ continue_stmt:
 optional_else:
   // Empty
     { $$ = nullptr; }
-| ELSE if_stmt
-    {
-      $$ = $2;
-    }
+//| ELSE if_stmt
+  //  {
+ //     $$ = $2;
+//    }
 | ELSE block
     { $$ = $2; }
 ;

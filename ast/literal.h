@@ -1,48 +1,46 @@
 #ifndef LITERAL
 #define LITERAL
 
-#include "type.h"
 #include "expression.h"
+#include "type.h"
 
 #include <memory>
 
 namespace pache {
-  class literal : public exp_ast {
-  public:
+class literal : public exp_ast {
+public:
+protected:
+  explicit literal() {}
+};
 
-  protected:
-    explicit literal(const type_ast *type) : exp_ast(type) { }
-  };
+class void_literal_t : public literal {
+public:
+  virtual llvm::Value *codegen() override;
+  //  virtual type_ast const *get_type() override { return void_type_t::get(); }
 
-  class void_literal_t : public literal {
-  public:
+  static void_literal_t make_void_literal_t() { return void_literal_t(); }
 
+  virtual ~void_literal_t() override = default;
 
+private:
+  explicit void_literal_t() {}
+};
 
-    static void_literal_t make_void_literal_t() {
-      return void_literal_t();
-    }
+inline void_literal_t void_literal = void_literal_t::make_void_literal_t();
 
-    virtual ~void_literal_t() override = default;
-  private:
-    explicit void_literal_t() : literal(void_type_t::get()) { }
-  };
+class i32_literal : public literal {
+public:
+  explicit i32_literal(int32_t value) : m_value(value) {}
 
-  inline void_literal_t void_literal = void_literal_t::make_void_literal_t();
+  //  virtual type_ast const *get_type() override { return i32_type_t::get(); }
 
-  class i32_literal : public literal {
-  public:
-    explicit i32_literal(int32_t value)
-      : literal(i32_type_t::get()), m_value(value) { }
+  virtual llvm::Value *codegen() override;
 
+  virtual ~i32_literal() override = default;
 
-
-
-
-    virtual ~i32_literal() override = default;
-  private:
-    int32_t m_value;
-  };
-}
+private:
+  int32_t m_value;
+};
+} // namespace pache
 
 #endif

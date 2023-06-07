@@ -24,13 +24,17 @@ int main(int argc, const char *argv[]) {
   pache::driver drv;
   drv.scan_begin(fopen(input, "r"));
   // 调用 parser 函数, parser 函数会进一步调用 lexer 解析输入文件的
-  unique_ptr<pache::base_ast> ast;
-  pache::parser parse(ast);
-  // auto ret = yyparse(ast);
-  // assert(!ret);
-  parse();
-  // 输出解析得到的 AST, 其实就是个字符串
-  // std::cout << ast->dump() << std::endl;
-  drv.scan_end();
+  unique_ptr<pache::compunit_ast> ast = make_unique<pache::compunit_ast>();
+
+  // pache::parser parse(ast);
+  //  auto ret = yyparse(ast);
+  //  assert(!ret);
+  // parse();
+  //  输出解析得到的 AST, 其实就是个字符串
+  //  std::cout << ast->dump() << std::endl;
+
+  ast->codegen();
+  // pache::TheModule->print(llvm::errs(), nullptr);
+  // drv.scan_end();
   return 0;
 }
