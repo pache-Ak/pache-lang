@@ -1,5 +1,5 @@
-#include "../ast/ast.h"
 #include "../build/parser.hpp"
+#include "ast/ast.h"
 #include "driver.h"
 #include <cassert>
 #include <cstdio>

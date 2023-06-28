@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "../../ast/compunit.h"
@@ -73,8 +74,9 @@ public:
     llvm::FunctionType *FT = llvm::FunctionType::get(
         func->get_return_type()->codegen(), args_Type, false);
     Function *F = Function::Create(FT, Function::ExternalLinkage,
-                                   func->get_name(), TheModule.get());
-
+                                   func->get_enconding_name(), TheModule.get());
+  }
+  void set_body(func_ast *func) {
     unsigned Idx = 0;
     for (auto &Arg : F->args()) {
       Arg.setName(func->get_args_name()[Idx]);
@@ -161,7 +163,7 @@ private:
   std::pmr::unordered_map<std::string, unsigned int> m_member_var;
   // std::string const m_name; // used by log error
   llvm::StructType *m_type;
-  std::unordered_map<std::string, builded_class> builded_classes;
+  std::pmr::unordered_map<std::string, builded_class> builded_classes;
 }
 
 llvm::Constant *
@@ -175,6 +177,19 @@ build_global_variable(let_stmt *const stmt) {
 class file_build : public base_build {
 public:
   file_build(compunit_ast *comp) : base_build(nullptr), ast(comp) {}
+
+  llvm::StructType *class_name_find(std::string const &name) {
+    auto it = class_def.find(name);
+    if (it != class_def.end()) {
+      return it->second;
+    } else if (m_father != nullptr) {
+      return m_father->class_name_find(name);
+    } else {
+      return nullptr;
+    }
+  }
+
+private:
   void build_classes(compunit_ast *comp) {
     for (auto str : comp->class_def) {
       auto [it, b] = class_def.try_emplace(
@@ -195,20 +210,22 @@ public:
     for (auto var : comp->class_def->var_def) {
     }
   }
-  llvm::StructType *class_name_find(std::string const &name) {
-    auto it = class_def.find(name);
-    if (it != class_def.end()) {
-      return it->second;
-    } else if (m_father != nullptr) {
-      return m_father->class_name_find(name);
-    } else {
-      return nullptr;
+  void build_functions(std::vector<func_ast *> const &func_asts) {
+    std::vector<std::pair<std::string, build_function>> functions;
+    for (auto ast : func_asts) {
+      functions.emplace(std::make_pair(ast->get_name(), build_function{ast}));
     }
+    auto beg = functions.begin();
+    for (auto ast : func_asts) {
+      beg->set_body(ast);
+      ++beg;
+    }
+    builded_functions.insert(functions.begin(), functions.end());
   }
 
-private:
   compunit_ast *ast; // maybe not need TODO
   std::unordered_map<std::string, builded_class> builded_classes;
+  std::unordered_map<std::string, build_function> builded_functions;
 };
 
 build_call_exp(base_build *father, func_call_exp *const ast) {

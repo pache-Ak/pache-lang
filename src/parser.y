@@ -10,10 +10,10 @@
 %code requires {
   #include <memory>
   #include <string>
-  #include "../ast/ast.h"
-  #include "../ast/expression.h"
-  #include "../ast/statement.h"
-  #include "../ast/compunit.h"
+  #include "ast/ast.h"
+  #include "ast/expression.h"
+  #include "ast/statement.h"
+  #include "ast/compunit.h"
 }
 
 %parse-param { std::unique_ptr<pache::compunit_ast> &ast }
@@ -39,13 +39,13 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include "../ast/ast.h"
-#include "../ast/expression.h"
-#include "../ast/statement.h"
-#include "../ast/type.h"
-#include "../src/driver.h"
-#include "../ast/literal.h"
-#include "../ast/compunit.h"
+#include "ast/ast.h"
+#include "ast/expression.h"
+#include "ast/statement.h"
+#include "ast/type.h"
+#include "driver.h"
+#include "ast/literal.h"
+#include "ast/compunit.h"
 // 声明 lexer 函数和错误处理函数
 
 using namespace std;

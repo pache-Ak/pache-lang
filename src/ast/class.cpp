@@ -10,7 +10,7 @@ pache::class_ast::class_ast(std::string &&name, class_body &&body)
   for (auto &p : m_body.func_def) {
     p->set_father(get_father());
   }
-  for (auto &p : m_body.var_def) {
+  for (auto &p : m_body.inner_class_def) {
     p->set_father(this);
   }
 }

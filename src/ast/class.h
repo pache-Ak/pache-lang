@@ -11,7 +11,7 @@ class class_body {
 public:
   std::vector<std::unique_ptr<let_stmt>> var_def;
   std::vector<std::unique_ptr<func_ast>> func_def;
-  std::vector<std::unique_ptr<class_ast>> class_def;
+  std::vector<std::unique_ptr<class_ast>> inner_class_def;
 };
 class class_ast : public base_ast {
 public:
