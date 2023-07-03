@@ -2,7 +2,10 @@
 #define TYPE_H
 
 #include <algorithm>
+#include <cstddef>
+#include <iostream>
 #include <iterator>
+#include <memory>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -31,18 +34,69 @@ public:
   virtual bool isConstant() const { return false; }
 
   virtual std::string const encoding_name() const = 0;
+  virtual ~type_ast() = default;
 
 protected:
   explicit type_ast() = default;
+  explicit type_ast(type_ast const &type) = default;
+  explicit type_ast(type_ast &&type) = default;
 };
 
-template <class T> class const_type {
+template <class T> class const_type : public T {
 public:
-  virtual bool isConstant() const { return true; }
+  const_type(T *type) : T(std::move(*type)) {}
+  virtual bool is_const() const { return true; }
 };
 
-template <class T> class const_type<const_type<T>> {
-  std::enable_if<false> isConstant() const {}
+template <class T> class const_type<const_type<T>> : public const_type<T> {
+public:
+  const_type(const_type<T> *type) : const_type<T>(std::move(*type)) {}
+  virtual bool is_const() const override { return true; }
+  // TODO　log error
+  // like this
+  // file name: in ...
+  // ...
+  // file name : line : error :duplicate const
+  // error line
+};
+
+template <class T> class volatile_type : public T {
+public:
+  volatile_type(T *type) : T(std::move(*type)) {}
+  virtual bool is_volatile() const { return true; }
+};
+
+template <class T>
+class volatile_type<volatile_type<T>> : public volatile_type<T> {
+public:
+  volatile_type(volatile_type<T> *type) : volatile_type<T>(std::move(*type)) {}
+  virtual bool is_volatile() const override { return true; }
+  // TODO　log error
+  // like this
+  // file name: in ...
+  // ...
+  // file name : line : error :duplicate volatile
+  // error line
+};
+
+template <class T> class reference_type : public T {
+public:
+  reference_type(T *type) : T(std::move(*type)) {}
+  virtual bool is_volatile() const { return true; }
+};
+
+template <class T>
+class reference_type<reference_type<T>> : public reference_type<T> {
+public:
+  reference_type(reference_type<T> *type)
+      : reference_type<T>(std::move(*type)) {}
+  virtual bool is_volatile() const override { return true; }
+  // TODO　log error
+  // like this
+  // file name: in ...  // from file to current
+  // ...
+  // file name : line : error :
+  // error line
 };
 
 class primary_type : public type_ast {
@@ -68,9 +122,12 @@ public:
 
 class i8_type_t : public signed_type {
 public:
-  static i8_type_t *get();
+  static void *operator new(std::size_t sz) { return &i8_type; }
+  static void operator delete(void *ptr) {}
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_i8"s; }
+  virtual ~i8_type_t() = default;
 
 private:
   //  explicit i8_type_t() = default;
@@ -79,7 +136,9 @@ private:
 
 class i16_type_t : public signed_type {
 public:
-  static i16_type_t *get();
+  static void *operator new(std::size_t sz) { return &i16_type; }
+  static void operator delete(void *ptr) {}
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_16"s; }
 
@@ -89,7 +148,7 @@ private:
 };
 class i32_type_t : public signed_type {
 public:
-  static i32_type_t *get();
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_i32"s; }
 
@@ -100,7 +159,7 @@ private:
 
 class i64_type_t : public signed_type {
 public:
-  static i64_type_t *get();
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_i64"s; }
 
@@ -111,7 +170,7 @@ private:
 
 class i128_type_t : public signed_type {
 public:
-  static i128_type_t *get();
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_i128"s; }
 
@@ -122,7 +181,7 @@ private:
 
 class u8_type_t : public unsigned_type {
 public:
-  static u8_type_t *get();
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_u8"s; }
 
@@ -133,7 +192,7 @@ private:
 
 class u16_type_t : public unsigned_type {
 public:
-  static u16_type_t *get();
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_u16"s; }
 
@@ -143,7 +202,7 @@ private:
 };
 class u32_type_t : public unsigned_type {
 public:
-  static u32_type_t *get();
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_u32"s; }
 
@@ -154,7 +213,7 @@ private:
 
 class u64_type_t : public unsigned_type {
 public:
-  static u64_type_t *get();
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_u64"s; }
 
@@ -165,7 +224,7 @@ private:
 
 class u128_type_t : public primary_type {
 public:
-  static u128_type_t *get();
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_u128"s; }
 
@@ -176,7 +235,7 @@ private:
 
 class f16_type_t : public primary_type {
 public:
-  static f16_type_t *get();
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_f16"s; }
 
@@ -190,7 +249,7 @@ class bfloat_type_t : public primary_type {};
 
 class f32_type_t : public primary_type {
 public:
-  static f32_type_t *get();
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_f32"s; }
 
@@ -201,7 +260,7 @@ private:
 
 class f64_type_t : public primary_type {
 public:
-  static f64_type_t *get();
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_f64"s; }
 
@@ -215,7 +274,7 @@ class x86_fp80_type_t : public primary_type {};
 
 class f128_type_t : public primary_type {
 public:
-  static f128_type_t *get();
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_f128"s; }
 
@@ -229,7 +288,7 @@ class ppc_fp128_type_t : public primary_type {};
 
 class d32_type_t : public primary_type {
 public:
-  static d32_type_t *get();
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_d32"s; }
 
@@ -240,7 +299,7 @@ private:
 
 class d64_type_t : public primary_type {
 public:
-  static d64_type_t *get();
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_d64"s; }
 
@@ -251,7 +310,7 @@ private:
 
 class c8_type_t : public primary_type {
 public:
-  static c8_type_t *get();
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_c8"s; }
 
@@ -262,7 +321,7 @@ private:
 
 class c16_type_t : public primary_type {
 public:
-  static c16_type_t *get();
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_c16"s; }
 
@@ -272,7 +331,7 @@ private:
 };
 class c32_type_t : public primary_type {
 public:
-  static c32_type_t *get();
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_c32"s; }
 
@@ -283,7 +342,7 @@ private:
 
 class void_type_t : public primary_type {
 public:
-  static void_type_t *get();
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_void"s; }
 
@@ -294,7 +353,7 @@ private:
 
 class bool_type_t : public primary_type {
 public:
-  static bool_type_t *get();
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_bool"s; }
 
@@ -305,7 +364,7 @@ private:
 
 class size_type_t : public primary_type {
 public:
-  static size_type_t *get();
+  static std::unique_ptr<type_ast> get();
   virtual llvm::Type *codegen() override;
   virtual std::string const encoding_name() const override { return "_size"s; }
 
@@ -316,33 +375,34 @@ private:
 
 class arr_type_t : public type_ast {
 public:
-  explicit arr_type_t(type_ast *element_type, const std::size_t size)
-      : m_element_type(element_type), m_size(size) {}
+  explicit arr_type_t(std::unique_ptr<type_ast> &&element_type,
+                      const std::size_t size)
+      : m_element_type(std::move(element_type)), m_size(size) {}
   virtual llvm::Type *codegen() override;
 
-  const arr_type_t *get() const { return this; }
+  std::unique_ptr<type_ast> get() { return std::unique_ptr<arr_type_t>(this); }
   virtual std::string const encoding_name() const override {
     return "_TODO_arr"s;
   }
 
 private:
-  type_ast *m_element_type;
+  std::unique_ptr<type_ast> m_element_type;
   const std::size_t m_size;
 };
 class variable_ast;
 class func_type : public type_ast {
 public:
   explicit func_type(const std::vector<variable_ast *> &args,
-                     const type_ast *return_type);
+                     std::unique_ptr<type_ast> &&return_type);
 
-  const func_type *get() const { return this; }
+  std::unique_ptr<type_ast> get() { return std::unique_ptr<func_type>(this); }
   virtual std::string const encoding_name() const override {
     return "_TODO_func"s;
   }
 
 private:
   std::vector<const type_ast *> m_args_type;
-  const type_ast *m_return_type;
+  std::unique_ptr<type_ast> m_return_type;
 };
 class class_ast;
 class class_type : public type_ast {
@@ -350,7 +410,7 @@ public:
   explicit class_type(const class_ast *class_def) : m_def(class_def) {}
   virtual llvm::Type *codegen() override;
 
-  const class_type *get() const { return this; }
+  std::unique_ptr<type_ast> get() { return std::unique_ptr<class_type>(this); }
   virtual std::string const encoding_name() const override {
     return "_TODO_class"s;
   }
@@ -366,7 +426,7 @@ public:
   explicit user_def_type(std::string &&identifier)
       : m_iden(std::move(identifier)) {}
 
-  type_ast *get(compunit_ast *comp);
+  std::unique_ptr<type_ast> get(compunit_ast *comp);
   virtual llvm::Type *codegen() override;
   virtual ~user_def_type() = default;
   virtual std::string const encoding_name() const override {

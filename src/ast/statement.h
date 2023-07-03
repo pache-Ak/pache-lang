@@ -106,8 +106,9 @@ private:
 
 class let_stmt : public stmt_ast {
 public:
-  explicit let_stmt(type_ast *type_, std::string const &name, exp_ast *init)
-      : type(type_), var_name(name), m_init(init) {
+  explicit let_stmt(std::unique_ptr<type_ast> &&type_, std::string &&name,
+                    exp_ast *init)
+      : type(std::move(type_)), var_name(std::move(name)), m_init(init) {
     set_father(get_father());
     if (m_init != nullptr) {
       m_init->set_father(get_father());
@@ -133,12 +134,12 @@ public:
 
     return nullptr;
   }
-  type_ast *get_var_type() const { return type; }
+  std::unique_ptr<type_ast> &get_var_type() { return type; }
   std::string const &get_var_name() const { return var_name; }
   std::unique_ptr<exp_ast> const &get_init_exp() const { return m_init; }
 
 private:
-  type_ast *type;
+  std::unique_ptr<type_ast> type;
   std::string const var_name;
   // std::unique_ptr<variable_ast> m_var;
   std::unique_ptr<exp_ast> m_init;

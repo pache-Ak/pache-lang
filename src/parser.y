@@ -10,10 +10,10 @@
 %code requires {
   #include <memory>
   #include <string>
-  #include "ast/ast.h"
-  #include "ast/expression.h"
-  #include "ast/statement.h"
-  #include "ast/compunit.h"
+  #include "../src/ast/ast.h"
+  #include "../src/ast/expression.h"
+  #include "../src/ast/statement.h"
+  #include "../src/ast/compunit.h"
 }
 
 %parse-param { std::unique_ptr<pache::compunit_ast> &ast }
@@ -39,13 +39,15 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include "ast/ast.h"
-#include "ast/expression.h"
-#include "ast/statement.h"
-#include "ast/type.h"
-#include "driver.h"
-#include "ast/literal.h"
-#include "ast/compunit.h"
+  #include "../src/ast/ast.h"
+  #include "../src/ast/expression.h"
+  #include "../src/ast/statement.h"
+  #include "../src/ast/compunit.h"
+
+#include "../src/ast/type.h"
+#include "../src/driver.h"
+#include "../src/ast/literal.h"
+
 // 声明 lexer 函数和错误处理函数
 
 using namespace std;
@@ -128,7 +130,7 @@ using namespace std;
 %token EOF 0;
 // 非终结符的类型定义
 %type <pache::compunit_ast*>   CompUnit
-%type <pache::type_ast*> type arr_type
+%type <std::unique_ptr<pache::type_ast>> type arr_type
 %type <pache::exp_ast*> Number   primary_expression unary_expression call_expression
 %type <pache::block_ast*> block optional_else  loop_stmt
 %type <pache::let_stmt*> let_stmt
@@ -137,8 +139,8 @@ using namespace std;
 %type <std::vector<pache::stmt_ast*>> statement_list
 %type <pache::exp_ast*>  mul_expressions
 %type <pache::exp_ast*> three_way_expression rel_expression eq_expression logical_and_expression logical_or_expression
-%type <std::pair<pache::type_ast*, std::string>> FuncFParam
-%type <std::pair<std::vector<pache::type_ast*>, std::vector<std::string>>> FuncFParams
+%type <std::pair<std::unique_ptr<pache::type_ast>, std::string>> FuncFParam
+%type <std::pair<std::vector<std::unique_ptr<pache::type_ast>>, std::vector<std::string>>> FuncFParams
 %type <std::vector<pache::exp_ast*>> FuncRParams
 %type <pache::class_ast*> class_def
 %type <pache::class_body> class_body
@@ -179,22 +181,22 @@ CompUnit
 
 FuncFParam:
   type IDENTIFIER {
-    $$ = std::make_pair<pache::type_ast*,std::string>(std::move($1), std::move($2));
+    $$ = std::make_pair<std::unique_ptr<pache::type_ast>,std::string>(std::move($1), std::move($2));
   };
 
 FuncFParams:
   // empty
 
-  { $$ = std::make_pair<std::vector<pache::type_ast*>, std::vector<std::string>>({}, {});
+  { $$ = std::make_pair<std::vector<std::unique_ptr<pache::type_ast>>, std::vector<std::string>>({}, {});
   }
   | FuncFParam {
-    $$ = std::make_pair<std::vector<pache::type_ast*>, std::vector<std::string>>({}, {});
-    $$.first.push_back($1.first);
+    $$ = std::make_pair<std::vector<std::unique_ptr<pache::type_ast>>, std::vector<std::string>>({}, {});
+    $$.first.push_back(std::move($1.first));
     $$.second.push_back($1.second);
   }
 | FuncFParams COMMA FuncFParam {
-      $$ = $1;
-      $$.first.push_back($3.first);
+      $$ = std::move($1);
+      $$.first.push_back(std::move($3.first));
     $$.second.push_back($3.second);
 
 };
@@ -210,7 +212,7 @@ FuncFParams:
 
 FuncDef
   : FUNC IDENTIFIER LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS type block {
-    auto ast = new pache::func_ast(std::move($2), std::move($4), $6, $7);
+    auto ast = new pache::func_ast(std::move($2), std::move($4), std::move($6), $7);
     //      for (auto arg : *$4) {
      //   arg->set_father($$);
      // }
@@ -234,7 +236,7 @@ class_body:
 }
 | class_body class_def {
   $$ = std::move($1);
-  $$.class_def.push_back(std::unique_ptr<pache::class_ast>{$2});
+  $$.inner_class_def.push_back(std::unique_ptr<pache::class_ast>{$2});
 
 };
 
@@ -292,16 +294,17 @@ type:
 | C32
 { $$ = pache::c32_type_t::get(); }
 | arr_type {
-  $$ = $1;
+  $$ = std::move($1);
 }
 | IDENTIFIER {
-  $$ = new pache::user_def_type(std::move($1));
+  $$ = std::make_unique<pache::user_def_type>(std::move($1));
 }
   ;
 
 arr_type:
   type LEFT_SQUARE_BRACKET INTEGER RIGHT_SQUARE_BRACKET {
-    $$ = new pache::arr_type_t($1, $3);
+    $$ = std::make_unique<arr_type_t>(std::move($1), $3);
+    
   }
 
 statement_list:
@@ -367,13 +370,13 @@ return_stmt:
 
 let_stmt:
   LET type IDENTIFIER ASSIGN expression SEMICOLON {
-    $$ = new pache::let_stmt($2, $3, $5);
+    $$ = new pache::let_stmt(std::move($2), std::move($3), $5);
   }
 | LET type IDENTIFIER LEFT_CURLY_BRACE expression RIGHT_CURLY_BRACE SEMICOLON {
-    $$ = new pache::let_stmt($2, $3, $5);
+    $$ = new pache::let_stmt(std::move($2), std::move($3), $5);
 }
 | LET type IDENTIFIER SEMICOLON {
-    $$ = new pache::let_stmt($2, $3, nullptr);
+    $$ = new pache::let_stmt(std::move($2), std::move($3), nullptr);
   }
 ;
 

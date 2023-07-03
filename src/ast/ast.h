@@ -95,10 +95,11 @@ private:
 class func_ast : public callable_ast {
 public:
   explicit func_ast(std::string &&name,
-                    std::pair<std::vector<pache::type_ast *>,
+                    std::pair<std::vector<std::unique_ptr<pache::type_ast>>,
                               std::vector<std::string>> &&args,
-                    type_ast *return_type, base_ast *block)
-      : m_name(std::move(name)), m_type(return_type),
+                    std::unique_ptr<pache::type_ast> &&return_type,
+                    base_ast *block)
+      : m_name(std::move(name)), m_type(std::move(return_type)),
         m_args_type(std::move(args.first)), m_args_name(std::move(args.second)),
         m_block(block) {}
 
@@ -113,9 +114,11 @@ public:
       return m_father->find_dec(name);
     }
   }*/
-  std::vector<type_ast *> const &get_args_type() const { return m_args_type; }
+  std::vector<std::unique_ptr<pache::type_ast>> const &get_args_type() const {
+    return m_args_type;
+  }
   std::vector<std::string> const &get_args_name() const { return m_args_name; }
-  type_ast *const get_return_type() const { return m_type; }
+  type_ast *const get_return_type() const { return m_type.get(); }
   std::string const &get_name() const { return m_name; }
   std::string const get_encoding_name() const {
     std::string s = "_N" + m_father->encoding_name() + get_name();
@@ -127,15 +130,15 @@ public:
 
 protected:
   std::string m_name;
-  type_ast *m_type;
-  std::vector<type_ast *> m_args_type;
+  std::unique_ptr<pache::type_ast> m_type;
+  std::vector<std::unique_ptr<pache::type_ast>> m_args_type;
   std::vector<std::string> m_args_name;
   std::unique_ptr<base_ast> m_block;
   std::string name_mangling() {
     std::string s{};
     s += get_father()->encoding_name();
     s += this->m_name;
-    for (auto arg : m_args_type) {
+    for (auto &arg : m_args_type) {
       s += arg->encoding_name();
     }
     return s;
