@@ -50,6 +50,9 @@ C8                   "c8"
 C16                  "c16"
 C32                  "c32"
 
+CONST                "const"
+VOLATILE             "volatile"
+
 MAIN                 "main"
 LET                  "let"
 CLASS                "class"
@@ -102,7 +105,7 @@ operand_start         [(A-Za-z0-9_\"]
 Decimal       [1-9][0-9]*
 Octal         0[0-7]*
 Hexadecimal   0[xX][0-9a-fA-F]+
-Binary        0[bB][01]*
+Binary        0[bB][01]+
 %{
   // Code run each time a pattern is matched.
   # define YY_USER_ACTION  loc.columns (yyleng);
@@ -160,6 +163,8 @@ Binary        0[bB][01]*
 {C16}           { return pache::parser::make_C16(loc); }
 {C32}           { return pache::parser::make_C32(loc); }
 
+{CONST}         { return pache::parser::make_CONST(loc);}
+{VOLATILE}         { return pache::parser::make_VOLATILE(loc);}
 "return"        { return pache::parser::make_RETURN(loc); }
 "func"          { return pache::parser::make_FUNC(loc); }
 {CLASS}                 { return pache::parser::make_CLASS(loc); }

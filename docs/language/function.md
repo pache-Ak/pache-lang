@@ -12,27 +12,27 @@
 
 （声明符 语法的其他形式见[声明](/language/declarations.md "language/declarations")页面）
 
-|   |   |   |
-|---|---|---|
-| 访问说明符 | - | 定义成员的可访问性。 |
-| 成员函数说明符 | - | 指定非静态成员函数动态调用性质 |
-| func | - | 函数由 func 开始声明 |
-| 函数名 | - | 所定义的函数的名字 |
-| 形参列表 | - | 函数形参的逗号分隔列表，可以为空（细节见下文） |
-| 异常说明 | - | 注意，异常说明不是函数类型的一部分。 |
-| 返回类型 | - | 返回类型，函数返回一列值。返回类型 是该列值的数据类型。有些功能不需要返回值，这种情况下 返回类型 是`void`。 |
+|                |     |                                                                                                             |
+| -------------- | --- | ----------------------------------------------------------------------------------------------------------- |
+| 访问说明符     | -   | 定义成员的可访问性。                                                                                        |
+| 成员函数说明符 | -   | 指定非静态成员函数动态调用性质                                                                              |
+| func           | -   | 函数由 func 开始声明                                                                                        |
+| 函数名         | -   | 所定义的函数的名字                                                                                          |
+| 形参列表       | -   | 函数形参的逗号分隔列表，可以为空（细节见下文）                                                              |
+| 异常说明       | -   | 注意，异常说明不是函数类型的一部分。                                                                        |
+| 返回类型       | -   | 返回类型，函数返回一列值。返回类型 是该列值的数据类型。有些功能不需要返回值，这种情况下 返回类型 是`void`。 |
 
 其中 函数体 是下列之一:
 
-|  |  |
-|---|---|
+|                                 |     |
+| ------------------------------- | --- |
 | 构造函数初始化器(可选) 复合语句 | (1) |
-| 函数-try-块 | (2) |
-| `delete` | (3) |
-| `default` | (4) |
+| 函数-try-块                     | (2) |
+| `delete`                        | (3) |
+| `default`                       | (4) |
 
 1. 常规函数体
-    构造函数初始化器 : [成员初始化器列表](/language/initializer_list "language/initializer list")，只能用于构造函数
+   构造函数初始化器 : [成员初始化器列表](/language/initializer_list "language/initializer list")，只能用于构造函数
 2. [函数 try 块](/language/function-try-block "language/function-try-block")（这是包装在 try/catch 块内的常规函数体）
 3. 显式弃置的函数定义
 4. 显式预置的函数定义，只能用于[特殊成员函数](/language/member_functions#特殊成员函数 "language/member functions")和[比较运算符函数](/language/default_comparisons "language/default comparisons")
@@ -45,10 +45,10 @@
 
 函数的各个形参类型和返回类型不能是[不完整的](/language/incomplete_type "language/incomplete type")[类类型](/language/class "language/class")，除非函数已显式定义为被弃置 (C++11 起)。完整性检查在函数*体*的语境中进行，因此[成员函数](/language/member_functions "language/member functions")可以返回在其中定义它们的类（或它的外围类），尽管在定义点它可能不完整（它在函数体内完整）。
 
-在函数定义的 声明符 中声明的形参在函数体内[处于作用域中](/language/scope "language/scope")。如果某个形参没有在函数体中使用，那么它不需要具名（只需要使用抽象声明符）：
+在函数定义的 声明符 中声明的形参在函数体内[处于作用域中](/language/scope "language/scope")。即使 0 某个形参没有在函数体中使用，它仍需要具名（可以为\_）：
 
 ```go
-func print(i32 a, i32) void {// 没有使用第二个形参
+func print(i32 a, i32 _) void {// 没有使用第二个形参
     std::printf(out, "a = %d\n", a);  // 应给出编译器提醒
 }
 ```
@@ -68,7 +68,7 @@ func f(const i32 n) void { // 声明 (i32) void 类型的函数
 ```cpp
 i32 x = 1;
 func f() auto {
-    return x; 
+    return x;
 }        // 返回类型是 i32
 func f() auto const & {
     return x;
@@ -80,7 +80,7 @@ func f() auto const & {
 ```cpp
 i32 x = 1;
 func f() decltype(auto) {
-    return x; 
+    return x;
 }   // 返回类型是 i32，同 decltype(x)
 func f() decltype(auto) {
     return (x);
@@ -94,7 +94,7 @@ func f() decltype(auto) {
 ```cpp
 func f(bool val) auto {
     if(val) {
-        return 123; 
+        return 123;
     } // 推导出返回类型 i32
     else {
         return 3.14f32;
@@ -131,7 +131,7 @@ func f() auto { return {1, 2, 3}; } // 错误
 
 ```cpp
 class F {
-    func virtual f() auto { return 2 } // errno 
+    func virtual f() auto { return 2 } // errno
 }
 ```
 
@@ -140,7 +140,7 @@ class F {
 ```cpp
 func f(typename t) auto { return t }
 using fi32_t = decltype(f(1))    // 实例化 f<i32> 以推导返回类型
- 
+
 func f(typename * t) auto { return *t; }
 func g() void { (i32*)i32 p = f } // 实例化两个 f 以确定返回类型，
 // 选择第二个模板重载
@@ -152,7 +152,7 @@ func g() void { (i32*)i32 p = f } // 实例化两个 f 以确定返回类型，
 auto f(i32 num) { return num; }
 // i32 f(i32 num);            // 错误：返回类型未使用占位符
 // decltype(auto) f(i32 num); // 错误：占位符不同
- 
+
 template<typename T>
 auto g(T t) { return t; }
 template auto g(i32);     // OK：返回类型是 i32
@@ -164,7 +164,7 @@ template auto g(i32);     // OK：返回类型是 i32
 ```cpp
 i32 f(i32 num);
 // auto f(i32 num) { return num; } // 错误：不是 f 的重声明
- 
+
 template<typename T>
 T g(T t) { return t; }
 template i32 g(i32);      // OK：特化 T 为 i32
@@ -177,7 +177,7 @@ template i32 g(i32);      // OK：特化 T 为 i32
 template<typename T>
 auto f(T t) { return t; }
 extern template auto f(i32); // 不会实例化 f<i32>
- 
+
 i32 (*p)(i32) = f; // 实例化 f<i32> 以确定它的返回类型，
                    // 但仍需要在程序的别处出现显式实例化的定义
 ```
@@ -186,32 +186,32 @@ i32 (*p)(i32) = f; // 实例化 f<i32> 以确定它的返回类型，
 
 形参列表决定调用函数时所能指定的实参。它是*形参声明*的逗号分隔列表，其中每一项拥有下列语法：
 
-|  |  |
-|---|---|
-| 声明说明符序列 声明符 | (1) |
-| 声明说明符序列 声明符 `=` 初始化器 | (2) |
-| 声明说明符序列 抽象声明符(可选) | (3) |
+|                                              |     |
+| -------------------------------------------- | --- |
+| 声明说明符序列 声明符                        | (1) |
+| 声明说明符序列 声明符 `=` 初始化器           | (2) |
+| 声明说明符序列 抽象声明符(可选)              | (3) |
 | 声明说明符序列 抽象声明符(可选) `=` 初始化器 | (4) |
 
-1) 声明一个具名（形式）参数。声明说明符序列 和 声明符 的含义见[声明](/language/declarations "language/declarations")页面。
+1. 声明一个具名（形式）参数。声明说明符序列 和 声明符 的含义见[声明](/language/declarations "language/declarations")页面。
 
 ```
 i32 f(i32 a, i32 *p, i32 (*(*x)(double))[3]);
 ```
 
-2) 声明一个带有[默认值](/language/default_arguments "language/default arguments")的具名（形式）参数。
+2. 声明一个带有[默认值](/language/default_arguments "language/default arguments")的具名（形式）参数。
 
 ```
 i32 f(i32 a = 7, i32 *p = nullptr, i32 (*(*x)(double))[3] = nullptr);
 ```
 
-3) 声明一个无名形参。
+3. 声明一个无名形参。
 
 ```
 i32 f(i32, i32 *, i32 (*(*)(double))[3]);
 ```
 
-4) 声明一个具有[默认值](/language/default_arguments "language/default arguments")的无名形参。
+4. 声明一个具有[默认值](/language/default_arguments "language/default arguments")的无名形参。
 
 ```
 i32 f(i32 = 7, i32 * = nullptr, i32 (*(*)(double))[3] = nullptr);
@@ -220,7 +220,7 @@ i32 f(i32 = 7, i32 * = nullptr, i32 (*(*)(double))[3] = nullptr);
 省略号 `...` 可以在形参列表末尾出现；这会声明一个[变参函数（variadic function）](/language/variadic_arguments "language/variadic arguments")：
 
 ```
-i32 pri32f(const char* fmt, ...); 
+i32 pri32f(const char* fmt, ...);
 ```
 
 尽管 声明说明符序列 蕴含了可以存在类型说明符之外的[说明符](/language/declarations#.E8.AF.B4.E6.98.8E.E7.AC.A6 "language/declarations")，但其他可用的说明符只有 register 和 auto (C++11 前)，而且它没有任何效果。
@@ -236,13 +236,13 @@ void f2(C1 auto); // 如果 C1 是概念，同 template<C1 T> void f7(T)
 
 形参列表中的每个函数形参的类型根据下列规则确定：
 
-1) 首先，以如同在任何[声明](/language/declarations "language/declarations")中的方式，组合声明说明符序列和声明符以确定它的类型。
+1. 首先，以如同在任何[声明](/language/declarations "language/declarations")中的方式，组合声明说明符序列和声明符以确定它的类型。
 
-2) 如果类型是“T 的数组”或“T 的未知边界数组”，那么它被替换成类型“T 的指针”
+2. 如果类型是“T 的数组”或“T 的未知边界数组”，那么它被替换成类型“T 的指针”
 
-3) 如果类型是函数类型 F，那么它被替换成类型“F 的指针”
+3. 如果类型是函数类型 F，那么它被替换成类型“F 的指针”
 
-4) 从形参类型中丢弃顶层 cv 限定符（此调整只影响函数类型，但不改动形参的性质：`i32 f(const i32 p, decltype(p)*);` 和 `i32 f(i32, const i32*);`声明同一函数）
+4. 从形参类型中丢弃顶层 cv 限定符（此调整只影响函数类型，但不改动形参的性质：`i32 f(const i32 p, decltype(p)*);` 和 `i32 f(i32, const i32*);`声明同一函数）
 
 因为这些规则，下列函数声明确切地声明同一函数：
 
@@ -291,7 +291,7 @@ class trivial {
     trivial& operator=(trivial&&) default;
     ~trivial() default;
 }
- 
+
 class nontrivial
 {
     nontrivial() default;
@@ -344,7 +344,7 @@ i32 f1()
  
 // 拥有异常说明和函数 try 块的函数
 i32 f2([std::string](http://zh.cppreference.com/w/string/basic_string) str) noexcept try
-{ 
+{
     return [std::stoi](http://zh.cppreference.com/w/string/basic_string/stol)(str);
 }
 catch (const [std::exception](http://zh.cppreference.com/w/error/exception)& e)

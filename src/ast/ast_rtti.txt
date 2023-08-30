@@ -5,7 +5,7 @@ abstract class Statement : AstNode;
 class ExpressionStatement : Statement;
 class Assign : Statement;
 class VariableDefinition : Statement;
-class If : Statement;
+class If : Block;
 abstract class Return : Statement;
 class ReturnVar : Return;
 class ReturnExpression : Return;

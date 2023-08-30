@@ -120,6 +120,8 @@ using namespace std;
   COMMA                 // ,
   SEMICOLON             // ;
   NEW_LINE              // \n
+  CONST                 // const
+  VOLATILE              // volatile
   UNARY_STAR "unary *"
   PREFIX_STAR "prefix *"
   POSTFIX_STAR "postfix *"
@@ -130,11 +132,11 @@ using namespace std;
 %token EOF 0;
 // 非终结符的类型定义
 %type <pache::compunit_ast*>   CompUnit
-%type <std::unique_ptr<pache::type_ast>> type arr_type
+%type <std::unique_ptr<pache::type_ast>> type arr_type const_type volatile_type multi_array_type primary_type
 %type <pache::exp_ast*> Number   primary_expression unary_expression call_expression
-%type <pache::block_ast*> block optional_else  loop_stmt
-%type <pache::let_stmt*> let_stmt
-%type <pache::stmt_ast*> stmt return_void_stmt return_stmt if_stmt  assign_stmt break_stmt continue_stmt
+%type <pache::block_ast*> block /*optional_else*/  loop_stmt  
+%type <pache::let_stmt*> let_stmt 
+%type <pache::stmt_ast*> stmt return_void_stmt return_stmt  if_stmt if_else_stmt assign_stmt break_stmt continue_stmt else_stmt
 %type <pache::exp_ast*>  expression  add_exp
 %type <std::vector<pache::stmt_ast*>> statement_list
 %type <pache::exp_ast*>  mul_expressions
@@ -148,6 +150,7 @@ using namespace std;
 %type <pache::exp_ast*> bitwise_xor_expression
 %type <pache::exp_ast*> bitwise_or_expression
 %type <pache::func_ast*> FuncDef  // main_func
+%type <std::vector<std::size_t>> size_list
 
 %%
 
@@ -185,8 +188,7 @@ FuncFParam:
   };
 
 FuncFParams:
-  // empty
-
+  %empty
   { $$ = std::make_pair<std::vector<std::unique_ptr<pache::type_ast>>, std::vector<std::string>>({}, {});
   }
   | FuncFParam {
@@ -224,8 +226,7 @@ FuncDef
 ;
 
 class_body:
-  // Empty
-  { $$; }
+%empty  { $$; }
 | class_body let_stmt {
   $$ = std::move($1);
   $$.var_def.push_back(std::unique_ptr<pache::let_stmt>{$2});
@@ -246,7 +247,36 @@ class_def:
     $$ = new class_ast(std::move($2), std::move($4));
   };
 // 同上, 不再解释
-type:
+const_type:
+  primary_type CONST {
+    $$ = std::move($1);
+  }
+| const_type CONST {
+  $$ = std::move($1);
+  // TODO log error
+};
+
+volatile_type:
+  primary_type VOLATILE {
+    $$ = std::move($1);
+  }
+| volatile_type VOLATILE {
+  $$ = std::move($1);
+  // TODO log error
+};
+
+type :
+const_type {
+  $$ = std::move($1);
+} |
+volatile_type {
+  $$ = std::move($1);
+}|
+primary_type {
+  $$ = std::move($1);
+}
+
+primary_type:
   VOID
   { $$ = pache::void_type_t::get(); }
 | BOOL {
@@ -295,20 +325,43 @@ type:
 { $$ = pache::c32_type_t::get(); }
 | arr_type {
   $$ = std::move($1);
+}|
+multi_array_type {
+$$ = std::move($1);
 }
 | IDENTIFIER {
   $$ = std::make_unique<pache::user_def_type>(std::move($1));
 }
   ;
 
+
+
 arr_type:
   type LEFT_SQUARE_BRACKET INTEGER RIGHT_SQUARE_BRACKET {
     $$ = std::make_unique<arr_type_t>(std::move($1), $3);
     
   }
-
+;
+size_list:
+  INTEGER COMMA {
+    $$ = std::vector<std::size_t>{};
+    $$.push_back($1);
+  } |
+  size_list  INTEGER  COMMA {
+    $$ = std::move($1);
+    $$.push_back($2);
+  }| 
+  size_list  INTEGER{
+    $$ = std::move($1);
+    $$.push_back($2);
+  }
+  ;
+  multi_array_type:
+  type LEFT_SQUARE_BRACKET size_list RIGHT_SQUARE_BRACKET {
+    $$ = std::make_unique<pache::multi_array_type>(std::move($1), std::move($3));
+  };
 statement_list:
-  // Empty
+  %empty
     { $$ = std::vector<pache::stmt_ast*>{}; }
 | statement_list stmt
     {
@@ -323,6 +376,7 @@ block
       ast->set_father($$->get_father());
     }
   }
+
   ;
 
 stmt:
@@ -342,9 +396,6 @@ stmt:
 }
 | return_stmt
     { $$ = $1; }
-| if_stmt {
-  $$ = $1;
-}
 | loop_stmt {
   $$ = $1;
 }
@@ -353,7 +404,9 @@ stmt:
 }
 | continue_stmt {
   $$ = $1;
-}
+}  | if_stmt {
+    $$ = std::move($1);
+  }
 ;
 
 return_void_stmt:
@@ -396,8 +449,8 @@ continue_stmt:
   CONTINUE SEMICOLON {
     $$ = new pache::continue_stmt();
   };
-optional_else:
-  // Empty
+/* optional_else:
+%empty
     { $$ = nullptr; }
 //| ELSE if_stmt
   //  {
@@ -406,11 +459,28 @@ optional_else:
 | ELSE block
     { $$ = $2; }
 ;
+ */
+else_stmt:
+  block {
+    $$ = std::move($1);
+  } |
+  if_stmt {
+    $$ = std::move($1);
+  };
 
 if_stmt:
-  IF expression block optional_else {
-    $$ = new pache::if_stmt($2, $3, $4);
+  IF expression block  {
+    $$ = new pache::if_stmt($2, $3);
   }
+  | if_else_stmt {
+    $$=std::move($1);
+  }
+  ;
+if_else_stmt:
+  IF expression block ELSE else_stmt {
+    $$ = std::make_unique<pache::if_else_stmt>(pache::if_stmt(std::move($2), std::move($3)))
+  }
+
 Number
   : INTEGER {
     $$ = new pache::i32_literal($1);
@@ -430,7 +500,7 @@ expression:
 ;
 
 FuncRParams:
-  // empty
+%empty
   {
     $$ = std::vector<pache::exp_ast*>();
   }|

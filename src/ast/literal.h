@@ -9,18 +9,19 @@
 namespace pache {
 class literal : public exp_ast {
 public:
+  virtual ~literal() = 0;
+
 protected:
   explicit literal() {}
 };
 
 class void_literal_t : public literal {
 public:
-  virtual llvm::Value *codegen() override;
+  // virtual llvm::Value *codegen() override;
   //  virtual type_ast const *get_type() override { return void_type_t::get(); }
 
   static void_literal_t make_void_literal_t() { return void_literal_t(); }
-
-  virtual ~void_literal_t() override = default;
+  ` virtual ~void_literal_t() = default;
 
 private:
   explicit void_literal_t() {}
@@ -34,7 +35,7 @@ public:
 
   //  virtual type_ast const *get_type() override { return i32_type_t::get(); }
 
-  virtual llvm::Value *codegen() override;
+  // virtual llvm::Value *codegen() override;
 
   virtual ~i32_literal() override = default;
 

@@ -2,6 +2,7 @@
 #define CLASS_H
 
 #include "ast.h"
+#include "function.h"
 #include "statement.h"
 #include <memory>
 #include <vector>
@@ -17,11 +18,11 @@ class class_ast : public base_ast {
 public:
   explicit class_ast(std::string &&name, class_body &&body);
 
-  virtual llvm::Value *codegen() override { return nullptr; } // TODO
+  // virtual llvm::Value *codegen() override { return nullptr; } // TODO
   std::string const get_name() const { return m_name; }
-  virtual std::string const encoding_name() const override {
-    return get_name();
-  }
+  // virtual std::string const decorated_name() const override {
+  //   return get_name();
+  // }
 
   std::string const m_name;
   class_body m_body;
