@@ -5,8 +5,8 @@ AST_DIR		:= src/ast
 
 # Flags
 CFLAGS := -Wall -std=c11
-CPPFLAGS := -Wall  -Wno-register -std=c++17 `llvm-config --cxxflags --ldflags --system-libs --libs core`
-#`llvm-config --cxxflags --ldflags --system-libs --libs core`
+CPPFLAGS := -Wall  -Wno-register -std=c++14 `llvm-config --cxxflags --ldflags --system-libs --libs core`
+
 FFLAGS :=
 BFLAGS := -d
 LDFLAGS :=
