@@ -14,13 +14,13 @@ true false null 常量
 
 class ~~stuct~~ union func enum this operator let 类型定义
 
-static_cast const_cast repinterpret_cast dynamic_cast 转换 TODO
+static_cast const_cast repinterpret_cast dynamic_cast 转换 TODO 不作为关键字
 
 atomic_cancel atomic_commot atomic_noexcept synchronized 事务性内存
 
 co_await co_return co_yield 协程
 
-package import namespace using ~~export~~ 包 作用域管理  TODO
+package import ~~namespace~~ using ~~export~~ 包 作用域管理  TODO
 
 sizeof alignof 对象大小（改为内置函数？？） TODO
 
