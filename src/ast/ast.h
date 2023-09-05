@@ -30,15 +30,6 @@
 #include <vector>
 
 namespace pache {
-inline namespace ast {
-static std::unique_ptr<llvm::LLVMContext> TheContext =
-    std::make_unique<llvm::LLVMContext>();
-static std::unique_ptr<llvm::Module> TheModule =
-    std::make_unique<llvm::Module>("first modlue", *TheContext);
-// Create a new builder for the module.
-static std::unique_ptr<llvm::IRBuilder<>> Builder =
-    std::make_unique<llvm::IRBuilder<>>(*TheContext);
-} // namespace ast
 
 class variable_ast;
 class stmt_ast;
