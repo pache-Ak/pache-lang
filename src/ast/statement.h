@@ -17,8 +17,7 @@ class base_build;
 class stmt_ast : public base_ast {
 public:
   virtual ~stmt_ast() = default;
-  virtual void build(base_build *father) = 0;
-  ////  virtual llvm::Value *codegen() override = 0;
+  virtual void build(base_build *const father) const = 0;
 };
 
 class block_ast : public stmt_ast {
@@ -27,24 +26,11 @@ public:
   block_ast(block_ast &&other) = default;
   block_ast(std::vector<std::unique_ptr<stmt_ast>> &&statements)
       : m_statements(std::move(statements)) {}
-  /* virtual void insert_dec(std::string name, variable_ast *dec) override {
-     dec_name.insert(std::make_pair(name, dec));
-   }
 
-   virtual variable_ast *find_dec(const std::string &name) const override {
-     auto beg = this->dec_name.find(name);
-     if (beg != this->dec_name.end()) {
-       return beg->second;
-     } else if (m_father != nullptr) {
-       return m_father->find_dec(name);
-     } else {
-       return nullptr;
-     }
-   }*/
-  std::vector<std::unique_ptr<stmt_ast>> &get_stmt_list() {
+  std::vector<std::unique_ptr<stmt_ast>> const &get_stmt_list() const {
     return m_statements;
   }
-  virtual void build(base_build *father) override;
+  virtual void build(base_build *const father) const override;
 
   // virtual llvm::Value *codegen() override;
 
@@ -52,7 +38,6 @@ public:
 
 protected:
   std::vector<std::unique_ptr<stmt_ast>> m_statements;
-  // std::unordered_map<std::string, variable_ast *> dec_name;
 };
 
 class loop_stmt : public block_ast {
@@ -63,7 +48,7 @@ public:
   //   virtual std::string begin_lable() const override { return begin; }
 
   //  virtual std::string end_lable() const override { return end; }
-  virtual void build(base_build *father) override;
+  virtual void build(base_build *const father) const override;
 
 private:
   std::unique_ptr<block_ast> m_block;
@@ -73,18 +58,18 @@ private:
 
 class break_stmt : public stmt_ast {
 public:
-  // virtual llvm::Value *codegen() override { return nullptr; }
+  virtual void build(base_build *const father) const override;
 };
 
 class continue_stmt : public stmt_ast {
 public:
-  // virtual llvm::Value *codegen() override { return nullptr; }
+  virtual void build(base_build *const father) const override;
 };
 
 class return_void_stmt : public stmt_ast {
 public:
   explicit return_void_stmt() = default;
-
+  virtual void build(base_build *const father) const override;
   // virtual llvm::Value *codegen() override;
   virtual ~return_void_stmt() override = default;
 };
@@ -95,6 +80,8 @@ public:
 
   // virtual llvm::Value *codegen() override;
   virtual ~return_ast() override = default;
+  exp_ast const *const get_exp() const { return m_exp.get(); }
+  virtual void build(base_build *const father) const override;
 
 private:
   std::unique_ptr<exp_ast> m_exp;
@@ -108,6 +95,9 @@ public:
     m_val->set_father(get_father());
   }
   // virtual llvm::Value *codegen() override { return nullptr; }
+
+  var_exp const *const get_var() const { return m_var; }
+  exp_ast const *const get_exp() const { return m_val.get(); }
 
 private:
   var_exp *m_var;
@@ -157,10 +147,7 @@ private:
 class exp_stmt : public stmt_ast {
 public:
   explicit exp_stmt(std::unique_ptr<exp_ast> &&exp) : m_exp(std::move(exp)) {}
-  // virtual llvm::Value *codegen() override {
-  // m_exp->codegen()->print(llvm::errs());
-  // return m_exp->codegen();
-  //  }
+  exp_ast const *const get_exp() const { return m_exp.get(); }
 
 private:
   std::unique_ptr<exp_ast> m_exp;
@@ -174,24 +161,30 @@ private:
   // var      TODO
 };
 
-class if_stmt : public block_ast {
+class if_stmt : public stmt_ast {
 public:
   explicit if_stmt(std::unique_ptr<exp_ast> &&exp,
                    std::unique_ptr<block_ast> &&then)
-      : block_ast(std::move(*then)), m_condition(std::move(exp)) {}
+      : m_condition(std::move(exp)), m_then_block(std::move(then)) {
+    m_condition->set_father(get_father());
+    m_then_block->set_father(get_father());
+  }
 
-  virtual void build(base_build *) override;
+  virtual void build(base_build *const father) const override;
+  exp_ast const *const get_condition() const { return m_condition.get(); }
+  block_ast const *const get_then_block() const { return m_then_block.get(); }
 
 private:
   std::unique_ptr<exp_ast> m_condition;
-  // std::unique_ptr<block_ast> m_then_block;
+  std::unique_ptr<block_ast> m_then_block;
 };
 
-class if_else_stmt : public if_stmt {
+class if_else_stmt : public stmt_ast {
 public:
   explicit if_else_stmt(std::unique_ptr<exp_ast> &&exp,
                         std::unique_ptr<block_ast> &&then, block_ast *elses)
-      : if_stmt(std::move(exp), std::move(then)), m_else_block(elses) {
+      : m_condition(std::move(exp)), m_then_block(std::move(then)),
+        m_else_block(std::move(elses)) {
     m_condition->set_father(get_father());
     m_then_block->set_father(get_father());
     if (m_else_block != nullptr) {
@@ -199,11 +192,11 @@ public:
     }
   }
 
-  // virtual llvm::Value *codegen() override;
-  virtual void build(base_build *) override;
-  // virtual variable_ast *find_dec(const std::string &name) const override {
-  //    return m_father->find_dec(name);
-  //  }
+  virtual void build(base_build *const father) const override;
+
+  exp_ast const *const get_condition() const { return m_condition.get(); }
+  block_ast const *const get_then_block() const { return m_then_block.get(); }
+  block_ast const *const get_else_block() const { return m_else_block.get(); }
 
 private:
   std::unique_ptr<exp_ast> m_condition;

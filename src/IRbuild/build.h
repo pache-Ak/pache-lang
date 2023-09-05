@@ -17,14 +17,17 @@ static std::unique_ptr<llvm::Module> TheModule =
 static std::unique_ptr<llvm::IRBuilder<>> Builder =
     std::make_unique<llvm::IRBuilder<>>(*TheContext);
 } // namespace IR
+class build_type;
 class base_build {
 public:
   explicit base_build(base_build *father) : m_father(father) {}
   virtual ~base_build() = 0;
-  virtual llvm::StructType *find_type(std::string const &name);
-  virtual llvm::Value *find_var(std::string const &name) const = 0;
+  // virtual llvm::StructType *find_type(std::string const &name);
+  virtual build_variable *const find_var(std::string const &name) const = 0;
   virtual void insert(std::string const &, build_variable &&value);
-  virtual build_type find_type(std::string name) = 0;
+  virtual build_type *const find_type(std::string const &name) const = 0;
+  virtual llvm::BasicBlock *get_loop_begin() = 0;
+  virtual llvm::BasicBlock *get_loop_end() = 0;
 
 protected:
   base_build *m_father;
