@@ -1,7 +1,11 @@
 #include "statement.h"
 #include "build.h"
 #include "expression.h"
+#include "type.h"
+#include "variable.h"
 #include <llvm-14/llvm/IR/BasicBlock.h>
+#include <llvm-14/llvm/IR/IRBuilder.h>
+#include <llvm-14/llvm/IR/Instructions.h>
 #include <llvm-14/llvm/IR/Value.h>
 #include <memory>
 
@@ -210,5 +214,40 @@ void build_if_else(base_build *const father, if_else_stmt const *const ast) {
   Builder->CreateBr(merge_BB);
 }
 
-void build_let(base_build *const father, let_stmt const *const ast) {}
+void build_let(base_build *const father, let_stmt const *const ast) {
+  if (dynamic_cast<block_scope *const>(father) == nullptr) {
+    std::cerr << "can't define variable in here.\n";
+    return;
+  }
+  std::unique_ptr<build_type> type{type_build(father, ast->get_var_type())};
+  llvm::AllocaInst *all = IR::Builder->CreateAlloca(
+      type->get_llvm_type(), nullptr, ast->get_var_name());
+  build_variable var{type.get(), all};
+  father->insert(ast->get_var_name(), std::move(var));
+
+  if (ast->get_init_exp() != nullptr) {
+    auto exp = build_exp(father, ast->get_init_exp().get());
+    IR::Builder->CreateStore(exp, all);
+  } else {
+    std::cerr << "define variable without initializer.\n";
+  }
+}
+
+void build_assign(base_build *const father, assign_stmt const *const ast) {
+  build_variable *const var = father->find_var(ast->get_var()->get_name());
+  if (var == nullptr) {
+    std::cerr << "variable hasn't defined.\n";
+  } else {
+    auto exp = build_exp(father, ast->get_exp());
+    if (exp == nullptr) {
+      std::cerr << "expression is not valid.\n";
+    } else {
+      IR::Builder->CreateStore(exp, var->get_value());
+    }
+  }
+}
+
+void build_exp_stmt(base_build *const father, exp_stmt const *const ast) {
+  build_exp(father, ast->get_exp());
+}
 } // namespace pache

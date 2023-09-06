@@ -94,10 +94,10 @@ public:
     m_var->set_father(get_father());
     m_val->set_father(get_father());
   }
-  // virtual llvm::Value *codegen() override { return nullptr; }
 
   var_exp const *const get_var() const { return m_var; }
   exp_ast const *const get_exp() const { return m_val.get(); }
+  virtual void build(base_build *const father) const override;
 
 private:
   var_exp *m_var;
@@ -115,6 +115,8 @@ public:
       m_init->set_father(get_father());
     }
   }
+
+  virtual void build(base_build *const father) const override;
   /*   explicit let_stmt(variable_ast *var, std::unique_ptr<exp_ast> init)
         : m_var(var), m_init(init) {
       m_var->set_father(get_father());
@@ -123,24 +125,13 @@ public:
       }
     } */
 
-  // will be delete
-  // virtual llvm::Value *codegen() override {
-  // todo global or alloca
-  //   TheModule->getOrInsertGlobal(m_var->get_name(), Builder->getInt32Ty());
-  ////   llvm::GlobalVariable *gVar =
-  /// TheModule->getNamedGlobal(m_var->get_name());
-  //   std::cout << "let stmt.\n";
-  //
-  //  return nullptr;
-  // }
-  std::unique_ptr<type_ast> &get_var_type() { return type; }
+  type_ast const *const get_var_type() const { return type.get(); }
   std::string const &get_var_name() const { return var_name; }
   std::unique_ptr<exp_ast> const &get_init_exp() const { return m_init; }
 
 private:
   std::unique_ptr<type_ast> type;
   std::string const var_name;
-  // std::unique_ptr<variable_ast> m_var;
   std::unique_ptr<exp_ast> m_init;
 };
 
@@ -148,6 +139,7 @@ class exp_stmt : public stmt_ast {
 public:
   explicit exp_stmt(std::unique_ptr<exp_ast> &&exp) : m_exp(std::move(exp)) {}
   exp_ast const *const get_exp() const { return m_exp.get(); }
+  virtual void build(base_build *const father) const override;
 
 private:
   std::unique_ptr<exp_ast> m_exp;

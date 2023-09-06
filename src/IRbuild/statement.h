@@ -36,6 +36,9 @@ void build_if_else(base_build *const father, if_else_stmt const *const ast);
 
 void build_break(base_build *const father, break_stmt const *const ast);
 void build_continue(base_build *const father, continue_stmt const *const ast);
+void build_let(base_build *const father, let_stmt const *const ast);
+void build_assign(base_build *const father, assign_stmt const *const ast);
+void build_exp_stmt(base_build *const father, exp_stmt const *const ast);
 } // namespace pache
 
 #endif

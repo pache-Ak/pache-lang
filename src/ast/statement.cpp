@@ -33,3 +33,15 @@ void pache::break_stmt::build(base_build *const father) const {
 void pache::continue_stmt::build(base_build *const father) const {
   build_continue(father, this);
 }
+
+void pache::let_stmt::build(base_build *const father) const {
+  build_let(father, this);
+}
+
+void pache::assign_stmt::build(base_build *const father) const {
+  build_assign(father, this);
+}
+
+void pache::exp_stmt::build(base_build *const father) const {
+  build_exp_stmt(father, this);
+}
