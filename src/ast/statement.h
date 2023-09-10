@@ -89,18 +89,19 @@ private:
 
 class assign_stmt : public stmt_ast {
 public:
-  explicit assign_stmt(var_exp *var, std::unique_ptr<exp_ast> val)
-      : m_var(var), m_val(std::move(val)) {
+  explicit assign_stmt(std::unique_ptr<var_exp> &&var,
+                       std::unique_ptr<exp_ast> &&val)
+      : m_var(std::move(var)), m_val(std::move(val)) {
     m_var->set_father(get_father());
     m_val->set_father(get_father());
   }
 
-  var_exp const *const get_var() const { return m_var; }
+  var_exp const *const get_var() const { return m_var.get(); }
   exp_ast const *const get_exp() const { return m_val.get(); }
   virtual void build(base_build *const father) const override;
 
 private:
-  var_exp *m_var;
+  std::unique_ptr<var_exp> m_var;
   std::unique_ptr<exp_ast> m_val;
 };
 
@@ -174,7 +175,8 @@ private:
 class if_else_stmt : public stmt_ast {
 public:
   explicit if_else_stmt(std::unique_ptr<exp_ast> &&exp,
-                        std::unique_ptr<block_ast> &&then, block_ast *elses)
+                        std::unique_ptr<block_ast> &&then,
+                        std::unique_ptr<stmt_ast> &&elses)
       : m_condition(std::move(exp)), m_then_block(std::move(then)),
         m_else_block(std::move(elses)) {
     m_condition->set_father(get_father());
@@ -188,12 +190,12 @@ public:
 
   exp_ast const *const get_condition() const { return m_condition.get(); }
   block_ast const *const get_then_block() const { return m_then_block.get(); }
-  block_ast const *const get_else_block() const { return m_else_block.get(); }
+  stmt_ast const *const get_else_block() const { return m_else_block.get(); }
 
 private:
   std::unique_ptr<exp_ast> m_condition;
   std::unique_ptr<block_ast> m_then_block;
-  std::unique_ptr<block_ast> m_else_block;
+  std::unique_ptr<stmt_ast> m_else_block;
 };
 
 } // namespace pache

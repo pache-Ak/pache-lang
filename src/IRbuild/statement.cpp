@@ -51,38 +51,7 @@ void return_exp_stmt_build(base_build *father, return_ast const *const ast) {
 
   Builder->CreateRet(val);
 }
-class block_scope : public base_build {
-public:
-  explicit block_scope(base_build *father) : base_build(father) {}
-  virtual build_variable *const
-  find_var(std::string const &name) const override;
 
-  virtual build_type *const find_type(std::string const &name) const override;
-  virtual void insert(std::string const &name, build_variable &&value) override;
-  void deallco_all();
-  ~block_scope() { deallco_all(); }
-  virtual llvm::BasicBlock *get_loop_begin() override {
-    if (m_father != nullptr) {
-      return m_father->get_loop_begin();
-    } else {
-      return nullptr;
-    }
-  }
-  virtual llvm::BasicBlock *get_loop_end() override {
-    if (m_father != nullptr) {
-      return m_father->get_loop_end();
-    } else {
-      return nullptr;
-    }
-  }
-
-private:
-  // here need a symbol table
-  // search by string
-  // Need to maintain the order of insertion
-  // Because it needs to be destroyed in reverse order of insertion
-  std::vector<std::pair<std::string, build_variable *>> named_values;
-};
 build_variable *const block_scope::find_var(std::string const &name) const {
   for (auto it = named_values.begin(); it != named_values.end(); ++it) {
     if (it->first == name) {
@@ -210,7 +179,7 @@ void build_if_else(base_build *const father, if_else_stmt const *const ast) {
   Builder->CreateBr(merge_BB);
 
   Builder->SetInsertPoint(else_BB);
-  block_build(father, ast->get_else_block());
+  statement_build(father, ast->get_else_block());
   Builder->CreateBr(merge_BB);
 }
 
@@ -222,7 +191,7 @@ void build_let(base_build *const father, let_stmt const *const ast) {
   std::unique_ptr<build_type> type{type_build(father, ast->get_var_type())};
   llvm::AllocaInst *all = IR::Builder->CreateAlloca(
       type->get_llvm_type(), nullptr, ast->get_var_name());
-  build_variable var{type.get(), all};
+  build_local_variable var{std::move(type), all};
   father->insert(ast->get_var_name(), std::move(var));
 
   if (ast->get_init_exp() != nullptr) {
