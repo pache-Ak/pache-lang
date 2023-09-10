@@ -2,7 +2,7 @@
 #define IR_BUILD_H
 
 #include "../ast/ast.h"
-#include "variable.h"
+//#include "variable.h"
 #include "llvm/IR/IRBuilder.h"
 #include <memory>
 #include <string_view>
@@ -18,6 +18,7 @@ static std::unique_ptr<llvm::IRBuilder<>> Builder =
     std::make_unique<llvm::IRBuilder<>>(*TheContext);
 } // namespace IR
 class build_type;
+class build_variable;
 class base_build {
 public:
   explicit base_build(base_build *father) : m_father(father) {}
