@@ -3,8 +3,10 @@
 
 #include "ast.h"
 #include "statement.h"
+#include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace pache {
 
@@ -27,48 +29,25 @@ public:
         m_args_name(std::move(args.second)), m_type(std::move(return_type)),
         m_block(std::move(block)) {}
   explicit func_ast() {}
-  //  virtual llvm::Value *codegen() override;
 
   void set_name(std::string &&name) { m_name = std::move(name); }
-  /*virtual variable_ast *find_dec(const std::string &name) const override {
-    auto beg = std::find_if(m_args.begin(), m_args.end(), [=](func_arg *arg) {
-      return (arg->get_name() == name);
-    });
-    if (beg != m_args.end()) {
-      return *beg;
-    } else {
-      return m_father->find_dec(name);
-    }
-  }*/
+
   std::vector<std::unique_ptr<pache::type_ast>> const &get_args_type() const {
     return m_args_type;
   }
   std::vector<std::string> const &get_args_name() const { return m_args_name; }
   type_ast *const get_return_type() const { return m_type.get(); }
   std::string const &get_name() const { return m_name; }
-  /*   std::string const get_decorated_name() const {
-      std::string s = "_N" + m_father->decorated_name() + get_name();
-      for (auto &type : m_args_type) {
-        s += type->decorated_name();
-      }
-      return s;
-    } */
+  auto const &get_args() const { return m_args; }
+  auto const &get_block() const { return m_block; }
 
 protected:
   std::string m_name;
+  std::vector<std::pair<std::unique_ptr<type_ast>, std::string>> m_args;
   std::vector<std::unique_ptr<pache::type_ast>> m_args_type;
   std::vector<std::string> m_args_name;
   std::unique_ptr<pache::type_ast> m_type;
   std::unique_ptr<block_ast> m_block;
-  /*   std::string name_mangling() {
-      std::string s{};
-      s += get_father()->decorated_name();
-      s += this->m_name;
-      for (auto &arg : m_args_type) {
-        s += arg->decorated_name();
-      }
-      return s;
-    } */
 };
 /* class main_func_ast : public func_ast {
 public:
