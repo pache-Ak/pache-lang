@@ -1,4 +1,5 @@
 #include "class.h"
+#include "variable.h"
 #include "llvm/IR/Verifier.h"
 
 void pache::class_build::create_member_functions(
@@ -24,5 +25,30 @@ void pache::class_build::create_member_functions(
     IR::Builder->SetInsertPoint(BB);
 
     verifyFunction(*F);
+  }
+}
+
+// even in member function, class's variable still need assgin by explict arg
+// this.
+//
+// so excpet static variable there is no variable in class.
+// static variable will define in namespace.
+// don't need find variable in class.
+pache::build_variable *const
+pache::class_build::find_var(std::string const &name) const {
+  std::cerr << "shouldn't access this function!\n";
+  return nullptr;
+}
+
+llvm::Value *pache::class_build::get_member_var(llvm::Value *ptr,
+                                                std::string const &name) {
+  auto it = m_member_var.find(name);
+  if (it != m_member_var.end()) {
+    return IR::Builder->CreateGEP(
+        m_type, ptr,
+        {IR::Builder->getInt32(0), IR::Builder->getInt32(m_member_var[name])},
+        name);
+  } else {
+    return find_var(name)->get_value();
   }
 }

@@ -1,13 +1,14 @@
-#ifndef CLASS_H
-#define CLASS_H
+#ifndef IR_CLASS_H
+#define IR_CLASS_H
 
 #include "../ast/function.h"
 #include "../ast/statement.h"
 
 #include "build.h"
-
 #include <memory>
 #include <memory_resource>
+#include <string>
+#include <unordered_map>
 
 namespace pache {
 class class_build : public base_build {
@@ -25,8 +26,8 @@ public:
     m_type->setBody(vars_type);
     for (auto &stmt_ptr : v_var) {
       unsigned int i = 0;
-      auto [it, b] = m_member_var.try_emplace(stmt_ptr->get_var_name(), i);
-      if (!b) {
+      auto p = m_member_var.emplace(stmt_ptr->get_var_name(), i);
+      if (!(p.second)) {
         std::cerr << "file name : line : error : redefinition of "
                   << stmt_ptr->get_var_name() << "\n";
       }
@@ -35,31 +36,16 @@ public:
   }
   llvm::StructType *get_IRtype() const { return m_type; }
   void create_member_functions(std::vector<std::unique_ptr<func_ast>> &v_func);
-  virtual llvm::Value *find_var(std::string const &name) const override {
-    if (m_father != nullptr) {
-      return m_father->find_var(name);
-    } else {
-      return nullptr;
-    }
-  }
+  virtual build_variable *const
+  find_var(std::string const &name) const override;
 
 private:
-  llvm::Value *get_member_var(llvm::Value *ptr, std::string const &name) const {
-    auto it = m_member_var.find(name);
-    if (it != m_member_var.end()) {
-      return IR::Builder->CreateGEP(
-          m_type, ptr,
-          {IR::Builder->getInt32(0), IR::Builder->getInt32(m_member_var[name])},
-          name);
-    } else {
-      return find_var(name);
-    }
-  }
-  std::pmr::unordered_map<std::string, unsigned int> m_member_var;
+  llvm::Value *get_member_var(llvm::Value *ptr, std::string const &name);
+
+  std::unordered_map<std::string, unsigned int> m_member_var;
   // std::string const m_name; // used by log error
   llvm::StructType *m_type;
-  std::pmr::unordered_map<std::string, std::unique_ptr<class_build>>
-      builded_classes;
+  std::unordered_map<std::string, std::unique_ptr<class_build>> builded_classes;
 };
 } // namespace pache
 

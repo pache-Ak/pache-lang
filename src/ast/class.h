@@ -8,14 +8,15 @@
 #include <vector>
 
 namespace pache {
-class class_body {
-public:
-  std::vector<std::unique_ptr<let_stmt>> var_def;
-  std::vector<std::unique_ptr<func_ast>> func_def;
-  std::vector<std::unique_ptr<class_ast>> inner_class_def;
-};
+
 class class_ast : public base_ast {
 public:
+  class class_body {
+  public:
+    std::vector<std::unique_ptr<let_stmt>> var_def;
+    std::vector<std::unique_ptr<func_ast>> func_def;
+    std::vector<std::unique_ptr<class_ast>> inner_class_def;
+  };
   explicit class_ast(std::string &&name, class_body &&body);
 
   // virtual llvm::Value *codegen() override { return nullptr; } // TODO
@@ -23,7 +24,9 @@ public:
   // virtual std::string const decorated_name() const override {
   //   return get_name();
   // }
+  virtual ~class_ast() = default;
 
+private:
   std::string const m_name;
   class_body m_body;
 };
