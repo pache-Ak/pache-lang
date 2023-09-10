@@ -1,9 +1,10 @@
 #include "literal.h"
+#include "../IRbuild/build.h"
 
-// llvm::Value *pache::void_literal_t::codegen() {
-//     return nullptr;
-// }
-
-// llvm::Value *pache::i32_literal::codegen() {
-//     return llvm::ConstantInt::get(Builder->getInt32Ty(), m_value);
-// }
+namespace pache {
+std::unique_ptr<build_variable> i32_literal_t::build() const {
+  return std::make_unique<build_constant_variable>(
+      i32_type_t::get(),
+      llvm::ConstantInt::get(Builder->getInt32Ty(), m_value, true));
+}
+} // namespace pache
