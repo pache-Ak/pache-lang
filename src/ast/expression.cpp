@@ -1,20 +1,68 @@
 #include "expression.h"
+#include "../IRbuild/expression.h"
+#include "../IRbuild/function.h"
+#include <algorithm>
+#include <array>
+#include <functional>
+#include <memory>
+#include <vector>
+using namespace std::literals;
 
-// llvm::Value *pache::unary_plus::codegen() { return m_argument->codegen(); }
+namespace pache {
+std::unique_ptr<build_variable> build_exp(std::unique_ptr<exp_ast> const &ast) {
+  return ast->build();
+}
 
-// llvm::Value *pache::unary_minus::codegen() {
-//   /*   if (m_argument->codegen()->getType()->isIntOrIntVectorTy()) {
-//       return Builder->CreateSub(
-//           llvm::Constant::getNullValue(m_argument->codegen()->getType()),
-//           m_argument->codegen(), "");
-//     } else if (m_argument->codegen()->getType()->isFPOrFPVectorTy()) {
-//       return Builder->CreateFSub(
-//           llvm::Constant::getNullValue(m_argument->codegen()->getType()),
-//           m_argument->codegen(), "");
-//     } else {
-//       return nullptr;
-//     } */
-// }
+std::unique_ptr<build_variable> pache::unary_plus::build() const {
+  std::array<std::unique_ptr<build_variable>, 1> arges;
+
+  auto it = arges.begin();
+  auto beg = m_arguments.begin();
+  for (; beg != m_arguments.end(); ++it, ++beg) {
+    *it = build_exp(*beg);
+  }
+
+  std::unique_ptr<function_build> const &func =
+      function_lookup("operator+"s, arges.begin(), arges.end());
+
+  if (func != nullptr) {
+    std::array<llvm::Value *, 1> args_Value;
+    args_Value[0] = arges[0]->get_value();
+
+    return std::make_unique<build_prvalue_variable>(
+        func->get_function_type()->get_return_type(),
+        Builder->CreateCall(func->get_llvm_function(), args_Value,
+                            "call_operator+"));
+  } else {
+    return nullptr;
+  }
+}
+
+std::unique_ptr<build_variable> pache::unary_minus::build() const {
+  std::array<std::unique_ptr<build_variable>, 1> arges;
+
+  auto it = arges.begin();
+  auto beg = m_arguments.begin();
+  for (; beg != m_arguments.end(); ++it, ++beg) {
+    *it = build_exp(*beg);
+  }
+
+  std::unique_ptr<function_build> const &func =
+      function_lookup("operator-"s, arges.begin(), arges.end());
+
+  if (func != nullptr) {
+    std::array<llvm::Value *, 1> args_Value;
+    args_Value[0] = arges[0]->get_value();
+
+    return std::make_unique<build_prvalue_variable>(
+        func->get_function_type()->get_return_type(),
+        Builder->CreateCall(func->get_llvm_function(), args_Value,
+                            "call_operator-"));
+  } else {
+    return nullptr;
+  }
+}
+} // namespace pache
 
 // llvm::Value *pache::func_call_exp::codegen() {
 //   llvm::Function *CalleeF = TheModule->getFunction(m_name);
