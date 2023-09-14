@@ -78,11 +78,11 @@ public:
   explicit func_call_exp(std::string &&name,
                          std::vector<std::unique_ptr<exp_ast>> &&args)
       : m_name(std::move(name)), m_args(std::move(args)) {}
-  // virtual llvm::Value *codegen() override;
   std::string const &get_name() const { return m_name; }
   std::vector<std::unique_ptr<exp_ast>> const &get_args() const {
     return m_args;
   }
+  virtual std::unique_ptr<build_variable> build() const override;
 
 private:
   std::string m_name;

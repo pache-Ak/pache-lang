@@ -62,28 +62,29 @@ std::unique_ptr<build_variable> pache::unary_minus::build() const {
     return nullptr;
   }
 }
+
+std::unique_ptr<build_variable> pache::func_call_exp::build() const {
+  std::vector<std::unique_ptr<build_variable>> args;
+  for (auto &arg : m_args) {
+    args.emplace_back(build_exp(arg));
+  }
+
+  std::unique_ptr<function_build> const &func =
+      function_lookup("operator-"s, args.begin(), args.end());
+
+  if (func != nullptr) {
+    std::vector<llvm::Value *> args_Value;
+    for (auto &val : args) {
+      args_Value.emplace_back(val->get_value());
+    }
+    return std::make_unique<build_prvalue_variable>(
+        func->get_function_type()->get_return_type(),
+        Builder->CreateCall(func->get_llvm_function(), args_Value, ""));
+  } else {
+    return nullptr;
+  }
+}
 } // namespace pache
-
-// llvm::Value *pache::func_call_exp::codegen() {
-//   llvm::Function *CalleeF = TheModule->getFunction(m_name);
-//   if (CalleeF == nullptr) {
-//     // TODO log error
-//   }
-
-//   if (CalleeF->arg_size() != m_args.size()) {
-//     // TODO log error
-//   }
-
-//   std::vector<llvm::Value *> args_Value;
-//   for (auto val : m_args) {
-//     args_Value.push_back(val->codegen());
-//     if (args_Value.back() == nullptr) {
-//       return nullptr;
-//     }
-//   }
-
-//   return Builder->CreateCall(CalleeF, args_Value, "calltmp");
-// }
 
 // llvm::Value *pache::var_exp::codegen() {
 //   /*   llvm::Value *val = get_father()->find_named_Value(m_name);
