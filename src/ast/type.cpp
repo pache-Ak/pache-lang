@@ -1,12 +1,19 @@
 #include "type.h"
-#include "IRbuild/type.h"
-#include "IRbuild/variable.h"
+#include "../IRbuild/type.h"
+#include "../IRbuild/variable.h"
 #include "ast.h"
 #include "compunit.h"
 #include "statement.h"
 #include <memory>
-
 namespace pache {
+std::unique_ptr<build_type>
+void_type_ast::build(base_build *const father) const {
+  return void_type_t::get();
+}
+
+std::unique_ptr<type_ast> void_type_ast::get() {
+  return std::make_unique<void_type_ast>();
+}
 // void_type_t void_type_t::void_type{};
 
 // bool_type_t bool_type_t::bool_type{};
@@ -237,14 +244,12 @@ std::unique_ptr<pache::type_ast> user_def_type::get() {
 //   return nullptr; /// TODO
 // }
 
-std::unique_ptr<pache::build_type> pache::const_type::build() {
-  auto b = m_type->build();
-  b->set_const();
-  return b;
+std::unique_ptr<pache::build_type>
+pache::const_type::build(base_build *const father) const {
+  return build_const_type(father, this);
 }
 
-std::unique_ptr<pache::build_type> pache::volatile_type::build() {
-  auto b = m_type->build();
-  b->set_const();
-  return b;
+std::unique_ptr<pache::build_type>
+pache::volatile_type::build(base_build *const father) const {
+  return build_volatile_type(father, this);
 }

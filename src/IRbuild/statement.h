@@ -16,33 +16,17 @@
 #include <vector>
 
 namespace pache {
-
-void statement_build(base_build *father, stmt_ast const *const ast);
-
-void assign_stmt_build(base_build *father, assign_stmt const *const ast);
-
-void return_void_stmt_build(base_build *father,
-                            return_void_stmt const *const ast);
-
-void return_exp_stmt_build(base_build *father, return_ast const *const ast);
-class block_scope : public base_build {
+class loop_label {
 public:
-  explicit block_scope(base_build *father) : base_build(father) {}
-  virtual build_variable *const
-  find_var(std::string const &name) const override;
-
-  virtual build_type *const find_type(std::string const &name) const override;
-  virtual void insert(std::string const &name, build_variable &&value) override;
-  void deallco_all();
-  ~block_scope() { deallco_all(); }
-  virtual llvm::BasicBlock *get_loop_begin() override {
+  explicit loop_label(loop_label const *const father) : m_father(father) {}
+  virtual llvm::BasicBlock *get_loop_begin() const {
     if (m_father != nullptr) {
       return m_father->get_loop_begin();
     } else {
       return nullptr;
     }
   }
-  virtual llvm::BasicBlock *get_loop_end() override {
+  virtual llvm::BasicBlock *get_loop_end() const {
     if (m_father != nullptr) {
       return m_father->get_loop_end();
     } else {
@@ -50,25 +34,70 @@ public:
     }
   }
 
+protected:
+  loop_label const *const m_father;
+};
+class block_scope : public base_build, public loop_label {
+public:
+  explicit block_scope(base_build *father, loop_label const *const loop)
+      : base_build(father), loop_label(loop) {}
+  virtual std::unique_ptr<build_variable> const &
+  find_var(std::string const &name) const override;
+
+  virtual build_type *const find_type(std::string const &name) const override;
+  virtual void insert(std::string &&name,
+                      std::unique_ptr<build_variable> &&value) override;
+  virtual void insert(std::string const &name,
+                      std::unique_ptr<build_variable> &&value) override;
+  void deallco_all();
+  ~block_scope() { deallco_all(); }
+  virtual llvm::BasicBlock *get_loop_begin() {
+    if (loop_label::m_father != nullptr) {
+      return loop_label::m_father->get_loop_begin();
+    } else {
+      return nullptr;
+    }
+  }
+  llvm::BasicBlock *get_loop_end() {
+    if (loop_label::m_father != nullptr) {
+      return loop_label::m_father->get_loop_end();
+    } else {
+      return nullptr;
+    }
+  }
+  loop_label const *const get_loop_father() const {
+    return loop_label::m_father;
+  }
+
 private:
   // here need a symbol table
   // search by string
   // Need to maintain the order of insertion
   // Because it needs to be destroyed in reverse order of insertion
-  std::vector<std::pair<std::string, build_variable *>> named_values;
+  std::vector<std::pair<std::string, std::unique_ptr<build_variable>>>
+      named_values;
 };
-void block_build(base_build *father, block_ast const *const ast);
+void statement_build(block_scope *father, stmt_ast const *const ast);
 
-void build_loop(base_build *const father, block_ast const *const ast);
+void assign_stmt_build(block_scope *father, assign_stmt const *const ast);
 
-void build_if(base_build *const father, if_stmt const *const ast);
-void build_if_else(base_build *const father, if_else_stmt const *const ast);
+void return_void_stmt_build(block_scope *father,
+                            return_void_stmt const *const ast);
 
-void build_break(base_build *const father, break_stmt const *const ast);
-void build_continue(base_build *const father, continue_stmt const *const ast);
-void build_let(base_build *const father, let_stmt const *const ast);
-void build_assign(base_build *const father, assign_stmt const *const ast);
-void build_exp_stmt(base_build *const father, exp_stmt const *const ast);
+void return_exp_stmt_build(block_scope *father, return_ast const *const ast);
+
+void block_build(block_scope *father, block_ast const *const ast);
+
+void build_loop(block_scope *const father, block_ast const *const ast);
+
+void build_if(block_scope *const father, if_stmt const *const ast);
+void build_if_else(block_scope *const father, if_else_stmt const *const ast);
+
+void build_break(block_scope *const father, break_stmt const *const ast);
+void build_continue(block_scope *const father, continue_stmt const *const ast);
+void build_let(block_scope *const father, let_stmt const *const ast);
+void build_assign(block_scope *const father, assign_stmt const *const ast);
+void build_exp_stmt(block_scope *const father, exp_stmt const *const ast);
 } // namespace pache
 
 #endif

@@ -6,6 +6,7 @@
 
 namespace pache {
 extern std::vector<function_build> operator_unary_plus;
+extern std::vector<function_build> operator_unary_minus;
 } // namespace pache
 
 #endif

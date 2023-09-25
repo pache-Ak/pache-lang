@@ -2,13 +2,11 @@
 #define TYPE_H
 
 #include "ast.h"
+#include "llvm/IR/Value.h"
 #include <cstddef>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include "llvm/IR/Value.h"
-
 using namespace std::literals;
 
 namespace pache {
@@ -18,53 +16,36 @@ namespace pache {
   lvalue,
 }; */
 class build_type;
+class base_build;
 class type_ast : public base_ast {
 public:
-  // virtual llvm::Type *codegen() = 0;
-
-  // virtual bool is_integral() const { return false; }
-
-  // virtual bool is_signed() const { return false; }
-
-  // virtual bool is_unsigned() const { return false; }
-
-  // bool is_const() const { return m_is_const; }
-
-  // virtual std::string const decorated_name() const = 0;
-  virtual ~type_ast() = default;
+  virtual ~type_ast() = 0;
   // virtual std::string location() { return get_father()->location(); }
-  virtual std::unique_ptr<build_type> build() = 0;
+  virtual std::unique_ptr<build_type> build(base_build *const father) const = 0;
 
-protected:
   explicit type_ast() = default;
-  explicit type_ast(type_ast const &type) = default;
-  explicit type_ast(type_ast &&type) = default;
-  // bool m_is_const = false;
 };
 
 class const_type : public type_ast {
 public:
   const_type(std::unique_ptr<type_ast> &&type) : m_type(std::move(type)) {}
-  //  virtual bool is_const() const { return true; }
-  std::string log_error();
-  // if type is const type
-  // TODO　log error
-  // like this
-  // file name: in ...
-  // ...
-  // file name : line : error :duplicate const
-  // error line
 
-  virtual std::unique_ptr<build_type> build() override;
+  virtual std::unique_ptr<build_type>
+  build(base_build *const father) const override;
+  type_ast const *const get_element_type() const { return m_type.get(); }
 
 private:
   std::unique_ptr<type_ast> m_type;
 };
 
-class volatile_type {
+class volatile_type : public type_ast {
 public:
   volatile_type(std::unique_ptr<type_ast> &&type) : m_type(std::move(type)) {}
   // virtual bool is_volatile() const { return true; }
+
+  virtual std::unique_ptr<build_type>
+  build(base_build *const father) const override;
+  type_ast const *const get_element_type() const { return m_type.get(); }
 
 private:
   std::unique_ptr<type_ast> m_type;
@@ -73,7 +54,9 @@ private:
 class reference_ast : type_ast {
 public:
   reference_ast(std::unique_ptr<type_ast> &&type) : m_type(std::move(type)) {}
-  // bool is_reference() const { return true; }
+  virtual std::unique_ptr<build_type>
+  build(base_build *const father) const override;
+  type_ast const *const get_element_type() const { return m_type.get(); }
 
 private:
   std::unique_ptr<type_ast> m_type;
@@ -82,6 +65,8 @@ private:
 class pointer_ast : public type_ast {
 public:
   pointer_ast(std::unique_ptr<type_ast> &&type) : m_type(std::move(type)) {}
+  virtual std::unique_ptr<build_type>
+  build(base_build *const father) const override;
 
 private:
   std::unique_ptr<type_ast> m_type;
@@ -135,9 +120,6 @@ private:
   std::vector<std::unique_ptr<type_ast>> m_args_type;
   std::unique_ptr<type_ast> m_return_type;
 };
-class class_ast;
-
-class compunit_ast;
 
 class user_def_type : public type_ast {
 public:
@@ -153,6 +135,15 @@ public:
 
 private:
   std::string m_iden;
+};
+
+class void_type_ast : public type_ast {
+public:
+  static std::unique_ptr<type_ast> get();
+  virtual std::unique_ptr<build_type>
+  build(base_build *const father) const override;
+
+private:
 };
 } // namespace pache
 

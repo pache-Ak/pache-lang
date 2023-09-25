@@ -19,12 +19,18 @@ public:
   };
   explicit class_ast(std::string &&name, class_body &&body);
 
-  // virtual llvm::Value *codegen() override { return nullptr; } // TODO
   std::string const get_name() const { return m_name; }
-  // virtual std::string const decorated_name() const override {
-  //   return get_name();
-  // }
+
   virtual ~class_ast() = default;
+  std::vector<std::unique_ptr<let_stmt>> const &get_var_def() const {
+    return m_body.var_def;
+  }
+  std::vector<std::unique_ptr<class_ast>> const &get_inner_class_def() const {
+    return m_body.inner_class_def;
+  }
+  std::vector<std::unique_ptr<func_ast>> const &get_func_def() const {
+    return m_body.func_def;
+  }
 
 private:
   std::string const m_name;

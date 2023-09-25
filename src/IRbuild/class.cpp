@@ -1,54 +1,63 @@
 #include "class.h"
+#include "../ast/class.h"
+#include "build.h"
+#include "function.h"
 #include "variable.h"
+#include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Verifier.h"
+#include <memory>
 
-void pache::class_build::create_member_functions(
-    std::vector<std::unique_ptr<func_ast>> &v_func) {
-  for (auto &func : v_func) {
-    std::vector<llvm::Type *> args_Type;
-    for (auto &args : func->get_args_type()) {
-      args_Type.push_back(args->codegen());
+namespace pache {
+class_build::class_build(base_build *const father,
+                         std::unique_ptr<class_ast> const &ast)
+    : base_build(father) {
+  for (auto &inner_class : ast->get_inner_class_def()) {
+    auto [it, b] = builded_classes.try_emplace(
+        inner_class->get_name(),
+        std::make_unique<class_build>(this, inner_class));
+    if (!b) {
+      // b is false meaing insert fail.
+      std::cerr << "redefinition class\n";
     }
-    llvm::FunctionType *FT = llvm::FunctionType::get(
-        func->get_return_type()->codegen(), args_Type, false);
-    llvm::Function *F =
-        llvm::Function::Create(FT, llvm::Function::ExternalLinkage,
-                               func->get_name(), IR::TheModule.get());
+  }
 
-    unsigned Idx = 0;
-    for (auto &Arg : F->args()) {
-      Arg.setName(func->get_args_name()[Idx]);
+  std::vector<llvm::Type *> vars_type;
+  size_t i = 0;
+  for (auto &var : ast->get_var_def()) {
+    auto [it, b] = m_member_var.try_emplace(
+        ast->get_name(), type_build(father, var->get_var_type()), ++i);
+    if (b) {
+      // b is true meaing insert succes.
+      vars_type.emplace_back(it->second.get_type()->get_llvm_type());
+    } else {
+      // b is false meaing insert fail.
+      std::cerr << "duplicate member.\n";
     }
+  }
 
-    llvm::BasicBlock *BB =
-        llvm::BasicBlock::Create(*IR::TheContext, "entry", F);
-    IR::Builder->SetInsertPoint(BB);
+  m_type = llvm::StructType::create(vars_type, ast->get_name());
 
-    verifyFunction(*F);
+  for (auto &func : ast->get_func_def()) {
+    m_functions.emplace(func->get_name(), function_build(this, func.get()));
   }
 }
 
-// even in member function, class's variable still need assgin by explict arg
-// this.
-//
-// so excpet static variable there is no variable in class.
-// static variable will define in namespace.
-// don't need find variable in class.
-pache::build_variable *const
-pache::class_build::find_var(std::string const &name) const {
+std::unique_ptr<build_variable> const &
+class_build::find_var(std::string const &name) const {
   std::cerr << "shouldn't access this function!\n";
   return nullptr;
 }
 
-llvm::Value *pache::class_build::get_member_var(llvm::Value *ptr,
-                                                std::string const &name) {
+llvm::Value *class_build::get_member_var(llvm::Value *ptr,
+                                         std::string const &name) {
   auto it = m_member_var.find(name);
   if (it != m_member_var.end()) {
     return IR::Builder->CreateGEP(
         m_type, ptr,
-        {IR::Builder->getInt32(0), IR::Builder->getInt32(m_member_var[name])},
+        {IR::Builder->getInt32(0), IR::Builder->getInt32(it->second.get_num())},
         name);
   } else {
     return find_var(name)->get_value();
   }
 }
+} // namespace pache

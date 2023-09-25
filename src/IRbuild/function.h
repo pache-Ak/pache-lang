@@ -5,7 +5,7 @@
 #include "../ast/function.h"
 #include "../ast/type.h"
 #include "build.h"
-#include "comp_unit.h"
+#include "function_type.h"
 #include "statement.h"
 #include "type.h"
 #include "variable.h"
@@ -14,7 +14,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
 using namespace std::literals;
 
 namespace pache {
@@ -28,70 +27,83 @@ std::string name_mangling(func_ast const *const func) {
   // }
   return func->get_name();
 }
-std::string function_build(base_build *father, func_ast const *const func) {
 
-  std::vector<llvm::Type *> args_Type;
-  {
+class function_build : public base_build {
+public:
+  explicit function_build(base_build *father, func_ast *func)
+      : base_build(father), decorated_name(name_mangling(func)) {
+
+    std::vector<llvm::Type *> args_Type;
+
     std::vector<std::unique_ptr<build_type>> args_types;
+
     for (auto &ast : func->get_args_type()) {
       args_types.emplace_back(type_build(father, ast.get()));
     }
     for (auto &type : args_types) {
       args_Type.emplace_back(type->get_llvm_type());
     }
+
+    std::unique_ptr<build_type> ret_type =
+        type_build(father, func->get_return_type());
+
+    llvm::FunctionType *FT =
+        llvm::FunctionType::get(ret_type->get_llvm_type(), args_Type, false);
+
+    m_type = std::make_unique<function_type>(std::move(ret_type),
+                                             std::move(args_types), FT);
+    llvm::Function *F = llvm::Function::Create(
+        FT, llvm::Function::ExternalLinkage, decorated_name, TheModule.get());
+
+    unsigned Idx = 0;
+    for (auto &Arg : F->args()) {
+      Arg.setName(func->get_args_name()[Idx]);
+    }
+
+    llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "entry", F);
+    Builder->SetInsertPoint(BB);
+
+    block_scope func_block{father, nullptr};
+    std::vector<build_variable> vars;
+
+    for (auto &args : func->get_args()) {
+      auto type = type_build(father, args.first.get());
+
+      llvm::AllocaInst *all = IR::Builder->CreateAlloca(type->get_llvm_type(),
+                                                        nullptr, args.second);
+
+      func_block.insert(
+          std::move(args.second),
+          std::make_unique<build_local_variable>(std::move(type), all));
+    }
+
+    for (auto &stmt : func->get_block()->get_stmt_list()) {
+      statement_build(&func_block, stmt.get());
+    }
+    verifyFunction(*F);
   }
-
-  llvm::FunctionType *FT = llvm::FunctionType::get(
-      type_build(father, func->get_return_type())->get_llvm_type(), args_Type,
-      false);
-  llvm::Function *F =
-      llvm::Function::Create(FT, llvm::Function::ExternalLinkage,
-                             name_mangling(func), TheModule.get());
-
-  unsigned Idx = 0;
-  for (auto &Arg : F->args()) {
-    Arg.setName(func->get_args_name()[Idx]);
-  }
-
-  llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "entry", F);
-  Builder->SetInsertPoint(BB);
-
-  block_scope func_block{father};
-  std::vector<build_variable> vars;
-
-  for (auto &args : func->get_args()) {
-    auto type = type_build(father, args.first.get());
-
-    llvm::AllocaInst *all =
-        IR::Builder->CreateAlloca(type->get_llvm_type(), nullptr, args.second);
-
-    func_block.insert(args.second, build_local_variable{std::move(type), all});
-  }
-
-  for (auto &stmt : func->get_block()->get_stmt_list()) {
-    statement_build(&func_block, stmt.get());
-  }
-  verifyFunction(*F);
-}
-
-class function_build : public base_build {
-public:
-  explicit function_build(base_build *father, func_ast *func)
-      : base_build(father) {}
   explicit function_build(base_build *father, std::string const &name,
-                          std::vector<build_type *> &&args);
-  explicit function_build();
+                          std::unique_ptr<function_type> &&type,
+                          llvm::Function *llvm_function)
+      : base_build(father), decorated_name(name), m_type(std::move(type)),
+        m_llvm_function(llvm_function) {}
 
-  virtual build_variable *const
+  function_build(function_build &&other) = default;
+
+  virtual std::unique_ptr<build_variable> const &
   find_var(std::string const &name) const override;
 
   virtual build_type *const find_type(std::string const &name) const override;
-  virtual llvm::BasicBlock *get_loop_begin() override { return nullptr; }
-  virtual llvm::BasicBlock *get_loop_end() override { return nullptr; }
+  virtual ~function_build() = default;
+  virtual llvm::Function *get_llvm_function() const { return m_llvm_function; }
+  std::unique_ptr<function_type> const &get_function_type() const {
+    return m_type;
+  }
 
 private:
   std::string decorated_name;
-  std::vector<pache::build_type *> args;
+  std::unique_ptr<function_type> m_type;
+  llvm::Function *m_llvm_function;
 };
 } // namespace pache
 
