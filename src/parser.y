@@ -119,7 +119,7 @@ using namespace std;
   CONTINUE              // continue
   COMMA                 // ,
   SEMICOLON             // ;
-  NEW_LINE              // \n
+ NEW_LINE              // \n
   CONST                 // const
   VOLATILE              // volatile
   UNARY_STAR "unary *"
@@ -133,23 +133,23 @@ using namespace std;
 // 非终结符的类型定义
 %type <pache::compunit_ast*>   CompUnit
 %type <std::unique_ptr<pache::type_ast>> type arr_type const_type volatile_type multi_array_type primary_type
-%type <pache::exp_ast*> Number   primary_expression unary_expression call_expression
-%type <pache::block_ast*> block /*optional_else*/  loop_stmt  
-%type <pache::let_stmt*> let_stmt 
-%type <pache::stmt_ast*> stmt return_void_stmt return_stmt  if_stmt if_else_stmt assign_stmt break_stmt continue_stmt else_stmt
-%type <pache::exp_ast*>  expression  add_exp
-%type <std::vector<pache::stmt_ast*>> statement_list
-%type <pache::exp_ast*>  mul_expressions
-%type <pache::exp_ast*> three_way_expression rel_expression eq_expression logical_and_expression logical_or_expression
+%type <std::unique_ptr<pache::exp_ast>> Number   primary_expression unary_expression call_expression
+%type <std::unique_ptr<pache::block_ast>> block /*optional_else*/  loop_stmt  
+%type <std::unique_ptr<pache::let_stmt>> let_stmt 
+%type <std::unique_ptr<pache::stmt_ast>> stmt return_void_stmt return_stmt  if_stmt if_else_stmt assign_stmt break_stmt continue_stmt else_stmt
+%type <std::unique_ptr<pache::exp_ast>>  expression  add_exp
+%type <std::vector<std::unique_ptr<pache::stmt_ast>>> statement_list
+%type <std::unique_ptr<pache::exp_ast>>  mul_expressions
+%type <std::unique_ptr<pache::exp_ast>> three_way_expression rel_expression eq_expression logical_and_expression logical_or_expression
 %type <std::pair<std::unique_ptr<pache::type_ast>, std::string>> FuncFParam
 %type <std::pair<std::vector<std::unique_ptr<pache::type_ast>>, std::vector<std::string>>> FuncFParams
-%type <std::vector<pache::exp_ast*>> FuncRParams
-%type <pache::class_ast*> class_def
-%type <pache::class_body> class_body
-%type <pache::exp_ast*> bitwise_and_expression
-%type <pache::exp_ast*> bitwise_xor_expression
-%type <pache::exp_ast*> bitwise_or_expression
-%type <pache::func_ast*> FuncDef  // main_func
+%type <std::vector<std::unique_ptr<pache::exp_ast>>> FuncRParams
+%type <std::unique_ptr<pache::class_ast>> class_def
+%type <pache::class_ast::class_body> class_body
+%type <std::unique_ptr<pache::exp_ast>> bitwise_and_expression
+%type <std::unique_ptr<pache::exp_ast>> bitwise_xor_expression
+%type <std::unique_ptr<pache::exp_ast>> bitwise_or_expression
+%type <std::unique_ptr<pache::func_ast>> FuncDef  // main_func
 %type <std::vector<std::size_t>> size_list
 
 %%
@@ -162,24 +162,24 @@ using namespace std;
 CompUnit
   : FuncDef {
     ast = make_unique<pache::compunit_ast>();
-    ast->insert_dec($1);
+    ast->insert_func_def(std::move($1));
   }
 | let_stmt {
     ast = make_unique<pache::compunit_ast>();
-    ast->insert_dec($1);
+    ast->insert_dec(std::move($1));
 }
 | class_def {
     ast = make_unique<pache::compunit_ast>();
-    ast->insert_class_def($1);
+    ast->insert_class_def(std::move($1));
 }
 | CompUnit FuncDef {
-      ast->insert_dec($2);
+      ast->insert_func_def(std::move($2));
 }
 | CompUnit let_stmt {
-    ast->insert_dec($2);
+    ast->insert_dec(std::move($2));
 }
 | CompUnit class_def {
-  ast->insert_class_def($2);
+  ast->insert_class_def(std::move($2));
 };
 
 FuncFParam:
@@ -204,7 +204,7 @@ FuncFParams:
 };
 //main_func:
 //  FUNC MAIN LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS I32 block {
-//    auto ast = new pache::main_func_ast("main"s, $4, pache::i32_type_t::get(), $7);
+//    auto ast = std::make_unique<pache::main_func_ast>("main"s, $4, pache::i32_type_t::get(), $7);
 
      // for (auto arg : *$4) {
      //   arg->set_father($$);
@@ -214,14 +214,11 @@ FuncFParams:
 
 FuncDef
   : FUNC IDENTIFIER LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS type block {
-    auto ast = new pache::func_ast(std::move($2), std::move($4), std::move($6), $7);
-    //      for (auto arg : *$4) {
-     //   arg->set_father($$);
-     // }
-    $$ = ast;
+
+    $$ = std::make_unique<func_ast>(std::move($2), std::move($4), std::move($6), std::move($7));
   }
 //| main_func {
-//  $$ = $1;
+//  $$ = std::move($1);
 //}
 ;
 
@@ -229,22 +226,22 @@ class_body:
 %empty  { $$; }
 | class_body let_stmt {
   $$ = std::move($1);
-  $$.var_def.push_back(std::unique_ptr<pache::let_stmt>{$2});
+  $$.var_def.emplace_back(std::move($2));
 }
 | class_body FuncDef {
   $$ = std::move($1);
-  $$.func_def.push_back(std::unique_ptr<pache::func_ast>{$2});
+  $$.func_def.emplace_back(std::move($2));
 }
 | class_body class_def {
   $$ = std::move($1);
-  $$.inner_class_def.push_back(std::unique_ptr<pache::class_ast>{$2});
+  $$.inner_class_def.emplace_back(std::move($2));
 
 };
 
 class_def:
   CLASS IDENTIFIER LEFT_CURLY_BRACE class_body RIGHT_CURLY_BRACE
   {
-    $$ = new class_ast(std::move($2), std::move($4));
+    $$ = std::make_unique<pache::class_ast>(std::move($2), std::move($4));
   };
 // 同上, 不再解释
 const_type:
@@ -278,8 +275,8 @@ primary_type {
 
 primary_type:
   VOID
-  { $$ = pache::void_type_t::get(); }
-| BOOL {
+  { $$ = pache::void_type_ast::get(); }
+/* | BOOL {
     $$ = pache::bool_type_t::get();
   }
 | SIZE {
@@ -322,8 +319,8 @@ primary_type:
 | C16
 { $$ = pache::c16_type_t::get(); }
 | C32
-{ $$ = pache::c32_type_t::get(); }
-| arr_type {
+{ $$ = pache::c32_type_t::get(); } */
+/* | arr_type {
   $$ = std::move($1);
 }|
 multi_array_type {
@@ -331,7 +328,7 @@ $$ = std::move($1);
 }
 | IDENTIFIER {
   $$ = std::make_unique<pache::user_def_type>(std::move($1));
-}
+} */
   ;
 
 
@@ -362,16 +359,16 @@ size_list:
   };
 statement_list:
   %empty
-    { $$ = std::vector<pache::stmt_ast*>{}; }
+    { $$ = std::vector<std::unique_ptr<pache::stmt_ast>>{}; }
 | statement_list stmt
     {
-      $$ = $1;;
-      $$.push_back($2);
+      $$ = std::move($1);;
+      $$.emplace_back(std::move($2));
     }
 ;
 block
   : LEFT_CURLY_BRACE statement_list RIGHT_CURLY_BRACE {
-    $$ = new pache::block_ast(std::move($2));
+    $$ = std::make_unique<pache::block_ast>(std::move($2));
     for (auto & ast : $2) {
       ast->set_father($$->get_father());
     }
@@ -381,29 +378,29 @@ block
 
 stmt:
   assign_stmt {
-  $$ = $1;
+  $$ = std::move($1);
 }
 | expression SEMICOLON {
-  $$ = new pache::exp_stmt($1);
+  $$ = std::make_unique<pache::exp_stmt>(std::move($1));
 }
 | block
-    { $$ = $1; }
+    { $$ = std::move($1); }
 | let_stmt {
-    $$ = $1;
+    $$ = std::move($1);
 }
 | return_void_stmt {
-  $$ = $1;
+  $$ = std::move($1);
 }
 | return_stmt
-    { $$ = $1; }
+    { $$ = std::move($1); }
 | loop_stmt {
-  $$ = $1;
+  $$ = std::move($1);
 }
 | break_stmt {
-  $$ = $1;
+  $$ = std::move($1);
 }
 | continue_stmt {
-  $$ = $1;
+  $$ = std::move($1);
 }  | if_stmt {
     $$ = std::move($1);
   }
@@ -411,43 +408,43 @@ stmt:
 
 return_void_stmt:
   RETURN SEMICOLON {
-    $$ = new pache::return_void_stmt();
+    $$ = std::make_unique<pache::return_void_stmt>();
   }
   ;
 
 return_stmt:
   RETURN expression SEMICOLON {
-    $$ = new pache::return_ast($2);
+    $$ = std::make_unique<pache::return_ast>(std::move($2));
   }
   ;
 
 let_stmt:
   LET type IDENTIFIER ASSIGN expression SEMICOLON {
-    $$ = new pache::let_stmt(std::move($2), std::move($3), $5);
+    $$ = std::make_unique<pache::let_stmt>(std::move($2), std::move($3), std::move($5));
   }
 | LET type IDENTIFIER LEFT_CURLY_BRACE expression RIGHT_CURLY_BRACE SEMICOLON {
-    $$ = new pache::let_stmt(std::move($2), std::move($3), $5);
+    $$ = std::make_unique<pache::let_stmt>(std::move($2), std::move($3), std::move($5));
 }
 | LET type IDENTIFIER SEMICOLON {
-    $$ = new pache::let_stmt(std::move($2), std::move($3), nullptr);
+    $$ = std::make_unique<pache::let_stmt>(std::move($2), std::move($3), nullptr);
   }
 ;
 
 assign_stmt:
   IDENTIFIER ASSIGN expression SEMICOLON {
-    auto exp = new pache::var_exp(std::move($1));
-    $$ = new pache::assign_stmt(exp, $3);
+    auto exp = std::make_unique<pache::var_exp>(std::move($1));
+    $$ = std::make_unique<pache::assign_stmt>(std::move(exp), std::move($3));
   }
 ;
 
 break_stmt:
   BREAK SEMICOLON {
-    $$ = new pache::break_stmt();
+    $$ = std::make_unique<pache::break_stmt>();
   };
 
 continue_stmt:
   CONTINUE SEMICOLON {
-    $$ = new pache::continue_stmt();
+    $$ = std::make_unique<pache::continue_stmt>();
   };
 /* optional_else:
 %empty
@@ -470,7 +467,7 @@ else_stmt:
 
 if_stmt:
   IF expression block  {
-    $$ = new pache::if_stmt($2, $3);
+    $$ = std::make_unique<pache::if_stmt>(std::move($2), std::move($3));
   }
   | if_else_stmt {
     $$=std::move($1);
@@ -478,179 +475,179 @@ if_stmt:
   ;
 if_else_stmt:
   IF expression block ELSE else_stmt {
-    $$ = std::make_unique<pache::if_else_stmt>(pache::if_stmt(std::move($2), std::move($3)))
+    $$ = std::make_unique<pache::if_else_stmt>(std::move($2), std::move($3), std::move($5));
   }
 
 Number
   : INTEGER {
-    $$ = new pache::i32_literal($1);
+    $$ = std::make_unique<pache::i32_literal_t>($1);
   }
   ;
 
 loop_stmt:
   LOOP block {
-    $$ = new pache::loop_stmt($2);
+    $$ = std::make_unique<pache::loop_stmt>(std::move($2));
 
   }
 ;
 expression:
   logical_or_expression {
-    $$ = $1;
+    $$ = std::move($1);
   }
 ;
 
 FuncRParams:
 %empty
   {
-    $$ = std::vector<pache::exp_ast*>();
+    $$ = std::vector<std::unique_ptr<pache::exp_ast>>();
   }|
   expression {
-    $$ = std::vector<pache::exp_ast*>{};
-    $$.push_back($1);
+    $$ = std::vector<std::unique_ptr<pache::exp_ast>>{};
+    $$.emplace_back(std::move($1));
   }
 | FuncRParams COMMA expression {
-  $$ = $1;
-  $$.push_back($3);
+  $$ = std::move($1);
+  $$.emplace_back(std::move($3));
 };
 
 primary_expression:
   LEFT_PARENTHESIS expression RIGHT_PARENTHESIS {
-    $$ = $2;
+    $$ = std::move($2);
   }
 | Number {
-    $$ = $1;
+    $$ = std::move($1);
   }
 | IDENTIFIER {
-    $$ = new pache::var_exp(std::move($1));
+    $$ = std::make_unique<pache::var_exp>(std::move($1));
 }
 ;
 
 call_expression:
   primary_expression {
-    $$ = $1;
+    $$ = std::move($1);
   }
 | IDENTIFIER LEFT_PARENTHESIS FuncRParams RIGHT_PARENTHESIS {
-  $$ = new pache::func_call_exp(std::move($1), std::move($3));
+  $$ = std::make_unique<pache::func_call_exp>(std::move($1), std::move($3));
 }
 
 unary_expression:
   call_expression {
-    $$ = $1;
+    $$ = std::move($1);
   }
 | PLUS unary_expression {
-    $$ = new pache::unary_plus($2);
+    $$ = std::make_unique<pache::unary_plus>(std::move($2));
   }
 | MINUS unary_expression {
-    $$ = new pache::unary_minus($2);
+    $$ = std::make_unique<pache::unary_minus>(std::move($2));
   }
 ;
 
 
 mul_expressions:
   unary_expression {
-    $$ = $1;
+    $$ = std::move($1);
   }
 | mul_expressions BINARY_STAR unary_expression {
-    $$ = new pache::binary_mul_exp($1, $3);
+    $$ = std::make_unique<pache::binary_mul_exp>(std::move($1), std::move($3));
   }
 | mul_expressions SLASH unary_expression {
-    $$ = new pache::binary_div_exp($1, $3);
+    $$ = std::make_unique<pache::binary_div_exp>(std::move($1), std::move($3));
   }
 | mul_expressions PERCENT unary_expression {
-    $$ = new pache::binary_mod_exp($1, $3);
+    $$ = std::make_unique<pache::binary_mod_exp>(std::move($1), std::move($3));
   }
 ;
 
 add_exp:
   mul_expressions {
-    $$ = $1;
+    $$ = std::move($1);
   }
 | add_exp PLUS mul_expressions {
-    $$ = new pache::binary_plus_exp($1, $3);
+    $$ = std::make_unique<pache::binary_plus_exp>(std::move($1), std::move($3));
   }
 | add_exp MINUS mul_expressions {
-    $$ = new pache::binary_minus_exp($1, $3);
+    $$ = std::make_unique<pache::binary_minus_exp>(std::move($1), std::move($3));
   }
 ;
 
 three_way_expression:
   add_exp {
-    $$ = $1;
+    $$ = std::move($1);
   }
 | three_way_expression THREE_WAY_COMPARISON add_exp {
-    $$ = new pache::three_way_exp($1, $3);
+    $$ = std::make_unique<pache::three_way_exp>(std::move($1), std::move($3));
 }
 ;
 
 rel_expression:
   three_way_expression {
-    $$ = $1;
+    $$ = std::move($1);
   }
 | rel_expression LESS three_way_expression {
-    $$ = new pache::less_exp($1, $3);
+    $$ = std::make_unique<pache::less_exp>(std::move($1), std::move($3));
 }
 | rel_expression LESS_EQUAL three_way_expression {
-  $$ = new pache::less_eq_exp($1, $3);
+  $$ = std::make_unique<pache::less_eq_exp>(std::move($1), std::move($3));
 }
 | rel_expression GREATER three_way_expression {
-  $$ = new pache::greater_exp($1, $3);
+  $$ = std::make_unique<pache::greater_exp>(std::move($1), std::move($3));
 }
 | rel_expression GREATER_EQUAL three_way_expression {
-  $$ = new pache::greater_eq_exp($1, $3);
+  $$ = std::make_unique<pache::greater_eq_exp>(std::move($1), std::move($3));
 }
 ;
 
 eq_expression:
   rel_expression {
-    $$ = $1;
+    $$ = std::move($1);
   }
 | eq_expression EQUAL rel_expression {
-  $$ = new pache::eq_exp($1, $3);
+  $$ = std::make_unique<pache::eq_exp>(std::move($1), std::move($3));
 }
 | eq_expression NOT_EQUAL rel_expression {
-  $$ = new pache::not_eq_exp($1, $3);
+  $$ = std::make_unique<pache::not_eq_exp>(std::move($1), std::move($3));
 }
 ;
 
 bitwise_and_expression:
   eq_expression {
-    $$ = $1;
+    $$ = std::move($1);
   }
 | bitwise_and_expression B_AND eq_expression {
-  $$ = new pache::bitwise_and_exp($1, $3);
+  $$ = std::make_unique<pache::bitwise_and_exp>(std::move($1), std::move($3));
 };
 
 bitwise_xor_expression:
   bitwise_and_expression {
-    $$ = $1;
+    $$ = std::move($1);
   }
 | bitwise_xor_expression B_XOR bitwise_and_expression {
-  $$ = new pache::bitwise_xor_exp($1, $3);
+  $$ = std::make_unique<pache::bitwise_xor_exp>(std::move($1), std::move($3));
 }
 ;
 bitwise_or_expression:
   bitwise_xor_expression {
-    $$ = $1;
+    $$ = std::move($1);
   }
 | bitwise_or_expression B_OR bitwise_xor_expression {
-  $$ = new pache::bitwise_or_exp($1, $3);
+  $$ = std::make_unique<pache::bitwise_or_exp>(std::move($1), std::move($3));
 }
 ;
 logical_and_expression:
   bitwise_or_expression {
-    $$ = $1;
+    $$ = std::move($1);
   }
 | logical_and_expression AND bitwise_or_expression {
-  $$ = new pache::logical_and_exp($1, $3);
+  $$ = std::make_unique<pache::logical_and_exp>(std::move($1), std::move($3));
 }
 ;
 
 logical_or_expression:
   logical_and_expression {
-    $$ = $1;
+    $$ = std::move($1);
   }
 | logical_or_expression OR logical_and_expression {
-  $$ = new pache::logical_or_exp($1, $3);
+  $$ = std::make_unique<pache::logical_or_exp>(std::move($1), std::move($3));
 }
 ;
 

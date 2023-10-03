@@ -1,12 +1,13 @@
 #include "../build/parser.hpp"
+#include "IRbuild/comp_unit.h"
 #include "ast/ast.h"
+#include "ast/compunit.h"
 #include "driver.h"
 #include <cassert>
 #include <cstdio>
 #include <iostream>
 #include <memory>
 #include <string>
-
 using namespace std;
 
 int main(int argc, const char *argv[]) {
@@ -32,8 +33,7 @@ int main(int argc, const char *argv[]) {
   // parse();
   //  输出解析得到的 AST, 其实就是个字符串
   //  std::cout << ast->dump() << std::endl;
-
-  ast->codegen();
+  pache::build_file(ast.get());
   // pache::TheModule->print(llvm::errs(), nullptr);
   // drv.scan_end();
   return 0;

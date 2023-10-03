@@ -5,6 +5,7 @@
 #include "class.h"
 #include "expression.h"
 #include "function.h"
+#include "import.h"
 #include "statement.h"
 #include "type.h"
 #include <algorithm>
@@ -29,16 +30,27 @@ public:
     m_func_asts.emplace_back(std::move(p));
   }
 
-  void insert_dec(std::unique_ptr<base_ast> &&p) {
+  void insert_dec(std::unique_ptr<let_stmt> &&p) {
     m_var_table.emplace_back(std::move(p));
   }
   std::vector<std::unique_ptr<func_ast>> const &get_funcs_ast() const {
     return m_func_asts;
   }
   virtual ~compunit_ast() = default;
+  std::vector<std::unique_ptr<import_ast>> const &get_packages() const {
+    return m_packages;
+  }
+  std::vector<std::unique_ptr<class_ast>> const &get_class() const {
+    return class_def;
+  }
+
+  std::vector<std::unique_ptr<let_stmt>> const &get_var() const {
+    return m_var_table;
+  }
 
 private:
-  std::vector<std::unique_ptr<base_ast>> m_var_table;
+  std::vector<std::unique_ptr<import_ast>> m_packages;
+  std::vector<std::unique_ptr<let_stmt>> m_var_table;
   // std::vector<std::pair<std::string, variable_ast *>> dec_name;
   // std::unordered_map<std::string, variable_ast *> m_symbol_table;
   std::vector<std::unique_ptr<class_ast>> class_def;

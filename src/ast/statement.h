@@ -13,11 +13,11 @@
 #include <vector>
 
 namespace pache {
-class base_build;
+class block_scope;
 class stmt_ast : public base_ast {
 public:
   virtual ~stmt_ast() = default;
-  virtual void build(base_build *const father) const = 0;
+  virtual void build(block_scope *const father) const = 0;
 };
 
 class block_ast : public stmt_ast {
@@ -30,7 +30,7 @@ public:
   std::vector<std::unique_ptr<stmt_ast>> const &get_stmt_list() const {
     return m_statements;
   }
-  virtual void build(base_build *const father) const override;
+  virtual void build(block_scope *const father) const override;
 
   // virtual llvm::Value *codegen() override;
 
@@ -48,7 +48,7 @@ public:
   //   virtual std::string begin_lable() const override { return begin; }
 
   //  virtual std::string end_lable() const override { return end; }
-  virtual void build(base_build *const father) const override;
+  virtual void build(block_scope *const father) const override;
 
 private:
   std::unique_ptr<block_ast> m_block;
@@ -58,18 +58,18 @@ private:
 
 class break_stmt : public stmt_ast {
 public:
-  virtual void build(base_build *const father) const override;
+  virtual void build(block_scope *const father) const override;
 };
 
 class continue_stmt : public stmt_ast {
 public:
-  virtual void build(base_build *const father) const override;
+  virtual void build(block_scope *const father) const override;
 };
 
 class return_void_stmt : public stmt_ast {
 public:
   explicit return_void_stmt() = default;
-  virtual void build(base_build *const father) const override;
+  virtual void build(block_scope *const father) const override;
   // virtual llvm::Value *codegen() override;
   virtual ~return_void_stmt() override = default;
 };
@@ -81,7 +81,7 @@ public:
   // virtual llvm::Value *codegen() override;
   virtual ~return_ast() override = default;
   exp_ast const *const get_exp() const { return m_exp.get(); }
-  virtual void build(base_build *const father) const override;
+  virtual void build(block_scope *const father) const override;
 
 private:
   std::unique_ptr<exp_ast> m_exp;
@@ -98,7 +98,7 @@ public:
 
   var_exp const *const get_var() const { return m_var.get(); }
   exp_ast const *const get_exp() const { return m_val.get(); }
-  virtual void build(base_build *const father) const override;
+  virtual void build(block_scope *const father) const override;
 
 private:
   std::unique_ptr<var_exp> m_var;
@@ -117,7 +117,7 @@ public:
     }
   }
 
-  virtual void build(base_build *const father) const override;
+  virtual void build(block_scope *const father) const override;
   /*   explicit let_stmt(variable_ast *var, std::unique_ptr<exp_ast> init)
         : m_var(var), m_init(init) {
       m_var->set_father(get_father());
@@ -140,12 +140,13 @@ class exp_stmt : public stmt_ast {
 public:
   explicit exp_stmt(std::unique_ptr<exp_ast> &&exp) : m_exp(std::move(exp)) {}
   exp_ast const *const get_exp() const { return m_exp.get(); }
-  virtual void build(base_build *const father) const override;
+  virtual void build(block_scope *const father) const override;
 
 private:
   std::unique_ptr<exp_ast> m_exp;
 };
 
+// TODO
 class for_ast : public stmt_ast {
 
 private:
@@ -163,7 +164,7 @@ public:
     m_then_block->set_father(get_father());
   }
 
-  virtual void build(base_build *const father) const override;
+  virtual void build(block_scope *const father) const override;
   exp_ast const *const get_condition() const { return m_condition.get(); }
   block_ast const *const get_then_block() const { return m_then_block.get(); }
 
@@ -186,7 +187,7 @@ public:
     }
   }
 
-  virtual void build(base_build *const father) const override;
+  virtual void build(block_scope *const father) const override;
 
   exp_ast const *const get_condition() const { return m_condition.get(); }
   block_ast const *const get_then_block() const { return m_then_block.get(); }

@@ -84,6 +84,55 @@ std::unique_ptr<build_variable> pache::func_call_exp::build() const {
     return nullptr;
   }
 }
+
+std::unique_ptr<build_variable> binary_mul_exp::build() const {
+  std::array<std::unique_ptr<build_variable>, 2> arges{
+      build_exp(m_lhs),
+      build_exp(m_rhs),
+  };
+
+  std::unique_ptr<function_build> const &func =
+      function_lookup("operator*"s, arges.begin(), arges.end());
+
+  if (func != nullptr) {
+    std::array<llvm::Value *, 2> args_Value{
+        arges[0]->get_value(),
+        arges[1]->get_value(),
+    };
+
+    return std::make_unique<build_prvalue_variable>(
+        func->get_function_type()->get_return_type(),
+        Builder->CreateCall(func->get_llvm_function(), args_Value,
+                            "call_operator*"));
+  } else {
+    return nullptr;
+  }
+}
+
+std::unique_ptr<build_variable> binary_div_exp::build() const {
+  std::array<std::unique_ptr<build_variable>, 2> arges{
+      build_exp(m_lhs),
+      build_exp(m_rhs),
+  };
+
+  std::unique_ptr<function_build> const &func =
+      function_lookup("operator/"s, arges.begin(), arges.end());
+
+  if (func != nullptr) {
+    std::array<llvm::Value *, 2> args_Value{
+        arges[0]->get_value(),
+        arges[1]->get_value(),
+    };
+
+    return std::make_unique<build_prvalue_variable>(
+        func->get_function_type()->get_return_type(),
+        Builder->CreateCall(func->get_llvm_function(), args_Value,
+                            "call_operator/"));
+  } else {
+    return nullptr;
+  }
+}
+
 } // namespace pache
 
 // llvm::Value *pache::var_exp::codegen() {

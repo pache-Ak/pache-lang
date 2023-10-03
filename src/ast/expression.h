@@ -107,7 +107,7 @@ public:
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
 
   virtual ~binary_mul_exp() override = default;
-  // virtual llvm::Value *codegen() override;
+  virtual std::unique_ptr<build_variable> build() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -121,7 +121,7 @@ public:
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
 
   virtual ~binary_div_exp() override = default;
-  // virtual llvm::Value *codegen() override;
+  virtual std::unique_ptr<build_variable> build() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -135,7 +135,7 @@ public:
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
 
   virtual ~binary_mod_exp() override = default;
-  // virtual llvm::Value *codegen() override;
+  virtual std::unique_ptr<build_variable> build() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -149,7 +149,7 @@ public:
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
 
   virtual ~binary_plus_exp() override = default;
-  // virtual llvm::Value *codegen() override;
+  virtual std::unique_ptr<build_variable> build() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -163,7 +163,7 @@ public:
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
 
   virtual ~binary_minus_exp() override = default;
-  // virtual llvm::Value *codegen() override;
+  virtual std::unique_ptr<build_variable> build() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -175,7 +175,7 @@ public:
   explicit three_way_exp(std::unique_ptr<exp_ast> &&lhs,
                          std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
-  // virtual llvm::Value *codegen() override;
+  virtual std::unique_ptr<build_variable> build() const override;
   virtual ~three_way_exp() override = default;
 
 private:
@@ -188,7 +188,7 @@ public:
   explicit less_exp(std::unique_ptr<exp_ast> &&lhs,
                     std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
-  // virtual llvm::Value *codegen() override;
+  virtual std::unique_ptr<build_variable> build() const override;
   virtual ~less_exp() override = default;
 
 private:
@@ -201,7 +201,7 @@ public:
   explicit less_eq_exp(std::unique_ptr<exp_ast> &&lhs,
                        std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
-  // virtual llvm::Value *codegen() override;
+  virtual std::unique_ptr<build_variable> build() const override;
   virtual ~less_eq_exp() override = default;
 
 private:
@@ -214,7 +214,7 @@ public:
   explicit greater_exp(std::unique_ptr<exp_ast> &&lhs,
                        std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
-  // virtual llvm::Value *codegen() override;
+  virtual std::unique_ptr<build_variable> build() const override;
   virtual ~greater_exp() override = default;
   // virtual type_ast const *get_type() override { return bool_type_t::get(); }
 
@@ -230,7 +230,7 @@ public:
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
 
   virtual ~greater_eq_exp() override = default;
-  // virtual llvm::Value *codegen() override;
+  virtual std::unique_ptr<build_variable> build() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -244,7 +244,7 @@ public:
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
 
   virtual ~eq_exp() override = default;
-  // virtual llvm::Value *codegen() override;
+  virtual std::unique_ptr<build_variable> build() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -256,7 +256,7 @@ public:
   explicit not_eq_exp(std::unique_ptr<exp_ast> &&lhs,
                       std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
-  // virtual llvm::Value *codegen() override;
+  virtual std::unique_ptr<build_variable> build() const override;
   virtual ~not_eq_exp() override = default;
 
 private:
@@ -269,7 +269,7 @@ public:
   explicit bitwise_and_exp(std::unique_ptr<exp_ast> &&lhs,
                            std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
-  // virtual llvm::Value *codegen() override;
+  virtual std::unique_ptr<build_variable> build() const override;
   virtual ~bitwise_and_exp() override = default;
 
 private:
@@ -282,7 +282,7 @@ public:
   explicit bitwise_xor_exp(std::unique_ptr<exp_ast> &&lhs,
                            std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
-  // virtual llvm::Value *codegen() override;
+  virtual std::unique_ptr<build_variable> build() const override;
   virtual ~bitwise_xor_exp() override = default;
 
 private:
@@ -297,7 +297,7 @@ public:
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
 
   virtual ~bitwise_or_exp() override = default;
-  // virtual llvm::Value *codegen() override;
+  virtual std::unique_ptr<build_variable> build() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -311,7 +311,7 @@ public:
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
 
   virtual ~logical_and_exp() override = default;
-  // virtual llvm::Value *codegen() override;
+  virtual std::unique_ptr<build_variable> build() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -325,7 +325,7 @@ public:
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
 
   virtual ~logical_or_exp() override = default;
-  // virtual llvm::Value *codegen() override;
+  virtual std::unique_ptr<build_variable> build() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;

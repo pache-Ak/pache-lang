@@ -17,7 +17,7 @@
 using namespace std::literals;
 
 namespace pache {
-std::string name_mangling(func_ast const *const func) {
+std::string name_mangling(std::unique_ptr<func_ast> const &func) {
   // std::string decorated_name = get_father_decorated_name(func->get_father())
   // +
   //                              std::to_string(func->get_name().size()) +
@@ -30,7 +30,8 @@ std::string name_mangling(func_ast const *const func) {
 
 class function_build : public base_build {
 public:
-  explicit function_build(base_build *father, func_ast *func)
+  explicit function_build(base_build *father,
+                          std::unique_ptr<func_ast> const &func)
       : base_build(father), decorated_name(name_mangling(func)) {
 
     std::vector<llvm::Type *> args_Type;

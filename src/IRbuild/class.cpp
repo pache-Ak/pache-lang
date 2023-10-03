@@ -5,6 +5,7 @@
 #include "variable.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Verifier.h"
+#include <cassert>
 #include <memory>
 
 namespace pache {
@@ -44,7 +45,7 @@ class_build::class_build(base_build *const father,
 
 std::unique_ptr<build_variable> const &
 class_build::find_var(std::string const &name) const {
-  std::cerr << "shouldn't access this function!\n";
+  assert(false);
   return nullptr;
 }
 

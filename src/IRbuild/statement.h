@@ -51,14 +51,14 @@ public:
                       std::unique_ptr<build_variable> &&value) override;
   void deallco_all();
   ~block_scope() { deallco_all(); }
-  virtual llvm::BasicBlock *get_loop_begin() {
+  virtual llvm::BasicBlock *get_loop_begin() const override {
     if (loop_label::m_father != nullptr) {
       return loop_label::m_father->get_loop_begin();
     } else {
       return nullptr;
     }
   }
-  llvm::BasicBlock *get_loop_end() {
+  llvm::BasicBlock *get_loop_end() const override {
     if (loop_label::m_father != nullptr) {
       return loop_label::m_father->get_loop_end();
     } else {
