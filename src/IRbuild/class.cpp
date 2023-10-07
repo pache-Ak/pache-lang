@@ -5,7 +5,6 @@
 #include "variable.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Verifier.h"
-#include <cassert>
 #include <memory>
 
 namespace pache {
@@ -39,7 +38,7 @@ class_build::class_build(base_build *const father,
   m_type = llvm::StructType::create(vars_type, ast->get_name());
 
   for (auto &func : ast->get_func_def()) {
-    m_functions.emplace(func->get_name(), function_build(this, func.get()));
+    m_functions.emplace(func->get_name(), function_build(this, func));
   }
 }
 

@@ -48,15 +48,14 @@ protected:
   std::vector<std::pair<std::unique_ptr<type_ast>, std::string>> m_args;
   std::vector<std::unique_ptr<pache::type_ast>> m_args_type;
   std::vector<std::string> m_args_name;
+  // TODO arguments' type and name have two, only need one.
+
   std::unique_ptr<pache::type_ast> m_type;
   std::unique_ptr<block_ast> m_block;
 };
-/* class main_func_ast : public func_ast {
-public:
-  explicit main_func_ast(std::string &&name, std::vector<func_arg *> args,
-                         type_ast *return_type, base_ast *block)
-      : func_ast(std::move(name), std::move(args), return_type, block) {}
-}; */
+
+// main func
+
 } // namespace pache
 
 #endif

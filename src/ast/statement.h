@@ -3,13 +3,9 @@
 
 #include "ast.h"
 #include "expression.h"
-#include "type.h"
 
-#include <algorithm>
-#include <iostream>
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace pache {
@@ -32,8 +28,6 @@ public:
   }
   virtual void build(block_scope *const father) const override;
 
-  // virtual llvm::Value *codegen() override;
-
   virtual ~block_ast() override = default;
 
 protected:
@@ -44,16 +38,11 @@ class loop_stmt : public block_ast {
 public:
   explicit loop_stmt(std::unique_ptr<block_ast> &&block)
       : m_block(std::move(block)) {}
-  // virtual llvm::Value *codegen() override;
-  //   virtual std::string begin_lable() const override { return begin; }
 
-  //  virtual std::string end_lable() const override { return end; }
   virtual void build(block_scope *const father) const override;
 
 private:
   std::unique_ptr<block_ast> m_block;
-  // std::string begin;
-  // std::string end;
 };
 
 class break_stmt : public stmt_ast {
@@ -70,7 +59,7 @@ class return_void_stmt : public stmt_ast {
 public:
   explicit return_void_stmt() = default;
   virtual void build(block_scope *const father) const override;
-  // virtual llvm::Value *codegen() override;
+
   virtual ~return_void_stmt() override = default;
 };
 
@@ -78,7 +67,6 @@ class return_ast : public stmt_ast {
 public:
   explicit return_ast(std::unique_ptr<exp_ast> &&exp) : m_exp(std::move(exp)) {}
 
-  // virtual llvm::Value *codegen() override;
   virtual ~return_ast() override = default;
   exp_ast const *const get_exp() const { return m_exp.get(); }
   virtual void build(block_scope *const father) const override;

@@ -2,8 +2,6 @@
 #define TYPE_H
 
 #include "ast.h"
-#include "llvm/IR/Value.h"
-#include <cstddef>
 #include <memory>
 #include <string>
 #include <vector>
@@ -20,7 +18,6 @@ class base_build;
 class type_ast : public base_ast {
 public:
   virtual ~type_ast() = 0;
-  // virtual std::string location() { return get_father()->location(); }
   virtual std::unique_ptr<build_type> build(base_build *const father) const = 0;
 
   explicit type_ast() = default;
@@ -41,7 +38,6 @@ private:
 class volatile_type : public type_ast {
 public:
   volatile_type(std::unique_ptr<type_ast> &&type) : m_type(std::move(type)) {}
-  // virtual bool is_volatile() const { return true; }
 
   virtual std::unique_ptr<build_type>
   build(base_build *const father) const override;
@@ -77,12 +73,6 @@ public:
   explicit arr_ast(std::unique_ptr<type_ast> &&element_type,
                    const std::size_t size)
       : m_element_type(std::move(element_type)), m_size(size) {}
-  // virtual llvm::Type *codegen() override;
-
-  // std::unique_ptr<type_ast> get() { return std::unique_ptr<arr_ast>(this); }
-  // virtual std::string const decorated_name() const override {
-  //   return "_TODO_arr"s;
-  //}
 
 private:
   std::unique_ptr<type_ast> m_element_type;
@@ -94,10 +84,6 @@ public:
   explicit multi_array_ast(std::unique_ptr<type_ast> &&element_type,
                            std::vector<std::size_t> &&size)
       : m_element_type(std::move(element_type)), m_size(std::move(size)) {}
-  // virtual llvm::Type *codegen() override { return nullptr; }
-  // virtual std::string const decorated_name() const override {
-  //   return "_TODO_mulri_arr"s;
-  //  }
 
 private:
   std::unique_ptr<type_ast> m_element_type;
@@ -110,11 +96,7 @@ public:
   explicit func_type(std::vector<std::unique_ptr<type_ast>> &&args,
                      std::unique_ptr<type_ast> &&return_type);
 
-  // std::unique_ptr<type_ast> get() { return std::unique_ptr<func_type>(this);
-  // }
-  //  virtual std::string const decorated_name() const override {
-  //   return "_TODO_func"s;
-  //  }
+  virtual ~func_type() = default;
 
 private:
   std::vector<std::unique_ptr<type_ast>> m_args_type;
@@ -127,11 +109,7 @@ public:
       : m_iden(std::move(identifier)) {}
 
   std::unique_ptr<type_ast> get();
-  // virtual llvm::Type *codegen() override;
   virtual ~user_def_type() = default;
-  // virtual std::string const decorated_name() const override {
-  //   return "_TODO_class"s;
-  // }
 
 private:
   std::string m_iden;

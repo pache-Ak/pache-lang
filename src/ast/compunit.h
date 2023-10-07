@@ -3,21 +3,16 @@
 
 #include "ast.h"
 #include "class.h"
-#include "expression.h"
 #include "function.h"
 #include "import.h"
 #include "statement.h"
-#include "type.h"
-#include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <vector>
 
 namespace pache {
-class class_ast;
 class compunit_ast : public base_ast {
 public:
   explicit compunit_ast() {}
@@ -51,13 +46,8 @@ public:
 private:
   std::vector<std::unique_ptr<import_ast>> m_packages;
   std::vector<std::unique_ptr<let_stmt>> m_var_table;
-  // std::vector<std::pair<std::string, variable_ast *>> dec_name;
-  // std::unordered_map<std::string, variable_ast *> m_symbol_table;
   std::vector<std::unique_ptr<class_ast>> class_def;
-  // std::unordered_map<std::string, llvm::AllocaInst *> m_named_values;
   std::vector<std::unique_ptr<func_ast>> m_func_asts;
-  // std::unordered_multimap<std::string, std::unique_ptr<callable_ast>>
-  // m_func_table;
   std::string m_file_name;
   std::vector<std::string> m_lines;
 };

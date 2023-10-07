@@ -1,7 +1,6 @@
 #ifndef IR_BUILD_H
 #define IR_BUILD_H
 
-//#include "variable.h"
 #include "llvm/IR/IRBuilder.h"
 #include <memory>
 #include <string_view>

@@ -1,9 +1,8 @@
 #ifndef LITERAL
 #define LITERAL
 
-#include "../IRbuild/type.h"
+#include "../IRbuild/variable.h"
 #include "expression.h"
-#include "type.h"
 #include <memory>
 
 namespace pache {
@@ -18,8 +17,6 @@ protected:
 // maybe need in template
 class void_literal_t : public literal {
 public:
-  // virtual llvm::Value *codegen() override;
-  //  virtual type_ast const *get_type() override { return void_type_t::get(); }
   virtual std::unique_ptr<build_variable> build() const override {
     return nullptr;
   }
@@ -36,9 +33,6 @@ class i32_literal_t : public literal {
 public:
   explicit i32_literal_t(int32_t value) : m_value(value) {}
 
-  //  virtual type_ast const *get_type() override { return i32_type_t::get(); }
-
-  // virtual llvm::Value *codegen() override;
   virtual std::unique_ptr<build_variable> build() const override;
   virtual ~i32_literal_t() override = default;
 

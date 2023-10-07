@@ -5,13 +5,11 @@
 #include "build.h"
 #include "class.h"
 #include "function.h"
-#include "type.h"
 #include "variable.h"
 #include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 namespace pache {
 class file_build : public base_build {
 public:

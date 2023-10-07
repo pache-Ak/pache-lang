@@ -7,7 +7,6 @@
 #include "build.h"
 #include "function.h"
 #include <memory>
-#include <memory_resource>
 #include <string>
 #include <unordered_map>
 

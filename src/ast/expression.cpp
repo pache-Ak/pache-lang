@@ -14,13 +14,7 @@ std::unique_ptr<build_variable> build_exp(std::unique_ptr<exp_ast> const &ast) {
 }
 
 std::unique_ptr<build_variable> pache::unary_plus::build() const {
-  std::array<std::unique_ptr<build_variable>, 1> arges;
-
-  auto it = arges.begin();
-  auto beg = m_arguments.begin();
-  for (; beg != m_arguments.end(); ++it, ++beg) {
-    *it = build_exp(*beg);
-  }
+  std::array<std::unique_ptr<build_variable>, 1> arges{build_exp(m_argument)};
 
   std::unique_ptr<function_build> const &func =
       function_lookup("operator+"s, arges.begin(), arges.end());
@@ -39,13 +33,7 @@ std::unique_ptr<build_variable> pache::unary_plus::build() const {
 }
 
 std::unique_ptr<build_variable> pache::unary_minus::build() const {
-  std::array<std::unique_ptr<build_variable>, 1> arges;
-
-  auto it = arges.begin();
-  auto beg = m_arguments.begin();
-  for (; beg != m_arguments.end(); ++it, ++beg) {
-    *it = build_exp(*beg);
-  }
+  std::array<std::unique_ptr<build_variable>, 1> arges{build_exp(m_argument)};
 
   std::unique_ptr<function_build> const &func =
       function_lookup("operator-"s, arges.begin(), arges.end());

@@ -4,12 +4,8 @@
 #include "../IRbuild/variable.h"
 #include "ast.h"
 #include "type.h"
-#include <cstdint>
 #include <memory>
 #include <string>
-#include <type_traits>
-#include <utility>
-#include <vector>
 
 namespace pache {
 class exp_ast : public base_ast {
@@ -52,26 +48,24 @@ std::unique_ptr<build_variable> build_exp(std::unique_ptr<exp_ast> const &ast);
 class unary_plus : public exp_ast {
 public:
   explicit unary_plus(std::unique_ptr<exp_ast> &&argument)
-      : m_arguments({std::move(argument)}) {}
+      : m_argument(std::move(argument)) {}
   virtual ~unary_plus() = default;
   virtual std::unique_ptr<build_variable> build() const override;
 
 private:
-  std::array<std::unique_ptr<exp_ast>, 1> m_arguments;
-  // std::unique_ptr<exp_ast> m_argument;
+  std::unique_ptr<exp_ast> m_argument;
 };
 
 class unary_minus : public exp_ast {
 public:
   explicit unary_minus(std::unique_ptr<exp_ast> &&argument)
-      : m_arguments({std::move(argument)}) {}
+      : m_argument(std::move(argument)) {}
 
   virtual ~unary_minus() = default;
   virtual std::unique_ptr<build_variable> build() const override;
 
 private:
-  std::array<std::unique_ptr<exp_ast>, 1> m_arguments;
-  // std::unique_ptr<exp_ast> m_argument;
+  std::unique_ptr<exp_ast> m_argument;
 };
 class func_call_exp : public exp_ast {
 public:
@@ -216,7 +210,6 @@ public:
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
   virtual std::unique_ptr<build_variable> build() const override;
   virtual ~greater_exp() override = default;
-  // virtual type_ast const *get_type() override { return bool_type_t::get(); }
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
