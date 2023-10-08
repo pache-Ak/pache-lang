@@ -8,20 +8,20 @@
 #include <memory>
 #include <utility>
 #include <vector>
-using namespace std::literals;
+
 namespace pache {
 
 class build_type {
 public:
-  virtual bool is_integral() const { return false; }
-  virtual bool is_signed() const { return false; }
-  virtual bool is_unsigned() const { return false; }
-  virtual std::string const decorated_name() const { return ""s; }
+  virtual bool is_integral() const;
+  virtual bool is_signed() const;
+  virtual bool is_unsigned() const;
+  virtual std::string const decorated_name() const;
   virtual llvm::Type *get_llvm_type() const = 0;
   virtual void set_const() = 0;
   virtual void set_volatile() = 0;
-  virtual bool is_const() const { return m_is_const; }
-  virtual bool is_volatile() const { return m_is_volatile; }
+  virtual bool is_const() const;
+  virtual bool is_volatile() const;
   virtual ~build_type() = default;
 
 protected:
@@ -41,163 +41,175 @@ public:
 
 class void_type_t : public primary_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override { return "_void"s; }
+  virtual std::string const decorated_name() const override;
 
 private:
-  //  explicit void_type_t() = default;
-  static void_type_t void_type;
+  explicit void_type_t() = default;
 };
 
 class bool_type_t : public primary_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override { return "_bool"s; }
+  virtual std::string const decorated_name() const override;
 
 private:
-  //  explicit bool_type_t() = default;
-  static bool_type_t bool_type;
+  explicit bool_type_t() = default;
 };
 
 class size_type_t : public primary_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override { return "_size"s; }
+  virtual std::string const decorated_name() const override;
 
 private:
-  //  explicit size_type_t() = default;
-  static size_type_t size_type;
+  explicit size_type_t() = default;
 };
 inline namespace integral {
 class integral_type : public primary_type {
 public:
   virtual bool is_integral() const override { return true; }
+  virtual ~integral_type() = 0;
 };
 
 class signed_type : public integral_type {
 public:
   virtual bool is_signed() const override { return true; }
+  virtual ~signed_type() = 0;
 };
 
 class unsigned_type : public integral_type {
 public:
   virtual bool is_unsigned() const override { return true; }
+  virtual ~unsigned_type() = 0;
 };
 
 class i8_type_t : public signed_type {
 public:
-  static void *operator new(std::size_t sz) { return &i8_type; }
-  static void operator delete(void *ptr) {}
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override { return "_i8"s; }
+  virtual std::string const decorated_name() const override;
   virtual ~i8_type_t() = default;
 
 private:
-  //  explicit i8_type_t() = default;
-  static i8_type_t i8_type;
+  explicit i8_type_t() = default;
 };
 
 class i16_type_t : public signed_type {
 public:
-  static void *operator new(std::size_t sz) { return &i16_type; }
-  static void operator delete(void *ptr) {}
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override { return "_16"s; }
+  virtual std::string const decorated_name() const override;
 
 private:
-  //  explicit i16_type_t() = default;
-  static i16_type_t i16_type;
+  explicit i16_type_t() = default;
 };
 class i32_type_t : public signed_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override { return "_i32"s; }
+  virtual std::string const decorated_name() const override;
 
 private:
-  //  explicit i32_type_t() = default;
-  static i32_type_t i32_type;
+  explicit i32_type_t() = default;
 };
 
 class i64_type_t : public signed_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override { return "_i64"s; }
+  virtual std::string const decorated_name() const override;
 
 private:
-  //  explicit i64_type_t() = default;
-  static i64_type_t i64_type;
+  explicit i64_type_t() = default;
 };
 
 class i128_type_t : public signed_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override { return "_i128"s; }
+  virtual std::string const decorated_name() const override;
 
 private:
-  //  explicit i128_type_t() = default;
-  static i128_type_t i128_type;
+  explicit i128_type_t() = default;
 };
 
 class u8_type_t : public unsigned_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override { return "_u8"s; }
+  virtual std::string const decorated_name() const override;
 
 private:
-  //  explicit u8_type_t() = default;
-  static u8_type_t u8_type;
+  explicit u8_type_t() = default;
 };
 
 class u16_type_t : public unsigned_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override { return "_u16"s; }
+  virtual std::string const decorated_name() const override;
 
 private:
-  //  explicit u16_type_t() = default;
-  static u16_type_t u16_type;
+  explicit u16_type_t() = default;
 };
 class u32_type_t : public unsigned_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override { return "_u32"s; }
+  virtual std::string const decorated_name() const override;
 
 private:
-  //  explicit u32_type_t() = default;
-  static u32_type_t u32_type;
+  explicit u32_type_t() = default;
 };
 
 class u64_type_t : public unsigned_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override { return "_u64"s; }
+  virtual std::string const decorated_name() const override;
 
 private:
-  //  explicit u64_type_t() = default;
-  static u64_type_t u64_type;
+  explicit u64_type_t() = default;
 };
 
 class u128_type_t : public primary_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override { return "_u128"s; }
+  virtual std::string const decorated_name() const override;
 
 private:
-  //  explicit u128_type_t() = default;
-  static u128_type_t u128_type;
+  explicit u128_type_t() = default;
 };
 } // namespace integral
 
@@ -206,17 +218,19 @@ inline namespace floating_pointer {
 class floating_pointer_type : public primary_type {
 public:
   virtual std::string const decorated_name() const override = 0;
+  virtual ~floating_pointer_type() = 0;
 };
 
 class f16_type_t : public floating_pointer_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override { return "_f16"s; }
+  virtual std::string const decorated_name() const override;
 
 private:
-  //  explicit f16_type_t() = default;
-  static f16_type_t f16_type;
+  explicit f16_type_t() = default;
 };
 
 // a 16-bit bfloat type. iee754like
@@ -224,24 +238,26 @@ class bfloat_type_t : public floating_pointer_type {};
 
 class f32_type_t : public floating_pointer_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override { return "_f32"s; }
+  virtual std::string const decorated_name() const override;
 
 private:
-  //  explicit f32_type_t() = default;
-  static f32_type_t f32_type;
+  explicit f32_type_t() = default;
 };
 
 class f64_type_t : public floating_pointer_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override { return "_f64"s; }
+  virtual std::string const decorated_name() const override;
 
 private:
-  //  explicit f64_type_t() = default;
-  static f64_type_t f64_type;
+  explicit f64_type_t() = default;
 };
 
 // x86 long double
@@ -249,13 +265,14 @@ class x86_fp80_type_t : public floating_pointer_type {};
 
 class f128_type_t : public floating_pointer_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override { return "_f128"s; }
+  virtual std::string const decorated_name() const override;
 
 private:
-  //  explicit f128_type_t() = default;
-  static f128_type_t f128_type;
+  explicit f128_type_t() = default;
 };
 
 // powerpc long double
@@ -269,6 +286,8 @@ public:
 
 class d32_type_t : public decimal_floating_pointer_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
   virtual std::string const decorated_name() const override { return "_d32"s; }
@@ -280,6 +299,8 @@ private:
 
 class d64_type_t : public decimal_floating_pointer_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
   virtual std::string const decorated_name() const override { return "_d64"s; }
@@ -291,6 +312,8 @@ private:
 
 class d128_type_t : public decimal_floating_pointer_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
   virtual std::string const decorated_name() const override;
@@ -301,34 +324,37 @@ public:
 
 class c8_type_t : public primary_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override { return "_c8"s; }
+  virtual std::string const decorated_name() const override;
 
 private:
-  //  explicit c8_type_t() = default;
-  static c8_type_t c8_type;
+  explicit c8_type_t() = default;
 };
 
 class c16_type_t : public primary_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override { return "_c16"s; }
+  virtual std::string const decorated_name() const override;
 
 private:
-  //  explicit c16_type_t() = default;
-  static c16_type_t c16_type;
+  explicit c16_type_t() = default;
 };
 class c32_type_t : public primary_type {
 public:
+  void *operator new(std::size_t count);
+  void operator delete(void *ptr);
   static std::unique_ptr<build_type> get();
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override { return "_c32"s; }
+  virtual std::string const decorated_name() const override;
 
 private:
-  //  explicit c32_type_t() = default;
-  static c32_type_t c32_type;
+  explicit c32_type_t() = default;
 };
 
 } // namespace primary
@@ -339,12 +365,8 @@ public:
                     const std::size_t size)
       : m_element_type(std::move(element_type)), m_size(size) {}
   virtual llvm::Type *get_llvm_type() const override;
-
-  // std::unique_ptr<build_type> get() { return std::unique_ptr<arr_type>(this);
-  // }
-  virtual std::string const decorated_name() const override {
-    return "_TODO_arr"s;
-  }
+  //  std::unique_ptr<build_type>  get();
+  virtual std::string const decorated_name() const override;
   virtual void set_const() override;
   virtual void set_volatile() override;
   virtual bool is_const() const override { return m_element_type->is_const(); }
@@ -364,16 +386,10 @@ public:
   explicit multi_array_type(std::unique_ptr<build_type> &&element_type,
                             std::vector<std::size_t> &&size)
       : m_element_type(std::move(element_type)), m_size(std::move(size)) {}
-  virtual llvm::Type *get_llvm_type() const override { return nullptr; }
-  virtual std::string const decorated_name() const override {
-    return "_TODO_mulri_arr"s;
-  }
-  virtual void set_const() override {
-    std::cerr << "array type can't set const.\n";
-  }
-  virtual void set_volatile() override {
-    std::cerr << "array type can't set volatile.\n";
-  }
+  virtual llvm::Type *get_llvm_type() const override;
+  virtual std::string const decorated_name() const override;
+  virtual void set_const() override;
+  virtual void set_volatile() override;
   virtual bool is_const() const override { return m_element_type->is_const(); }
   virtual bool is_volatile() const override {
     return m_element_type->is_volatile();
@@ -386,6 +402,7 @@ private:
 
 class pointer_type : public build_type {
   virtual llvm::Type *get_llvm_type() const override;
+  virtual std::string const decorated_name() const override;
   virtual void set_const() override;
   virtual void set_volatile() override;
   virtual bool is_const() const override { return m_element_type->is_const(); }
@@ -401,19 +418,14 @@ class reference_type : public build_type {
 public:
   explicit reference_type(std::unique_ptr<build_type> &&element_type)
       : m_element_type(std::move(element_type)) {}
-  virtual void set_const() override {
-    std::cerr << "reference type can't set const.\n";
-  }
-  virtual void set_volatile() override {
-    std::cerr << "reference type can't set volatile.\n";
-  }
+  virtual void set_const() override;
+  virtual void set_volatile() override;
   virtual bool is_const() const override { return m_element_type->is_const(); }
   virtual bool is_volatile() const override {
     return m_element_type->is_volatile();
   }
-  virtual llvm::Type *get_llvm_type() const override {
-    return llvm::PointerType::getUnqual(m_element_type->get_llvm_type());
-  }
+  virtual llvm::Type *get_llvm_type() const override;
+  virtual std::string const decorated_name() const override;
 
 private:
   std::unique_ptr<build_type> m_element_type;
