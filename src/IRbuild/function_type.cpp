@@ -1,4 +1,5 @@
 #include "function_type.h"
+#include "IRbuild/type.h"
 #include "ast/type.h"
 #include "llvm/IR/Type.h"
 #include <algorithm>
@@ -26,5 +27,10 @@ void function_type::set_const() {
 }
 void function_type::set_volatile() {
   std::cerr << "can't fix function with volatile.";
+}
+
+std::unique_ptr<build_type>
+build_func_type(base_build &father, func_type_ast const &ast) {
+  return std::make_unique<function_type>(type_build(father, *ast.get_return_type()), ast.get_args_type().begin(), ast.get_args_type().end());
 }
 } // namespace pache

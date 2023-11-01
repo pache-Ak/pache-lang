@@ -132,7 +132,7 @@ using namespace std;
 %token EOF 0;
 // 非终结符的类型定义
 %type <pache::compunit_ast*>   CompUnit
-%type <std::unique_ptr<pache::type_ast>> type arr_type const_type volatile_type multi_array_type primary_type
+%type <std::unique_ptr<pache::type_ast>> type arr_ast const_ast volatile_ast multi_array_ast primary_type
 %type <std::unique_ptr<pache::exp_ast>> Number   primary_expression unary_expression call_expression
 %type <std::unique_ptr<pache::block_ast>> block /*optional_else*/  loop_stmt  
 %type <std::unique_ptr<pache::let_stmt>> let_stmt 
@@ -244,29 +244,29 @@ class_def:
     $$ = std::make_unique<pache::class_ast>(std::move($2), std::move($4));
   };
 // 同上, 不再解释
-const_type:
+const_ast:
   primary_type CONST {
     $$ = std::move($1);
   }
-| const_type CONST {
+| const_ast CONST {
   $$ = std::move($1);
   // TODO log error
 };
 
-volatile_type:
+volatile_ast:
   primary_type VOLATILE {
     $$ = std::move($1);
   }
-| volatile_type VOLATILE {
+| volatile_ast VOLATILE {
   $$ = std::move($1);
   // TODO log error
 };
 
 type :
-const_type {
+const_ast {
   $$ = std::move($1);
 } |
-volatile_type {
+volatile_ast {
   $$ = std::move($1);
 }|
 primary_type {
@@ -274,9 +274,9 @@ primary_type {
 }
 
 primary_type:
-  VOID
+  /*VOID
   { $$ = pache::void_type_ast::get(); }
-/* | BOOL {
+ | BOOL {
     $$ = pache::bool_type_t::get();
   }
 | SIZE {
@@ -319,23 +319,23 @@ primary_type:
 | C16
 { $$ = pache::c16_type_t::get(); }
 | C32
-{ $$ = pache::c32_type_t::get(); } */
-/* | arr_type {
+{ $$ = pache::c32_type_t::get(); } 
+/* | arr_ast {
   $$ = std::move($1);
 }|
-multi_array_type {
+multi_array_ast {
 $$ = std::move($1);
-}
-| IDENTIFIER {
-  $$ = std::make_unique<pache::user_def_type>(std::move($1));
-} */
+}*/
+ IDENTIFIER {
+  $$ = std::make_unique<pache::named_type>(std::move($1));
+} 
   ;
 
 
 
-arr_type:
+arr_ast:
   type LEFT_SQUARE_BRACKET INTEGER RIGHT_SQUARE_BRACKET {
-    $$ = std::make_unique<arr_type_t>(std::move($1), $3);
+    $$ = std::make_unique<arr_ast_t>(std::move($1), $3);
     
   }
 ;
@@ -353,9 +353,9 @@ size_list:
     $$.push_back($2);
   }
   ;
-  multi_array_type:
+  multi_array_ast:
   type LEFT_SQUARE_BRACKET size_list RIGHT_SQUARE_BRACKET {
-    $$ = std::make_unique<pache::multi_array_type>(std::move($1), std::move($3));
+    $$ = std::make_unique<pache::multi_array_ast>(std::move($1), std::move($3));
   };
 statement_list:
   %empty

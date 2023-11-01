@@ -1,4 +1,5 @@
 #include "type.h"
+#include "ast/type.h"
 #include "build.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Type.h"
@@ -34,231 +35,149 @@ void primary_type::set_volatile() {
   }
 }
 
-void *void_type_t::operator new(std::size_t count) {
-  static void_type_t *void_type{::new void_type_t()};
-  std::cout << "void_type_t new.\n";
-  return void_type;
-}
-void void_type_t::operator delete(void *ptr) {
-  std::cout << "void_type_t delete.\n";
-}
-std::unique_ptr<build_type> void_type_t::get() {
-  return std::unique_ptr<void_type_t>{new void_type_t()};
-}
 llvm::Type *void_type_t::get_llvm_type() const { return Builder->getVoidTy(); }
 std::string const void_type_t::decorated_name() const { return "_void"s; }
+std::unique_ptr<build_type> void_type_t::clone() const {
+  return std::unique_ptr<void_type_t>(new void_type_t(*this));
+}
 
-void *bool_type_t::operator new(std::size_t count) {
-  static bool_type_t *bool_type{::new bool_type_t()};
-  return bool_type;
-}
-void bool_type_t::operator delete(void *ptr) {}
-std::unique_ptr<build_type> bool_type_t::get() {
-  return std::unique_ptr<bool_type_t>{new bool_type_t()};
-}
 llvm::Type *bool_type_t::get_llvm_type() const { return Builder->getInt1Ty(); }
 std::string const bool_type_t::decorated_name() const { return "_bool"s; }
+std::unique_ptr<build_type> bool_type_t::clone() const {
+  return std::unique_ptr<bool_type_t>(new bool_type_t(*this));
+}
 
-void *size_type_t::operator new(std::size_t count) {
-  static size_type_t *size_type{::new size_type_t()};
-  return size_type;
-}
-void size_type_t::operator delete(void *ptr) {}
-std::unique_ptr<build_type> size_type_t::get() {
-  return std::unique_ptr<size_type_t>{new size_type_t()};
-}
 llvm::Type *size_type_t::get_llvm_type() const { return Builder->getInt64Ty(); }
 std::string const size_type_t::decorated_name() const { return "_size"s; }
+std::unique_ptr<build_type> size_type_t::clone() const {
+  return std::unique_ptr<size_type_t>(new size_type_t(*this));
+}
 
-void *i8_type_t::operator new(std::size_t count) {
-  static i8_type_t *i8_type{::new i8_type_t()};
-  return i8_type;
-}
-void i8_type_t::operator delete(void *ptr) {}
-std::unique_ptr<build_type> i8_type_t::get() {
-  return std::unique_ptr<i8_type_t>{new i8_type_t()};
-}
 llvm::Type *i8_type_t::get_llvm_type() const { return Builder->getInt8Ty(); }
 std::string const i8_type_t::decorated_name() const { return "_i8"s; }
+std::unique_ptr<build_type> i8_type_t::clone() const {
+  return std::unique_ptr<i8_type_t>(new i8_type_t(*this));
+}
 
-void *i16_type_t::operator new(std::size_t count) {
-  static i16_type_t *i16_type{::new i16_type_t()};
-  return i16_type;
-}
-void i16_type_t::operator delete(void *ptr) {}
-std::unique_ptr<build_type> i16_type_t::get() {
-  return std::unique_ptr<i16_type_t>{new i16_type_t()};
-}
 llvm::Type *i16_type_t::get_llvm_type() const { return Builder->getInt16Ty(); }
 std::string const i16_type_t::decorated_name() const { return "_i16"s; }
-
-void *i32_type_t::operator new(std::size_t count) {
-  static i32_type_t *i32_type{::new i32_type_t()};
-  return i32_type;
+std::unique_ptr<build_type> i16_type_t::clone() const {
+  return std::unique_ptr<i16_type_t>(new i16_type_t(*this));
 }
-void i32_type_t::operator delete(void *ptr) {}
+
 llvm::Type *i32_type_t::get_llvm_type() const { return Builder->getInt32Ty(); }
 std::string const i32_type_t::decorated_name() const { return "_i32"s; }
+std::unique_ptr<build_type> i32_type_t::clone() const {
+  return std::unique_ptr<i32_type_t>(new i32_type_t(*this));
+}
 
-void *i64_type_t::operator new(std::size_t count) {
-  static i64_type_t *i64_type{::new i64_type_t()};
-  return i64_type;
-}
-void i64_type_t::operator delete(void *ptr) {}
-std::unique_ptr<build_type> i64_type_t::get() {
-  return std::unique_ptr<i64_type_t>{new i64_type_t()};
-}
 llvm::Type *i64_type_t::get_llvm_type() const { return Builder->getInt64Ty(); }
 std::string const i64_type_t::decorated_name() const { return "_i64"s; }
+std::unique_ptr<build_type> i64_type_t::clone() const {
+  return std::unique_ptr<i64_type_t>(new i64_type_t(*this));
+}
 
-void *i128_type_t::operator new(std::size_t count) {
-  static i128_type_t *i128_type{::new i128_type_t()};
-  return i128_type;
-}
-void i128_type_t::operator delete(void *ptr) {}
-std::unique_ptr<build_type> i128_type_t::get() {
-  return std::unique_ptr<i128_type_t>{new i128_type_t()};
-}
 llvm::Type *i128_type_t::get_llvm_type() const {
   return Builder->getInt128Ty();
 }
 std::string const i128_type_t::decorated_name() const { return "_i128"s; }
+std::unique_ptr<build_type> i128_type_t::clone() const {
+  return std::unique_ptr<i128_type_t>(new i128_type_t(*this));
+}
 
-void *u8_type_t::operator new(std::size_t count) {
-  static u8_type_t *u8_type{::new u8_type_t()};
-  return u8_type;
-}
-void u8_type_t::operator delete(void *ptr) {}
-std::unique_ptr<build_type> u8_type_t::get() {
-  return std::unique_ptr<u8_type_t>{new u8_type_t()};
-}
 llvm::Type *u8_type_t::get_llvm_type() const { return Builder->getInt8Ty(); }
 std::string const u8_type_t::decorated_name() const { return "_u8"s; }
+std::unique_ptr<build_type> u8_type_t::clone() const {
+  return std::unique_ptr<u8_type_t>(new u8_type_t(*this));
+}
 
-void *u16_type_t::operator new(std::size_t count) {
-  static u16_type_t *u16_type{::new u16_type_t()};
-  return u16_type;
-}
-void u16_type_t::operator delete(void *ptr) {}
-std::unique_ptr<build_type> u16_type_t::get() {
-  return std::unique_ptr<u16_type_t>{new u16_type_t()};
-}
 llvm::Type *u16_type_t::get_llvm_type() const { return Builder->getInt16Ty(); }
 std::string const u16_type_t::decorated_name() const { return "_u16"s; }
+std::unique_ptr<build_type> u16_type_t::clone() const {
+  return std::unique_ptr<u16_type_t>(new u16_type_t(*this));
+}
 
-void *u32_type_t::operator new(std::size_t count) {
-  static u32_type_t *u32_type{::new u32_type_t()};
-  return u32_type;
-}
-void u32_type_t::operator delete(void *ptr) {}
-std::unique_ptr<build_type> u32_type_t::get() {
-  return std::unique_ptr<u32_type_t>{new u32_type_t()};
-}
 llvm::Type *u32_type_t::get_llvm_type() const { return Builder->getInt32Ty(); }
 std::string const u32_type_t::decorated_name() const { return "_u32"s; }
+std::unique_ptr<build_type> u32_type_t::clone() const {
+  return std::unique_ptr<u32_type_t>(new u32_type_t(*this));
+}
 
-void *u64_type_t::operator new(std::size_t count) {
-  static u64_type_t *u64_type{::new u64_type_t()};
-  return u64_type;
-}
-void u64_type_t::operator delete(void *ptr) {}
-std::unique_ptr<build_type> u64_type_t::get() {
-  return std::unique_ptr<u64_type_t>{new u64_type_t()};
-}
 llvm::Type *u64_type_t::get_llvm_type() const { return Builder->getInt64Ty(); }
 std::string const u64_type_t::decorated_name() const { return "_u64"s; }
+std::unique_ptr<build_type> u64_type_t::clone() const {
+  return std::unique_ptr<u64_type_t>(new u64_type_t(*this));
+}
 
-void *u128_type_t::operator new(std::size_t count) {
-  static u128_type_t *u128_type{::new u128_type_t()};
-  return u128_type;
-}
-void u128_type_t::operator delete(void *ptr) {}
-std::unique_ptr<build_type> u128_type_t::get() {
-  return std::unique_ptr<u128_type_t>{new u128_type_t()};
-}
 llvm::Type *u128_type_t::get_llvm_type() const {
   return Builder->getInt128Ty();
 }
 std::string const u128_type_t::decorated_name() const { return "_u128"s; }
+std::unique_ptr<build_type> u128_type_t::clone() const {
+  return std::unique_ptr<u128_type_t>(new u128_type_t(*this));
+}
 
-void *f16_type_t::operator new(std::size_t count) {
-  static f16_type_t *f16_type{::new f16_type_t()};
-  return f16_type;
-}
-void f16_type_t::operator delete(void *ptr) {}
-std::unique_ptr<build_type> f16_type_t::get() {
-  return std::unique_ptr<f16_type_t>{new f16_type_t()};
-}
 llvm::Type *f16_type_t::get_llvm_type() const { return Builder->getHalfTy(); }
 std::string const f16_type_t::decorated_name() const { return "_f16"s; }
+std::unique_ptr<build_type> f16_type_t::clone() const {
+  return std::unique_ptr<f16_type_t>(new f16_type_t(*this));
+}
 
-void *f32_type_t::operator new(std::size_t count) {
-  static f32_type_t *i32_type{::new f32_type_t()};
-  return i32_type;
-}
-void f32_type_t::operator delete(void *ptr) {}
-std::unique_ptr<build_type> f32_type_t::get() {
-  return std::unique_ptr<f32_type_t>{new f32_type_t()};
-}
 llvm::Type *f32_type_t::get_llvm_type() const { return Builder->getFloatTy(); }
 std::string const f32_type_t::decorated_name() const { return "_f32"s; }
+std::unique_ptr<build_type> f32_type_t::clone() const {
+  return std::unique_ptr<f32_type_t>(new f32_type_t(*this));
+}
 
-void *f64_type_t::operator new(std::size_t count) {
-  static f64_type_t *i32_type{::new f64_type_t()};
-  return i32_type;
-}
-void f64_type_t::operator delete(void *ptr) {}
-std::unique_ptr<build_type> f64_type_t::get() {
-  return std::unique_ptr<f64_type_t>{new f64_type_t()};
-}
 llvm::Type *f64_type_t::get_llvm_type() const { return Builder->getDoubleTy(); }
 std::string const f64_type_t::decorated_name() const { return "_f64"s; }
+std::unique_ptr<build_type> f64_type_t::clone() const {
+  return std::unique_ptr<f64_type_t>(new f64_type_t(*this));
+}
 
-void *f128_type_t::operator new(std::size_t count) {
-  static f128_type_t *i32_type{::new f128_type_t()};
-  return i32_type;
-}
-void f128_type_t::operator delete(void *ptr) {}
-std::unique_ptr<build_type> f128_type_t::get() {
-  return std::unique_ptr<f128_type_t>{new f128_type_t()};
-}
 llvm::Type *f128_type_t::get_llvm_type() const {
   return llvm::Type::getFP128Ty(*TheContext);
 }
 std::string const f128_type_t::decorated_name() const { return "_f128"s; }
+std::unique_ptr<build_type> f128_type_t::clone() const {
+  return std::unique_ptr<f128_type_t>(new f128_type_t(*this));
+}
 
-void *c8_type_t::operator new(std::size_t count) {
-  static c8_type_t *i32_type{::new c8_type_t()};
-  return i32_type;
+llvm::Type *d32_type_t::get_llvm_type() const {}
+std::string const d32_type_t::decorated_name() const { return "_d32"s; }
+std::unique_ptr<build_type> d32_type_t::clone() const {
+  return std::unique_ptr<d32_type_t>(new d32_type_t{*this});
 }
-void c8_type_t::operator delete(void *ptr) {}
-std::unique_ptr<build_type> c8_type_t::get() {
-  return std::unique_ptr<c8_type_t>{new c8_type_t()};
+
+llvm::Type *d64_type_t::get_llvm_type() const {}
+std::string const d64_type_t::decorated_name() const { return "_d64"s; }
+std::unique_ptr<build_type> d64_type_t::clone() const {
+  return std::unique_ptr<d64_type_t>(new d64_type_t{*this});
 }
+
+llvm::Type *d128_type_t::get_llvm_type() const {}
+std::string const d128_type_t::decorated_name() const { return "_d128"s; }
+std::unique_ptr<build_type> d128_type_t::clone() const {
+  return std::unique_ptr<d128_type_t>(new d128_type_t{*this});
+}
+
 llvm::Type *c8_type_t::get_llvm_type() const { return Builder->getInt8Ty(); }
 std::string const c8_type_t::decorated_name() const { return "_c8"s; }
+std::unique_ptr<build_type> c8_type_t::clone() const {
+  return std::unique_ptr<c8_type_t>(new c8_type_t(*this));
+}
 
-void *c16_type_t::operator new(std::size_t count) {
-  static c16_type_t *i32_type{::new c16_type_t()};
-  return i32_type;
-}
-void c16_type_t::operator delete(void *ptr) {}
-std::unique_ptr<build_type> c16_type_t::get() {
-  return std::unique_ptr<c16_type_t>{new c16_type_t()};
-}
 llvm::Type *c16_type_t::get_llvm_type() const { return Builder->getInt16Ty(); }
 std::string const c16_type_t::decorated_name() const { return "_c16"s; }
+std::unique_ptr<build_type> c16_type_t::clone() const {
+  return std::unique_ptr<c16_type_t>(new c16_type_t(*this));
+}
 
-void *c32_type_t::operator new(std::size_t count) {
-  static c32_type_t *i32_type{::new c32_type_t()};
-  return i32_type;
-}
-void c32_type_t::operator delete(void *ptr) {}
-std::unique_ptr<build_type> c32_type_t::get() {
-  return std::unique_ptr<c32_type_t>{new c32_type_t()};
-}
 llvm::Type *c32_type_t::get_llvm_type() const { return Builder->getInt32Ty(); }
 std::string const c32_type_t::decorated_name() const { return "_c32"s; }
+std::unique_ptr<build_type> c32_type_t::clone() const {
+  return std::unique_ptr<c32_type_t>(new c32_type_t(*this));
+}
 
 llvm::Type *arr_type::get_llvm_type() const {
   return llvm::ArrayType::get(m_element_type->get_llvm_type(), m_size);
@@ -270,6 +189,10 @@ std::string const arr_type::decorated_name() const {
 void arr_type::set_const() { std::cerr << "con't fix array with const.\n"; }
 void arr_type::set_volatile() {
   std::cerr << "con't fix array with volatile.\n";
+}
+std::unique_ptr<build_type> arr_type::clone() const {
+  return std::unique_ptr<arr_type>(
+      new arr_type(m_element_type->clone(), m_size));
 }
 
 llvm::Type *multi_array_type::get_llvm_type() const {
@@ -292,6 +215,8 @@ void multi_array_type::set_volatile() {
   std::cerr << "array type can't set volatile.\n";
 }
 
+pointer_type::pointer_type(std::unique_ptr<build_type> &&element_type)
+    : m_element_type(std::move(element_type)) {}
 llvm::Type *pointer_type::get_llvm_type() const {
   return llvm::PointerType::getUnqual(m_element_type->get_llvm_type());
 }
@@ -313,6 +238,8 @@ void pointer_type::set_volatile() {
   }
 }
 
+reference_type::reference_type(std::unique_ptr<build_type> &&element_type)
+    : m_element_type(std::move(element_type)) {}
 void reference_type::set_const() {
   std::cerr << "reference type can't set const.\n";
 }
@@ -326,26 +253,45 @@ std::string const reference_type::decorated_name() const {
   return "_ref"s + m_element_type->decorated_name();
 }
 
-std::unique_ptr<build_type> type_build(base_build *const father,
-                                       type_ast const *const ast) {
-  return ast->build(father);
+std::unique_ptr<build_type>
+type_build(base_build &father, type_ast const &ast) {
+  return ast.build(father);
 }
 std::unique_ptr<reference_type>
-build_reference_type(base_build *const father, reference_ast const *const ast) {
-  auto element = type_build(father, ast->get_element_type());
-  return std::make_unique<reference_type>(std::move(element));
+build_reference_type(base_build &father, reference_ast const &ast) {
+  return std::make_unique<reference_type>(type_build(father, *ast.get_element_type()));
 }
 
-std::unique_ptr<build_type> build_const_type(base_build *const father,
-                                             const_type const *const ast) {
-  auto element = type_build(father, ast->get_element_type());
+std::unique_ptr<build_type>
+build_const_type(base_build &father, reference_ast const &ast) {
+  auto element = type_build(father, *ast.get_element_type());
   element->set_const();
   return element;
 }
 std::unique_ptr<build_type>
-build_volatile_type(base_build *const father, volatile_type const *const ast) {
-  auto element = type_build(father, ast->get_element_type());
+build_volatile_type(base_build &father, reference_ast const &ast) {
+  auto element = type_build(father, *ast.get_element_type());
   element->set_volatile();
   return element;
+}
+
+std::unique_ptr<build_type>
+build_pointer_type(base_build &father, pointer_ast const &ast) {
+  return std::make_unique<pointer_type>(type_build(father, *ast.get_element_type()));
+}
+
+std::unique_ptr<arr_type>
+build_arr_type(base_build &father, arr_ast const &ast) {
+  return std::make_unique<arr_type>(type_build(father, *ast.get_element_type()), ast.get_size());
+}
+
+std::unique_ptr<multi_array_type>
+build_multi_array_type(base_build &father, multi_array_ast const &ast) {
+  return std::make_unique<multi_array_type>(type_build(father, *ast.get_element_type()), ast.get_size());
+}
+
+std::unique_ptr<build_type>
+build_named_type(base_build &father, named_ast const &ast) {
+  return father.find_type(ast.get_name());
 }
 } // namespace pache

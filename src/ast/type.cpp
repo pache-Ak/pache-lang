@@ -1,19 +1,50 @@
 #include "type.h"
 #include "../IRbuild/type.h"
-#include "../IRbuild/variable.h"
-#include "ast.h"
-#include "compunit.h"
-#include "statement.h"
-#include <memory>
+#include "../IRbuild/function_type.h"
+
 namespace pache {
-std::unique_ptr<build_type>
-void_type_ast::build(base_build *const father) const {
+func_type_ast::func_type_ast(std::vector<std::unique_ptr<type_ast>> &&args,
+                     std::unique_ptr<type_ast> &&return_type)
+    : m_args_type(std::move(args)), m_return_type(std::move(return_type)) {}
+
+std::unique_ptr<build_type> const_ast::build(base_build &father) const {
+  return build_const_type(father, *this);
+}
+
+std::unique_ptr<build_type> volatile_ast::build(base_build &father) const {
+  return build_volatile_type(father, *this);
+}
+
+std::unique_ptr<build_type> reference_ast::build(base_build &father) const {
+  return build_reference_type(father, *this);
+}
+
+std::unique_ptr<build_type> pointer_ast::build(base_build &father) const {
+  return build_pointer_type(father, *this);
+}
+
+std::unique_ptr<build_type> arr_ast::build(base_build &father) const {
+  return build_arr_type(father, *this);
+}
+
+std::unique_ptr<build_type> multi_array_ast::build(base_build &father) const {
+  return build_multi_array_type(father, *this);
+}
+
+std::unique_ptr<build_type> func_type_ast::build(base_build &father) const {
+  return build_func_type(father, *this);
+}
+
+std::unique_ptr<build_type> named_ast::build(base_build &father) const {
+  return build_named_type(father, *this);
+}
+/* std::unique_ptr<build_type> void_type_ast::build(base_build &father) const {
   return void_type_t::get();
 }
 
 std::unique_ptr<type_ast> void_type_ast::get() {
   return std::make_unique<void_type_ast>();
-}
+} */
 // void_type_t void_type_t::void_type{};
 
 // bool_type_t bool_type_t::bool_type{};
@@ -132,15 +163,10 @@ std::unique_ptr<type_ast> void_type_ast::get() {
 //   return std::unique_ptr<size_type_t>(&size_type);
 // }
 
-func_type::func_type(std::vector<std::unique_ptr<type_ast>> &&args,
-                     std::unique_ptr<type_ast> &&return_type)
-    : m_args_type(std::move(args)), m_return_type(std::move(return_type)) {}
 
-std::unique_ptr<pache::type_ast> user_def_type::get() {
-  /* return comp->find_class_def(m_iden)
-              ? new class_type(comp->find_class_def(m_iden))
-              : nullptr;*/
-}
+
+
+
 } // namespace pache
 
 // llvm::Type *pache::i8_type_t::codegen() {
@@ -243,13 +269,3 @@ std::unique_ptr<pache::type_ast> user_def_type::get() {
 // llvm::Type *pache::user_def_type::codegen() {
 //   return nullptr; /// TODO
 // }
-
-std::unique_ptr<pache::build_type>
-pache::const_type::build(base_build *const father) const {
-  return build_const_type(father, this);
-}
-
-std::unique_ptr<pache::build_type>
-pache::volatile_type::build(base_build *const father) const {
-  return build_volatile_type(father, this);
-}

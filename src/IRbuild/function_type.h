@@ -23,18 +23,22 @@ public:
   }
   virtual void set_const() override;
   virtual void set_volatile() override;
-  std::unique_ptr<build_type> const &get_return_type() const {
-    return m_return_type;
+  std::unique_ptr<build_type> const get_return_type() const {
+    return m_return_type->clone();
   }
   std::vector<std::unique_ptr<build_type>> const &get_args_type() const {
     return m_args_type;
   }
+  virtual std::unique_ptr<build_type> clone() const override;
 
 private:
   std::unique_ptr<build_type> m_return_type;
   std::vector<std::unique_ptr<build_type>> m_args_type;
   llvm::FunctionType *m_llvm_type;
 };
+
+std::unique_ptr<build_type>
+build_func_type(base_build &father, func_type_ast const &ast);
 } // namespace pache
 
 #endif
