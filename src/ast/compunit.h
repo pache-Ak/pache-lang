@@ -11,9 +11,10 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <filesystem>
 
 namespace pache {
-class compunit_ast : public base_ast {
+class compunit_ast final : public base_ast {
 public:
   explicit compunit_ast() {}
   void insert_class_def(std::unique_ptr<class_ast> &&p) {
@@ -31,7 +32,6 @@ public:
   std::vector<std::unique_ptr<func_ast>> const &get_funcs_ast() const {
     return m_func_asts;
   }
-  virtual ~compunit_ast() = default;
   std::vector<std::unique_ptr<import_ast>> const &get_packages() const {
     return m_packages;
   }
@@ -43,6 +43,9 @@ public:
     return m_var_table;
   }
 
+  std::vector<std::filesystem::path> const &get_include_dir() const {
+    return m_include_dir;
+  }
 private:
   std::vector<std::unique_ptr<import_ast>> m_packages;
   std::vector<std::unique_ptr<let_stmt>> m_var_table;
@@ -50,6 +53,8 @@ private:
   std::vector<std::unique_ptr<func_ast>> m_func_asts;
   std::string m_file_name;
   std::vector<std::string> m_lines;
+
+  static thread_local std::vector<std::filesystem::path> m_include_dir;
 };
 
 } // namespace pache

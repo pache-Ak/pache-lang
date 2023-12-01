@@ -3,6 +3,7 @@
 #include "expression.h"
 #include "type.h"
 #include "variable.h"
+#include <iostream>
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Instructions.h>
@@ -12,37 +13,40 @@
 
 namespace pache {
 
-void statement_build(block_scope *father, stmt_ast const *const ast) {
-  ast->build(father);
+void statement_build(block_scope &father, stmt_ast const &ast) {
+  ast.build(father);
 }
 
-void assign_stmt_build(block_scope *father, assign_stmt const *const ast) {
-  llvm::Value *var = father->find_var(ast->get_var()->get_name())->get_value();
-  if (var == nullptr) {
+void assign_stmt_build(block_scope &father, assign_stmt const &ast) {
+  if (auto var = father.find_var(ast.get_var().get_name()); var != nullptr) {
     // TODO log error
     // maybe like this
     // std::cerr << "Unknown variable name.\n";
     return;
-  }
+  }else {
 
-  llvm::Value *val = build_exp(father, ast->get_exp());
-  if (val == nullptr) {
-    // TODO log error
-    // maybe like this
-    // std::cerr << "expression is not vaild.\n";
-    return;
-  }
+    llvm::Value *val = ast.get_exp().build(father)->get_value();
+    if (val == nullptr) {
+      // TODO log error
+      // maybe like this
+      // std::cerr << "expression is not vaild.\n";
+      return;
+    }
 
-  Builder->CreateStore(val, var);
+    Builder->CreateStore(val, var->get_value());
+
+  
+  }
+  
+    
 }
 
-void return_void_stmt_build(block_scope *father,
-                            return_void_stmt const *const ast) {
+void return_void_stmt_build(block_scope &father, return_void_stmt const &ast) {
   Builder->CreateRetVoid();
 }
 
-void return_exp_stmt_build(block_scope *father, return_ast const *const ast) {
-  llvm::Value *val = build_exp(father, ast->get_exp());
+void return_exp_stmt_build(block_scope &father, return_ast const &ast) {
+  llvm::Value *val = ast.get_exp()->build(father)->get_value();
   if (val == nullptr) {
     // TODO log error
     // maybe like this
@@ -52,12 +56,11 @@ void return_exp_stmt_build(block_scope *father, return_ast const *const ast) {
 
   Builder->CreateRet(val);
 }
-
-std::unique_ptr<build_variable> const &
-block_scope::find_var(std::string const &name) const {
-  for (auto it = named_values.begin(); it != named_values.end(); ++it) {
-    if (it->first == name) {
-      return it->second;
+std::unique_ptr<build_variable>
+block_scope::find_var(std::string_view name) const {
+  for (auto &it: named_values) {
+    if (it.first == name) {
+      return it.second->clone();
     }
   }
 
@@ -69,10 +72,13 @@ block_scope::find_var(std::string const &name) const {
     return nullptr;
   }
 }
-build_type *const block_scope::find_type(std::string const &name) const {
+
+std::unique_ptr<build_type>
+block_scope::find_type(std::string_view name) const {
   if (base_build::m_father != nullptr) {
     return base_build::m_father->find_type(name);
   } else {
+    // TODO log error
     return nullptr;
   }
 }
@@ -88,7 +94,8 @@ void block_scope::insert(std::string &&name,
               << "redifintion " << name << "\n";
   }
 }
-void block_scope::insert(std::string const &name,
+
+void block_scope::insert(std::string_view name,
                          std::unique_ptr<build_variable> &&value) {
   if (find_var(name) == nullptr) {
     named_values.emplace_back(name, std::move(value));
@@ -107,20 +114,20 @@ void block_scope::deallco_all() {
   }
 }
 
-void block_build(block_scope *father, block_ast const *const ast) {
+void block_build(block_scope &father, block_ast const &ast) {
   std::unique_ptr<block_scope> scope{
-      std::make_unique<block_scope>(father, father->get_loop_father())};
+      std::make_unique<block_scope>(&father, father.get_loop_father())};
 
-  for (auto &stmt : ast->get_stmt_list()) {
-    statement_build(scope.get(), stmt.get());
+  for (auto &stmt : ast.get_stmt_list()) {
+    statement_build(*scope, *stmt);
   }
 }
 
 class loop_scope : public block_scope {
 public:
-  explicit loop_scope(block_scope *father, loop_label const *const loop,
+  explicit loop_scope(block_scope &father, loop_label const *const loop,
                       llvm::BasicBlock *begin, llvm::BasicBlock *end)
-      : block_scope(father, loop), loop_begin(begin), loop_end(end) {}
+      : block_scope(&father, loop), loop_begin(begin), loop_end(end) {}
 
   virtual llvm::BasicBlock *get_loop_begin() const override {
     return loop_begin;
@@ -132,7 +139,7 @@ private:
   llvm::BasicBlock *loop_end;
 };
 
-void build_loop(block_scope *const father, block_ast const *const ast) {
+void build_loop(block_scope &father, block_ast const &ast) {
   llvm::BasicBlock *entryBB = llvm::BasicBlock::Create(
       *IR::TheContext, "loop", IR::Builder->GetInsertBlock()->getParent());
   llvm::BasicBlock *endBB = llvm::BasicBlock::Create(
@@ -140,15 +147,15 @@ void build_loop(block_scope *const father, block_ast const *const ast) {
 
   IR::Builder->SetInsertPoint(entryBB);
   std::unique_ptr<loop_scope> scope{std::make_unique<loop_scope>(
-      father, father->get_loop_father(), entryBB, endBB)};
-  for (auto &stmt : ast->get_stmt_list()) {
-    statement_build(scope.get(), stmt.get());
+      father, father.get_loop_father(), entryBB, endBB)};
+  for (auto &stmt : ast.get_stmt_list()) {
+    statement_build(*scope, *stmt);
   }
   scope->deallco_all();
   IR::Builder->CreateBr(entryBB);
 }
 
-void build_break(block_scope *const father, break_stmt const *const ast) {
+void build_break(block_scope *const father, break_stmt const &ast) {
 
   if (father->get_loop_end() != nullptr) {
     IR::Builder->CreateBr(father->get_loop_end());
@@ -156,7 +163,7 @@ void build_break(block_scope *const father, break_stmt const *const ast) {
     std::cerr << "break not in loop.\n";
   }
 }
-void build_continue(block_scope *const father, continue_stmt const *const ast) {
+void build_continue(block_scope *const father, continue_stmt const &ast) {
   if (father->get_loop_begin() != nullptr) {
     IR::Builder->CreateBr(father->get_loop_begin());
   } else {
@@ -164,22 +171,22 @@ void build_continue(block_scope *const father, continue_stmt const *const ast) {
   }
 }
 
-void build_if(block_scope *const father, if_stmt const *const ast) {
+void build_if(block_scope &father, if_stmt const &ast) {
   llvm::BasicBlock *then_BB = llvm::BasicBlock::Create(
       *IR::TheContext, "then", IR::Builder->GetInsertBlock()->getParent());
   llvm::BasicBlock *merge_BB = llvm::BasicBlock::Create(
       *IR::TheContext, "merge", IR::Builder->GetInsertBlock()->getParent());
 
-  llvm::Value *condition = build_exp(father, ast->get_condition());
+  auto condition = build_exp(father, ast.get_condition())->get_value();
   // need implicit cast to boolean
   Builder->CreateCondBr(condition, then_BB, merge_BB);
 
   Builder->SetInsertPoint(then_BB);
-  block_build(father, ast->get_then_block());
+  block_build(father, ast.get_then_block());
   Builder->CreateBr(merge_BB);
 }
 
-void build_if_else(block_scope *const father, if_else_stmt const *const ast) {
+void build_if_else(block_scope &father, if_else_stmt const &ast) {
   llvm::BasicBlock *then_BB = llvm::BasicBlock::Create(
       *IR::TheContext, "then", IR::Builder->GetInsertBlock()->getParent());
   llvm::BasicBlock *else_BB = llvm::BasicBlock::Create(
@@ -187,55 +194,92 @@ void build_if_else(block_scope *const father, if_else_stmt const *const ast) {
   llvm::BasicBlock *merge_BB = llvm::BasicBlock::Create(
       *IR::TheContext, "merge", IR::Builder->GetInsertBlock()->getParent());
 
-  llvm::Value *condition = build_exp(father, ast->get_condition());
+  auto condition = build_exp(father, ast.get_condition());
   // need implicit cast to boolean
-  Builder->CreateCondBr(condition, then_BB, merge_BB);
+  Builder->CreateCondBr(condition->get_value(), then_BB, merge_BB);
 
   Builder->SetInsertPoint(then_BB);
-  block_build(father, ast->get_then_block());
+  block_build(father, ast.get_then_block());
   Builder->CreateBr(merge_BB);
 
   Builder->SetInsertPoint(else_BB);
-  statement_build(father, ast->get_else_block());
+  statement_build(father, ast.get_else_block());
   Builder->CreateBr(merge_BB);
 }
 
-void build_let(block_scope *const father, let_stmt const *const ast) {
-  if (dynamic_cast<block_scope *const>(father) == nullptr) {
-    std::cerr << "can't define variable in here.\n";
-    return;
-  }
-  std::unique_ptr<build_type> type{type_build(father, ast->get_var_type())};
+void build_let(block_scope &father, let_stmt const &ast) {
+  // if (dynamic_cast<block_scope *const>(father) == nullptr) {
+  //   std::cerr << "can't define variable in here.\n";
+  //   return;
+  // }
+  std::unique_ptr<build_type> type{type_build(father, ast.get_var_type())};
   llvm::AllocaInst *all = IR::Builder->CreateAlloca(
-      type->get_llvm_type(), nullptr, ast->get_var_name());
+      type->get_llvm_type(), nullptr, ast.get_var_name());
 
-  father->insert(ast->get_var_name(),
-                 std::make_unique<build_local_variable>(std::move(type), all));
+  if (type->is_reference()) {
+    father.insert(ast.get_var_name(), std::make_unique<build_local_reference>(
+                                            std::move(type), all));
+  } else {
+    father.insert(ast.get_var_name(), std::make_unique<build_local_variable>(
+                                            std::move(type), all));
+  }
 
-  if (ast->get_init_exp() != nullptr) {
-    auto exp = build_exp(father, ast->get_init_exp().get());
-    IR::Builder->CreateStore(exp, all);
+  if (ast.get_init_exp() != nullptr) {
+    auto exp = build_exp(father,*ast.get_init_exp().get());
+    IR::Builder->CreateStore(
+        exp->get_value(), father.find_var(ast.get_var_name())->get_value());
   } else {
     std::cerr << "define variable without initializer.\n";
   }
 }
 
-void build_assign(base_build *const father, assign_stmt const *const ast) {
+void build_assign(base_build &father, assign_stmt const &ast) {
   std::unique_ptr<build_variable> const &var =
-      father->find_var(ast->get_var()->get_name());
+      father.find_var(ast.get_var().get_name());
   if (var == nullptr) {
     std::cerr << "variable hasn't defined.\n";
   } else {
-    auto exp = build_exp(father, ast->get_exp());
+    auto exp = build_exp(father, ast.get_exp());
     if (exp == nullptr) {
       std::cerr << "expression is not valid.\n";
     } else {
-      IR::Builder->CreateStore(exp, var->get_value());
+      IR::Builder->CreateStore(exp->get_value(), var->get_value());
     }
   }
 }
 
-void build_exp_stmt(base_build *const father, exp_stmt const *const ast) {
-  build_exp(father, ast->get_exp());
+void build_exp_stmt(base_build &father, exp_stmt const &ast) {
+  build_exp(father, ast.get_exp());
+}
+llvm::BasicBlock *loop_label::get_loop_begin() const {
+  if (m_father != nullptr) {
+    return m_father->get_loop_begin();
+  } else {
+    return nullptr;
+  }
+}
+llvm::BasicBlock *loop_label::get_loop_end() const {
+  if (m_father != nullptr) {
+    return m_father->get_loop_end();
+  } else {
+    return nullptr;
+  }
+}
+llvm::BasicBlock *block_scope::get_loop_begin() const {
+  if (loop_label::m_father != nullptr) {
+    return loop_label::m_father->get_loop_begin();
+  } else {
+    return nullptr;
+  }
+}
+llvm::BasicBlock *block_scope::get_loop_end() const {
+  if (loop_label::m_father != nullptr) {
+    return loop_label::m_father->get_loop_end();
+  } else {
+    return nullptr;
+  }
+}
+loop_label const *const block_scope::get_loop_father() const {
+  return loop_label::m_father;
 }
 } // namespace pache

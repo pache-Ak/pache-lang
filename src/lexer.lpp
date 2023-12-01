@@ -4,10 +4,8 @@
 
 // 因为 Flex 会用到 Bison 中关于 token 的定义
 // 所以需要 include Bison 生成的头文件
-#include "parser.hpp"
-#include "../src/driver.h"
-using namespace std;
-
+#include "parser.tab.hh"
+#include "driver.h"
 %}
 
 %option noyywrap nounput noinput batch debug
@@ -64,6 +62,7 @@ BREAK                "break"
 CONTINUE             "continue"
 SEMICOLON            ";"
 ASSIGN               ":="
+BITWISE_NOT          "~"
 B_AND                "&"
 B_XOR                "^"
 B_OR                 "|"
@@ -74,7 +73,7 @@ PLUS                 "+"
 MINUS                "-"
 PERCENT              "%"
 SLASH                "/"
-PERIOD               "."
+DOT                  "."
 RIGHT_CURLY_BRACE    "}"
 RIGHT_PARENTHESIS    ")"
 RIGHT_SQUARE_BRACKET "]"
@@ -87,6 +86,7 @@ GREATER_EQUAL        ">="
 EQUAL                "=="
 NOT_EQUAL            "!="
 
+LOGICAL_NOT          "!"
 AND                  "&&"
 OR                   "||"
 
@@ -101,11 +101,21 @@ one_line_comment      \/\/[^\n]*\n
 /* 标识符 */
 IDENTIFIER    [a-zA-Z_][a-zA-Z0-9_]*
 operand_start         [(A-Za-z0-9_\"]
+
+
+
+BINARY_DIGIT      [01]
+ZERO              0
+OCTAL_DIGIT       [0-7]
+NONZERO_DIGIT     [1-9]
+DIGIT             [0-9]
+HEXADECIMAL_DIGIT [0-9a-fA-F]
 /* 整数字面量 */
-Decimal       [1-9][0-9]*
-Octal         0[0-7]*
-Hexadecimal   0[xX][0-9a-fA-F]+
-Binary        0[bB][01]+
+
+LOWERCASE_BINARY_PREFIX 0b
+UPPERCASE_BINARY_PREFIX 0B
+LOWERCASE_HEXADECIMAL_PREFIX 0x
+UPPERCASE_HEXADECIMAL_PREFIX 0X
 %{
   // Code run each time a pattern is matched.
   # define YY_USER_ACTION  loc.columns (yyleng);
@@ -119,6 +129,7 @@ Binary        0[bB][01]+
 %}
 {MAIN}          { return pache::parser::make_MAIN(loc); }
 {LET}           { return pache::parser::make_LET(loc); }
+{BITWISE_NOT}   { return pache::parser::make_BITWISE_NOT(loc); }
 {B_AND}         { return pache::parser::make_B_AND(loc); }
 {B_XOR}         { return pache::parser::make_B_XOR(loc); }
 {B_OR}         { return pache::parser::make_B_OR(loc); }
@@ -177,7 +188,7 @@ Binary        0[bB][01]+
 {MINUS}                 { return pache::parser::make_MINUS(loc); }
 {PERCENT}               { return pache::parser::make_PERCENT(loc); }
 {SLASH}                 { return pache::parser::make_SLASH(loc); }
-{PERIOD}                { return pache::parser::make_PERIOD(loc); }
+{DOT}                { return pache::parser::make_DOT(loc); }
 
 {THREE_WAY_COMPARISON}  { return pache::parser::make_THREE_WAY_COMPARISON(loc); }
 {LESS}                  { return pache::parser::make_LESS(loc); }
@@ -187,6 +198,7 @@ Binary        0[bB][01]+
 {EQUAL}                 { return pache::parser::make_EQUAL(loc); }
 {NOT_EQUAL}             { return pache::parser::make_NOT_EQUAL(loc); }
 
+{LOGICAL_NOT}           { return pache::pache::make_LOGICAL_NOT(loc); }
 {AND}                   { return pache::parser::make_AND(loc); }
 {OR}                    { return pache::parser::make_OR(loc); }
 
@@ -200,10 +212,17 @@ Binary        0[bB][01]+
 {SEMICOLON}           { return pache::parser::make_SEMICOLON(loc); }
 {IDENTIFIER}   { return pache::parser::make_IDENTIFIER(yytext, loc);}
 
-{Decimal}       {return pache::parser::make_INTEGER (std::strtol(yytext, nullptr, 0), loc);}
-{Octal}         return pache::parser::make_INTEGER (std::strtol(yytext, nullptr, 0), loc);
-{Hexadecimal}   return pache::parser::make_INTEGER (std::strtol(yytext, nullptr, 0), loc);
-{Binary}        return pache::parser::make_INTEGER (std::strtol(yytext, nullptr, 0), loc);
+{BINARY_DIGIT} {return pache::parser::make_BINARY_DIGIT(yytext, loc); }
+{ZERO} {return pache::parser::make_ZERO(loc); }
+{OCTAL_DIGIT} {return pache::parser::make_OCTAL_DIGIT(yytext, loc); }
+{NONZERO_DIGIT} {return pache::parser::make_NONZERO_DIGIT(yytext, loc); }
+{DIGIT} {return pache::parser::make_DIGIT(yytext, loc); }
+{HEXADECIMAL_DIGIT} {return pache::parser::make_HEXADECIMAL_DIGIT(yytext, loc); }
+
+{LOWERCASE_BINARY_PREFIX} { return pache::parser::make_LOWERCASE_BINARY_PREFIX(loc); }
+{UPPERCASE_BINARY_PREFIX} { return pache::parser::make_UPPERCASE_BINARY_PREFIX(loc); }
+{LOWERCASE_HEXADECIMAL_PREFIX} { return pache::parser::make_LOWERCASE_HEXADECIMAL_PREFIX(loc); }
+{UPPERCASE_HEXADECIMAL_PREFIX} { return pache::parser::make_UPPERCASE_HEXADECIMAL_PREFIX(loc); }
 
 \n+    {   // Advance end by yyleng lines, resetting the column to zero.
   //context.current_token_position.lines(yyleng);
@@ -245,10 +264,16 @@ Binary        0[bB][01]+
 %%
 
 void
-pache::driver::scan_begin (FILE *f)
+pache::driver::scan_begin ()
 {
-    yyin = f;
-
+  yy_flex_debug = trace_scanning;
+  if (file_name.empty () || file_name == "-")
+    yyin = stdin;
+  else if (!(yyin = fopen (file_name.c_str (), "r")))
+    {
+      std::cerr << "cannot open " << file_name << ": " << strerror (errno) << '\n';
+      exit (EXIT_FAILURE);
+    }
 }
 
 void

@@ -1,8 +1,8 @@
 %require "3.2"
 %language "c++"
+%header
 
 %define api.token.raw
-
 %define api.token.constructor
 %define api.value.type variant
 %define parse.assert
@@ -10,14 +10,18 @@
 %code requires {
   #include <memory>
   #include <string>
-  #include "../src/ast/ast.h"
-  #include "../src/ast/expression.h"
-  #include "../src/ast/statement.h"
-  #include "../src/ast/compunit.h"
+  namespace pache {
+    class driver;
+  }
+  #include "ast/ast.h"
+  #include "ast/expression.h"
+  #include "ast/statement.h"
+  #include "ast/compunit.h"
+  #include "ast/scope.h"
 }
 
-%parse-param { std::unique_ptr<pache::compunit_ast> &ast }
-
+%parse-param { pache::driver &drv }
+%lex-param {pache::driver &drv}
 %locations
 
 %define api.token.prefix {TOK_}
@@ -48,10 +52,7 @@
 #include "../src/driver.h"
 #include "../src/ast/literal.h"
 
-// 声明 lexer 函数和错误处理函数
-
-using namespace std;
-
+#include "driver.h"
 }
 
 %token
@@ -85,10 +86,13 @@ using namespace std;
   C16                  "c16"
   C32                  "c32"
 %token
+  SCOPE                 // ::
+  BITWISE_NOT          "~"
   B_AND                "&"
   B_XOR                "^"
   B_OR                 "|"
-
+  LEFT_SHITF            // <<
+  RIGHT_SHIFT           // >>
   ASSIGN                // :=
   LEFT_CURLY_BRACE      // {
   LEFT_PARENTHESIS      // (
@@ -97,8 +101,10 @@ using namespace std;
   RIGHT_CURLY_BRACE     // }
   RIGHT_SQUARE_BRACKET  // ]
   PLUS                  // +
+  LOGICAL_NOT           // !
   MINUS                 // -
-  PERIOD                // .
+  DOT                   // .
+  ARROW                 // ->
   SLASH                 // /
   PERCENT               // %
   THREE_WAY_COMPARISON  // <=>
@@ -122,24 +128,35 @@ using namespace std;
  NEW_LINE              // \n
   CONST                 // const
   VOLATILE              // volatile
+  SINGLE_QUOTE          // '
+  ALLOCATION            // new
+  DEALLOCATION          // delete
+  ALLOCATION_ARRAY      // new[]
+  DEALLOCATION_ARRAY    // delete[]
   UNARY_STAR "unary *"
   PREFIX_STAR "prefix *"
   POSTFIX_STAR "postfix *"
   BINARY_STAR "binary *"
+  LOWERCASE_BINARY_PREFIX      // 0b
+  UPPERCASE_BINARY_PREFIX      // 0B
+  LOWERCASE_HEXADECIMAL_PREFIX // 0x
+  UPPERCASE_HEXADECIMAL_PREFIX // 0X
+  ZERO                          // 0
 %token RETURN FUNC CLASS
 %token <std::string> IDENTIFIER
 %token <int> INTEGER
+%token <char const *> binary_digit octal_digit nonzero_digit decimal_digit hexadecimal_digit
 %token EOF 0;
 // 非终结符的类型定义
-%type <pache::compunit_ast*>   CompUnit
+%type <std::unique_ptr<pache::compunit_ast>>   CompUnit
 %type <std::unique_ptr<pache::type_ast>> type arr_ast const_ast volatile_ast multi_array_ast primary_type
-%type <std::unique_ptr<pache::exp_ast>> Number   primary_expression unary_expression call_expression
-%type <std::unique_ptr<pache::block_ast>> block /*optional_else*/  loop_stmt  
-%type <std::unique_ptr<pache::let_stmt>> let_stmt 
+%type <std::unique_ptr<pache::exp_ast>>    primary_expression unary_expression call_expression
+%type <std::unique_ptr<pache::block_ast>> block /*optional_else*/  loop_stmt
+%type <std::unique_ptr<pache::let_stmt>> let_stmt
 %type <std::unique_ptr<pache::stmt_ast>> stmt return_void_stmt return_stmt  if_stmt if_else_stmt assign_stmt break_stmt continue_stmt else_stmt
 %type <std::unique_ptr<pache::exp_ast>>  expression  add_exp
 %type <std::vector<std::unique_ptr<pache::stmt_ast>>> statement_list
-%type <std::unique_ptr<pache::exp_ast>>  mul_expressions
+%type <std::unique_ptr<pache::exp_ast>>  mul_expressions shift_exp
 %type <std::unique_ptr<pache::exp_ast>> three_way_expression rel_expression eq_expression logical_and_expression logical_or_expression
 %type <std::pair<std::unique_ptr<pache::type_ast>, std::string>> FuncFParam
 %type <std::pair<std::vector<std::unique_ptr<pache::type_ast>>, std::vector<std::string>>> FuncFParams
@@ -151,9 +168,18 @@ using namespace std;
 %type <std::unique_ptr<pache::exp_ast>> bitwise_or_expression
 %type <std::unique_ptr<pache::func_ast>> FuncDef  // main_func
 %type <std::vector<std::size_t>> size_list
-
+%type <std::unique_ptr<pache::scope_ast>> scope_resolution
+%type <std::unique_ptr<pache::unqualified_scope_ast>> unqualified_scope_resolution
+%type <std::unique_ptr<pache::qualified_scope_ast>> qualified_scope_resolution
+%type <std::unique_ptr<pache::exp_ast>> LITERAL INTEGER_LITERAL
+%type <std::string> binary_digit_sequence octal_digit_sequence decimal_digit_sequence hexadecimal_digit_sequence
+%type <std::string> binary_literal octal_literal decimal_literal hexadecimal_literal
 %%
-
+%start unit;
+unit : CompUnit {
+  drv.root_ast = std::move($1);
+}
+;
 // 开始符, CompUnit ::= FuncDef, 大括号后声明了解析完成后 parser 要做的事情
 // 之前我们定义了 FuncDef 会返回一个 str_val, 也就是字符串指针
 // 而 parser 一旦解析完 CompUnit, 就说明所有的 token 都被解析了, 即解析结束了
@@ -161,25 +187,25 @@ using namespace std;
 // $1 指代规则里第一个符号的返回值, 也就是 FuncDef 的返回值
 CompUnit
   : FuncDef {
-    ast = make_unique<pache::compunit_ast>();
-    ast->insert_func_def(std::move($1));
+    $$ = std::make_unique<pache::compunit_ast>();
+    $$->insert_func_def(std::move($1));
   }
 | let_stmt {
-    ast = make_unique<pache::compunit_ast>();
-    ast->insert_dec(std::move($1));
+    $$ = std::make_unique<pache::compunit_ast>();
+    $$->insert_dec(std::move($1));
 }
 | class_def {
-    ast = make_unique<pache::compunit_ast>();
-    ast->insert_class_def(std::move($1));
+    $$ = std::make_unique<pache::compunit_ast>();
+    $$->insert_class_def(std::move($1));
 }
 | CompUnit FuncDef {
-      ast->insert_func_def(std::move($2));
+      $$->insert_func_def(std::move($2));
 }
 | CompUnit let_stmt {
-    ast->insert_dec(std::move($2));
+    $$->insert_dec(std::move($2));
 }
 | CompUnit class_def {
-  ast->insert_class_def(std::move($2));
+  $$->insert_class_def(std::move($2));
 };
 
 FuncFParam:
@@ -319,7 +345,7 @@ primary_type:
 | C16
 { $$ = pache::c16_type_t::get(); }
 | C32
-{ $$ = pache::c32_type_t::get(); } 
+{ $$ = pache::c32_type_t::get(); }
 /* | arr_ast {
   $$ = std::move($1);
 }|
@@ -327,8 +353,8 @@ multi_array_ast {
 $$ = std::move($1);
 }*/
  IDENTIFIER {
-  $$ = std::make_unique<pache::named_type>(std::move($1));
-} 
+  $$ = std::make_unique<pache::named_ast>(std::move($1));
+}
   ;
 
 
@@ -336,7 +362,7 @@ $$ = std::move($1);
 arr_ast:
   type LEFT_SQUARE_BRACKET INTEGER RIGHT_SQUARE_BRACKET {
     $$ = std::make_unique<arr_ast_t>(std::move($1), $3);
-    
+
   }
 ;
 size_list:
@@ -347,7 +373,7 @@ size_list:
   size_list  INTEGER  COMMA {
     $$ = std::move($1);
     $$.push_back($2);
-  }| 
+  }|
   size_list  INTEGER{
     $$ = std::move($1);
     $$.push_back($2);
@@ -362,7 +388,7 @@ statement_list:
     { $$ = std::vector<std::unique_ptr<pache::stmt_ast>>{}; }
 | statement_list stmt
     {
-      $$ = std::move($1);;
+      $$ = std::move($1);
       $$.emplace_back(std::move($2));
     }
 ;
@@ -431,9 +457,8 @@ let_stmt:
 ;
 
 assign_stmt:
-  IDENTIFIER ASSIGN expression SEMICOLON {
-    auto exp = std::make_unique<pache::var_exp>(std::move($1));
-    $$ = std::make_unique<pache::assign_stmt>(std::move(exp), std::move($3));
+  primary_expression ASSIGN expression SEMICOLON {
+    $$ = std::make_unique<pache::assign_stmt>(std::move($1), std::move($3));
   }
 ;
 
@@ -478,15 +503,11 @@ if_else_stmt:
     $$ = std::make_unique<pache::if_else_stmt>(std::move($2), std::move($3), std::move($5));
   }
 
-Number
-  : INTEGER {
-    $$ = std::make_unique<pache::i32_literal_t>($1);
-  }
-  ;
+
 
 loop_stmt:
   LOOP block {
-    $$ = std::make_unique<pache::loop_stmt>(std::move($2));
+    $$ = std::make_unique<pache::loop_stmt>(std::move(*($2.release())));
 
   }
 ;
@@ -510,15 +531,150 @@ FuncRParams:
   $$.emplace_back(std::move($3));
 };
 
+scope_resolution
+: unqualified_scope_resolution {
+  $$ = std::move($1);
+}
+| qualified_scope_resolution {
+  $$ = std::move($1);
+}
+;
+
+unqualified_scope_resolution
+: %empty {
+$$ = std::make_unique<unqualified_scope_ast>();
+}
+;
+
+qualified_scope_resolution
+: SCOPE {
+  $$ = std::make_unique<root_scope_ast>();
+}
+| IDENTIFIER SCOPE {
+  $$ = std::make_unique<relative_scope_ast>();
+  $$->append($1);
+}
+| scope_resolution IDENTIFIER SCOPE {
+  $$->append($2);
+}
+;
 primary_expression:
   LEFT_PARENTHESIS expression RIGHT_PARENTHESIS {
     $$ = std::move($2);
   }
-| Number {
+| LITERAL {
     $$ = std::move($1);
   }
-| IDENTIFIER {
-    $$ = std::make_unique<pache::var_exp>(std::move($1));
+| scope_resolution IDENTIFIER {
+    $$ = std::make_unique<pache::var_exp>(std::move($1), std::move($2));
+}
+;
+
+LITERAL
+: INTEGER_LITERAL {
+  $$ = std::move($1);
+}
+// | charactr | floating-point | string | boolean | user_defined
+;
+
+INTEGER_LITERAL
+: binary_literal IDENTIFIER {
+  $$ = std::make_unique<binary_integer_literal>($1, $2);
+}
+| octal_literal IDENTIFIER {
+  $$ = std::make_unique<octal_integer_literal>($1, $2);
+}
+| decimal_literal IDENTIFIER {
+  $$ = std::make_unique<decimal_integer_literal>($1, $2);
+}
+| hexadecimal_literal IDENTIFIER {
+  $$ = std::make_unique<hexadecimal_integer_literal>($1, $2);
+}
+
+binary_literal
+: binary_preix binary_digit_sequence {
+  $$ = std::move($2);
+}
+
+binary_preix
+: LOWERCASE_BINARY_PREFIX
+| UPPERCASE_BINARY_PREFIX
+;
+
+binary_digit_sequence
+: binary_digit {
+  $$ = std::string{};
+  $$ += $1;
+}
+| binary_digit_sequence binary_digit {
+  $$ = std::move($1);
+  $$ += $2;
+}
+| binary_digit_sequence SINGLE_QUOTE binary_digit {
+  $$ = std::move($1);
+  $$ += $3;
+}
+;
+
+octal_literal
+: octal_digit_sequence
+;
+
+octal_digit_sequence
+: ZERO {
+  $$ = std::string{};
+}
+| octal_digit_sequence octal_digit {
+  $$ = std::move($1);
+  $$ += $2;
+}
+| octal_digit_sequence SINGLE_QUOTE octal_digit {
+  $$ = std::move($1);
+  $$ += $3;
+}
+;
+
+decimal_literal
+: decimal_digit_sequence
+;
+
+decimal_digit_sequence
+: nonzero_digit {
+  $$ = std::string{};
+  $$ += $1;
+}
+| decimal_digit_sequence decimal_digit {
+  $$ = std::move($1);
+  $$ += $2;
+}
+| decimal_digit_sequence SINGLE_QUOTE decimal_digit {
+  $$ = std::move($1);
+  $$ += $3;
+}
+;
+
+hexadecimal_literal
+: hexadecimal_prefix hexadecimal_digit_sequence {
+  $$ = std::move($2);
+}
+;
+hexadecimal_prefix
+: LOWERCASE_HEXADECIMAL_PREFIX
+| UPPERCASE_HEXADECIMAL_PREFIX
+;
+
+hexadecimal_digit_sequence
+: hexadecimal_digit {
+  $$ = std::string{};
+  $$ += $1;
+}
+| hexadecimal_digit_sequence hexadecimal_digit {
+  $$ = std::move($1);
+  $$ += $2;
+}
+| hexadecimal_digit_sequence SINGLE_QUOTE hexadecimal_digit {
+  $$ = std::move($1);
+  $$ += $3;
 }
 ;
 
@@ -526,20 +682,54 @@ call_expression:
   primary_expression {
     $$ = std::move($1);
   }
-| IDENTIFIER LEFT_PARENTHESIS FuncRParams RIGHT_PARENTHESIS {
+| call_expression LEFT_PARENTHESIS FuncRParams RIGHT_PARENTHESIS {
   $$ = std::make_unique<pache::func_call_exp>(std::move($1), std::move($3));
 }
+| call_expression LEFT_SQUARE_BRACKET FuncRParams RIGHT_SQUARE_BRACKET {
+  $$ = std::make_unique<pache::subscript_exp>(std::move($1), std::move($3));
+}
+| call_expression DOT IDENTIFIER {
+  $$ = std::make_unique<pache::dot_exp>(std::move($1), std::move($3));
+}
+| call_expression ARROW IDENTIFIER  {
+  $$ = std::make_unique<pache::arrow_exp>(std::move($1), std::move($3));
+}
+;
 
-unary_expression:
-  call_expression {
+unary_expression
+: call_expression {
     $$ = std::move($1);
-  }
+}
 | PLUS unary_expression {
     $$ = std::make_unique<pache::unary_plus>(std::move($2));
-  }
+}
 | MINUS unary_expression {
     $$ = std::make_unique<pache::unary_minus>(std::move($2));
-  }
+}
+| LOGICAL_NOT unary_expression {
+  $$ = std::make_unique<pache::logical_not_exp>(std::move($2));
+}
+| BITWISE_NOT unary_expression {
+  $$ = std::make_unique<pache::bitwise_not_exp>(std::move($2));
+}
+| UNARY_STAR unary_expression {
+  $$ = std::make_unique<pache::indirection_exp>(std::move($2));
+}
+| B_AND unary_expression {
+  $$ = std::make_unique<pache::address_of_exp>(std::move($2));
+}
+| ALLOCATION unary_expression {
+  $$ = std::make_unique<pache::allocation_exp>(std::move($2));
+}
+| ALLOCATION_ARRAY unary_expression {
+  $$ = std::make_unique<pache::allocation_array_exp>(std::move($2));
+}
+| DEALLOCATION unary_expression {
+  $$ = std::make_unique<pache::deallocation_exp>(std::move($2));
+}
+| DEALLOCATION_ARRAY unary_expression {
+  $$ = std::make_unique<pache::deallocation_array_exp>(std::move($2));
+}
 ;
 
 
@@ -570,8 +760,20 @@ add_exp:
   }
 ;
 
+shift_exp
+: add_exp {
+  $$ = std::move($1);
+}
+| shift_exp LEFT_SHITF add_exp {
+  $$ = std::make_unique<pache::left_shift_exp>(std::move($1), std::move($3));
+}
+| shift_exp RIGHT_SHIFT add_exp {
+  $$ = std::make_unique<pache::right_shift_exp>(std::move($1), std::move($3));
+}
+;
+
 three_way_expression:
-  add_exp {
+  shift_exp {
     $$ = std::move($1);
   }
 | three_way_expression THREE_WAY_COMPARISON add_exp {
@@ -625,6 +827,7 @@ bitwise_xor_expression:
   $$ = std::make_unique<pache::bitwise_xor_exp>(std::move($1), std::move($3));
 }
 ;
+
 bitwise_or_expression:
   bitwise_xor_expression {
     $$ = std::move($1);
@@ -633,6 +836,7 @@ bitwise_or_expression:
   $$ = std::make_unique<pache::bitwise_or_exp>(std::move($1), std::move($3));
 }
 ;
+
 logical_and_expression:
   bitwise_or_expression {
     $$ = std::move($1);

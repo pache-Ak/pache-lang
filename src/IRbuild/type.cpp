@@ -1,5 +1,5 @@
 #include "type.h"
-#include "ast/type.h"
+#include "../ast/type.h"
 #include "build.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Type.h"
@@ -13,6 +13,10 @@
 using namespace std::literals;
 
 namespace pache {
+llvm::Type *get_llvm_type(std::unique_ptr<build_type> const &type) {
+  return type->get_llvm_type();
+}
+
 bool build_type::is_integral() const { return false; }
 bool build_type::is_signed() const { return false; }
 bool build_type::is_unsigned() const { return false; }
@@ -20,11 +24,11 @@ std::string const build_type::decorated_name() const { return ""s; }
 bool build_type::is_const() const { return m_is_const; }
 bool build_type::is_volatile() const { return m_is_volatile; }
 
-void primary_type::set_const() {
-  if (is_const()) {
-    std::cerr << "redef const.\n";
+void primary_type::set_mutable() {
+  if (!is_const()) {
+    std::cerr << "redef mutable.\n";
   } else {
-    m_is_const = true;
+    m_is_const = false;
   }
 }
 void primary_type::set_volatile() {
@@ -143,13 +147,13 @@ std::unique_ptr<build_type> f128_type_t::clone() const {
   return std::unique_ptr<f128_type_t>(new f128_type_t(*this));
 }
 
-llvm::Type *d32_type_t::get_llvm_type() const {}
+llvm::Type *d32_type_t::get_llvm_type() const { return Builder->getFloatTy();}
 std::string const d32_type_t::decorated_name() const { return "_d32"s; }
 std::unique_ptr<build_type> d32_type_t::clone() const {
   return std::unique_ptr<d32_type_t>(new d32_type_t{*this});
 }
 
-llvm::Type *d64_type_t::get_llvm_type() const {}
+llvm::Type *d64_type_t::get_llvm_type() const { return Builder->getDoubleTy(); }
 std::string const d64_type_t::decorated_name() const { return "_d64"s; }
 std::unique_ptr<build_type> d64_type_t::clone() const {
   return std::unique_ptr<d64_type_t>(new d64_type_t{*this});
@@ -186,7 +190,7 @@ llvm::Type *arr_type::get_llvm_type() const {
 std::string const arr_type::decorated_name() const {
   return "_array"s + m_element_type->decorated_name() + std::to_string(m_size);
 }
-void arr_type::set_const() { std::cerr << "con't fix array with const.\n"; }
+void arr_type::set_mutable() { std::cerr << "con't fix array with mut.\n"; }
 void arr_type::set_volatile() {
   std::cerr << "con't fix array with volatile.\n";
 }
@@ -208,8 +212,8 @@ std::string const multi_array_type::decorated_name() const {
   }
   return str;
 }
-void multi_array_type::set_const() {
-  std::cerr << "array type can't set const.\n";
+void multi_array_type::set_mutable() {
+  std::cerr << "array type can't set mut.\n";
 }
 void multi_array_type::set_volatile() {
   std::cerr << "array type can't set volatile.\n";
@@ -223,11 +227,11 @@ llvm::Type *pointer_type::get_llvm_type() const {
 std::string const pointer_type::decorated_name() const {
   return "_ptr"s + m_element_type->decorated_name();
 }
-void pointer_type::set_const() {
-  if (is_const()) {
-    std::cerr << "redef const.\n";
+void pointer_type::set_mutable() {
+  if (!is_const()) {
+    std::cerr << "redef mut.\n";
   } else {
-    m_is_const = true;
+    m_is_const = false;
   }
 }
 void pointer_type::set_volatile() {
@@ -240,8 +244,8 @@ void pointer_type::set_volatile() {
 
 reference_type::reference_type(std::unique_ptr<build_type> &&element_type)
     : m_element_type(std::move(element_type)) {}
-void reference_type::set_const() {
-  std::cerr << "reference type can't set const.\n";
+void reference_type::set_mutable() {
+  std::cerr << "reference type can't set mut.\n";
 }
 void reference_type::set_volatile() {
   std::cerr << "reference type can't set volatile.\n";
@@ -263,9 +267,9 @@ build_reference_type(base_build &father, reference_ast const &ast) {
 }
 
 std::unique_ptr<build_type>
-build_const_type(base_build &father, reference_ast const &ast) {
+build_mut_type(base_build &father, mut_ast const &ast) {
   auto element = type_build(father, *ast.get_element_type());
-  element->set_const();
+  element->set_mutable();
   return element;
 }
 std::unique_ptr<build_type>

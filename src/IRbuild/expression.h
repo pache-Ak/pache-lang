@@ -2,53 +2,78 @@
 #define IR_EXPRESSION_H
 
 #include "../ast/expression.h"
+#include "../reference_ptr.h"
 #include "build.h"
 #include "function.h"
-#include "type.h"
+#include "variable.h"
 #include <memory>
 
 namespace pache {
-template <class Iterator>
-std::vector<std::reference_wrapper<std::unique_ptr<function_build> const>>
-ADL(std::string const &function_name, Iterator begin, Iterator end);
+std::unique_ptr<build_variable const> build_exp(base_build &build,
+                                                exp_ast const &ast);
+std::unique_ptr<build_variable const> build_unary_plus(base_build &build,
+                                                       unary_plus const &ast);
+std::unique_ptr<build_variable const> build_unary_minus(base_build &build,
+                                                        unary_minus const &ast);
+std::unique_ptr<build_variable const>
+build_func_call_exp(base_build &build, func_call_exp const &ast);
+std::unique_ptr<build_variable const> build_var_exp(base_build &build,
+                                                    var_exp const &ast);
+std::unique_ptr<build_variable const>
+build_binary_mul_exp(base_build &build, binary_mul_exp const &ast);
+std::unique_ptr<build_variable const>
+build_binary_div_exp(base_build &build, binary_div_exp const &ast);
+std::unique_ptr<build_variable const>
+build_binary_mod_exp(base_build &build, binary_mod_exp const &ast);
+std::unique_ptr<build_variable const>
+build_binary_plus_exp(base_build &build, binary_plus_exp const &ast);
+std::unique_ptr<build_variable const>
+build_binary_minus_exp(base_build &build, binary_minus_exp const &ast);
+std::unique_ptr<build_variable const>
+build_three_way_exp(base_build &build, three_way_exp const &ast);
+std::unique_ptr<build_variable const> build_less_exp(base_build &build,
+                                                     less_exp const &ast);
+std::unique_ptr<build_variable const> build_less_eq_exp(base_build &build,
+                                                        less_eq_exp const &ast);
+std::unique_ptr<build_variable const> build_greater_exp(base_build &build,
+                                                        greater_exp const &ast);
+std::unique_ptr<build_variable const>
+build_greater_eq_exp(base_build &build, greater_eq_exp const &ast);
+std::unique_ptr<build_variable const> build_eq_exp(base_build &build,
+                                                   eq_exp const &ast);
+std::unique_ptr<build_variable const> build_not_eq_exp(base_build &build,
+                                                       not_eq_exp const &ast);
+std::unique_ptr<build_variable const>
+build_bitwise_and_exp(base_build &build, bitwise_and_exp const &ast);
+std::unique_ptr<build_variable const>
+build_bitwise_xor_exp(base_build &build, bitwise_xor_exp const &ast);
+std::unique_ptr<build_variable const>
+build_bitwise_or_exp(base_build &build, bitwise_or_exp const &ast);
+std::unique_ptr<build_variable const>
+build_logical_and_exp(base_build &build, logical_and_exp const &ast);
+std::unique_ptr<build_variable const>
+build_logical_or_exp(base_build &build, logical_or_exp const &ast);
+
+std::unique_ptr<build_variable const>
+build_subscript_exp(base_build &build, subscript_exp const &ast);
 
 template <class Iterator>
-std::unique_ptr<function_build> const &
-function_lookup(std::string const &name, Iterator begin, Iterator end) {
-  std::vector<std::reference_wrapper<std::unique_ptr<function_build> const>>
-      set = ADL("operator+"s, begin, end);
+std::vector<reference_ptr<function_build>>
+ADL(base_build const &build, std::string_view function_name, Iterator begin,
+    Iterator end);
+
+template <class Iterator>
+reference_ptr<function_build>
+function_lookup(base_build const &build, std::string_view name, Iterator begin,
+                Iterator end) {
+  std::vector<reference_ptr<function_build>>
+      set = ADL(build, "operator+"sv, begin, end);
 
   ///  TODO
 
   return nullptr;
 }
 
-llvm::Value *build_exp(base_build *father, exp_ast const *const ast);
-
-llvm::Value *build_call_exp(base_build *father,
-                            func_call_exp const *const ast) {
-  /*  auto val = father->find_var(ast->get_name());
-   if (val != nullptr) {
-     // val should be a function type variable;
-
-     // then get function
-     return;
-   }
-   std::string name{}; // encoding name
-   llvm::Function *CalleeF = TheModule->getFunction(name);
-   if (CalleeF != nullptr) {
-     std::vector<Value *> ArgsV;
-     for (auto exp : ast->get_args()) {
-       if (exp->codegen() != nullptr) {
-         ArgsV.push_back(exp->codegen());
-       } else {
-         // log error
-       }
-     }
-
-     return Builder->CreateCall(CalleeF, ArgsV, "calltmp");
-   } */
-}
 } // namespace pache
 
 #endif

@@ -9,7 +9,7 @@
 
 namespace pache {
 
-class class_ast : public base_ast {
+class class_ast final : public base_ast {
 public:
   class class_body {
   public:
@@ -21,7 +21,6 @@ public:
 
   std::string const get_name() const { return m_name; }
 
-  virtual ~class_ast() = default;
   std::vector<std::unique_ptr<let_stmt>> const &get_var_def() const {
     return m_body.var_def;
   }

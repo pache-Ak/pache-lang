@@ -9,8 +9,16 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <algorithm>
 
 namespace pache {
+llvm::Type *get_llvm_type(std::unique_ptr<build_type> const &type);
+template<class Iterator>
+std::vector<llvm::Type*> get_llvm_type_arr(Iterator begin, Iterator end) {
+  std::vector<llvm::Type*> llvm_type;
+  std::transform(begin, end, std::back_inserter(llvm_type), get_llvm_type);
+  return llvm_type;
+}
 class build_type {
 public:
   virtual bool is_integral() const;
@@ -21,13 +29,13 @@ public:
   virtual bool is_character() const;
   virtual std::string const decorated_name() const;
   virtual llvm::Type *get_llvm_type() const = 0;
-  virtual void set_const() = 0;
+  virtual void set_mutable() = 0;
   virtual void set_volatile() = 0;
   virtual bool is_const() const;
   virtual bool is_volatile() const;
   virtual ~build_type() = 0;
   virtual bool is_reference() { return false; }
-  explicit build_type() : m_is_const(false), m_is_volatile(false) {}
+  explicit build_type() : m_is_const(true), m_is_volatile(false) {}
 
   virtual std::unique_ptr<build_type> clone() const = 0;
 
@@ -45,7 +53,7 @@ std::unique_ptr<build_type> type_build(base_build &father, type_ast const &ast);
 inline namespace primary {
 class primary_type : public build_type {
 public:
-  virtual void set_const() override;
+  virtual void set_mutable() override;
   virtual void set_volatile() override;
   primary_type() = default;
 
@@ -81,7 +89,7 @@ inline namespace integral {
 class integral_type : public primary_type {
 public:
   virtual bool is_integral() const override { return true; }
-
+  integral_type() = default;
 protected:
   integral_type(integral_type const &other) = default;
   integral_type &operator=(integral_type const &other) = default;
@@ -90,7 +98,7 @@ protected:
 class signed_type : public integral_type {
 public:
   virtual bool is_signed() const override { return true; }
-
+  signed_type() = default;
 protected:
   signed_type(signed_type const &other) = default;
   signed_type &operator=(signed_type const &other) = default;
@@ -99,7 +107,7 @@ protected:
 class unsigned_type : public integral_type {
 public:
   virtual bool is_unsigned() const override { return true; }
-
+  unsigned_type() = default;
 protected:
   unsigned_type(unsigned_type const &other) = default;
   unsigned_type &operator=(unsigned_type const &other) = default;
@@ -181,7 +189,7 @@ inline namespace floating_pointer {
 class floating_pointer_type : public primary_type {
 public:
   virtual bool is_floating_point() const override;
-
+  floating_pointer_type() = default;
 protected:
   floating_pointer_type(floating_pointer_type const &other) = default;
   floating_pointer_type &
@@ -300,7 +308,7 @@ public:
       : m_element_type(std::move(element_type)), m_size(size) {}
   virtual llvm::Type *get_llvm_type() const override;
   virtual std::string const decorated_name() const override;
-  virtual void set_const() override;
+  virtual void set_mutable() override;
   virtual void set_volatile() override;
   virtual bool is_const() const override { return m_element_type->is_const(); }
   virtual bool is_volatile() const override {
@@ -323,7 +331,7 @@ public:
       : m_element_type(std::move(element_type)), m_size(size) {}    
   virtual llvm::Type *get_llvm_type() const override;
   virtual std::string const decorated_name() const override;
-  virtual void set_const() override;
+  virtual void set_mutable() override;
   virtual void set_volatile() override;
   virtual bool is_const() const override { return m_element_type->is_const(); }
   virtual bool is_volatile() const override {
@@ -341,7 +349,7 @@ public:
   explicit pointer_type(std::unique_ptr<build_type> &&element_type);
   virtual llvm::Type *get_llvm_type() const override;
   virtual std::string const decorated_name() const override;
-  virtual void set_const() override;
+  virtual void set_mutable() override;
   virtual void set_volatile() override;
   virtual bool is_const() const override { return m_element_type->is_const(); }
   virtual bool is_volatile() const override {
@@ -356,7 +364,7 @@ private:
 class reference_type final : public build_type {
 public:
   explicit reference_type(std::unique_ptr<build_type> &&element_type);
-  virtual void set_const() override;
+  virtual void set_mutable() override;
   virtual void set_volatile() override;
   virtual bool is_const() const override { return m_element_type->is_const(); }
   virtual bool is_volatile() const override {
@@ -373,7 +381,7 @@ private:
 
 
 std::unique_ptr<build_type>
-build_const_type(base_build &father, const_ast const &ast);
+build_mut_type(base_build &father, mut_ast const &ast);
 
 std::unique_ptr<build_type>
 build_volatile_type(base_build &father, volatile_ast const &ast);

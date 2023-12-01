@@ -1,22 +1,23 @@
 #ifndef AST_H
 #define AST_H
 
-#include "llvm/IR/IRBuilder.h"
 #include <cstddef>
-#include <memory>
 #include <string>
-#include <string_view>
 
 namespace pache {
 class base_ast {
 public:
-  virtual ~base_ast() = default;
+  explicit base_ast() = default;
+  virtual ~base_ast() = 0;
   void set_father(base_ast *father);
-  base_ast *get_father();
+  base_ast *const get_father() const;
 
   // virtual std::string location() = 0;
 
 protected:
+  base_ast &operator=(base_ast const &other) = default;
+  base_ast(base_ast const &other) = default;
+
   base_ast *m_father;
   std::size_t m_line_number;
 };

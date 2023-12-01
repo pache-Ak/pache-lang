@@ -8,32 +8,23 @@
 #include "variable.h"
 #include <functional>
 #include <memory>
-#include <string>
+#include <string_view>
 #include <unordered_map>
 namespace pache {
 class file_build : public base_build {
 public:
-  explicit file_build(compunit_ast *comp);
-  /*
-      virtual llvm::StructType *find_type(std::string const &name) override {
-        auto it = class_def.find(name);
-        if (it != class_def.end()) {
-          return it->second;
-        } else if (m_father != nullptr) {
-          return m_father->find_type(name);
-        } else {
-          return nullptr;
-        }
-      } */
-  virtual std::unique_ptr<build_variable> const &
-  find_var(std::string const &name) const override;
+  explicit file_build(compunit_ast const *const comp);
+  virtual std::unique_ptr<build_variable >
+  find_var(std::string_view name) const override;
+  virtual std::unique_ptr<build_type> find_type(std::string_view name) const override;
+  void make_statement_file();
 
 private:
-  std::unordered_map<std::string, class_build> builded_classes;
-  std::unordered_map<std::string, function_build> builded_functions;
-  std::unordered_map<std::string, std::reference_wrapper<file_build>>
+  std::unordered_map<std::string_view, class_build> builded_classes;
+  std::unordered_map<std::string_view, function_build> builded_functions;
+  std::unordered_map<std::string_view, std::reference_wrapper<file_build>>
       import_packges;
-  std::unordered_map<std::string, std::unique_ptr<build_variable>>
+  std::unordered_map<std::string_view, std::unique_ptr<build_variable>>
       global_variables;
 };
 

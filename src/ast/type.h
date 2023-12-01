@@ -28,9 +28,9 @@ protected:
   type_ast &operator=(type_ast const &other) = default;
 };
 
-class const_ast : public type_ast {
+class mut_ast : public type_ast {
 public:
-  const_ast(std::unique_ptr<type_ast> &&type) : m_type(std::move(type)) {}
+  mut_ast(std::unique_ptr<type_ast> &&type) : m_type(std::move(type)) {}
 
   virtual std::unique_ptr<build_type> build(base_build &father) const override;
   std::unique_ptr<type_ast> const & get_element_type() const { return m_type; }

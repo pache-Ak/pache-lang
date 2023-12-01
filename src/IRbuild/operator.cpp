@@ -2,7 +2,6 @@
 #include "function.h"
 #include "function_type.h"
 #include "type.h"
-#include <array>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Function.h>
@@ -11,21 +10,18 @@
 #include <vector>
 
 namespace pache {
+
 inline namespace __operator_unary_plus {
 function_build make_operator_unary_plus_i8() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<i8_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      i8_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{i8_type_t::get()},
-      llvm::FunctionType::get(i8_type_t::get()->get_llvm_type(),
-                              {i8_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<i8_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
-      "_O9operator+_T2i8"s, TheModule.get());
-
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
+      "_O9operator+_T2i8", TheModule.get());
 
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
@@ -33,23 +29,19 @@ function_build make_operator_unary_plus_i8() {
   Builder->CreateRet(F->getArg(0));
   llvm::verifyFunction(*F);
 
-  return function_build{nullptr, "_O9operator+_T2i8"s, std::move(type), F};
+  return function_build{nullptr, "_O9operator+_T2i8"sv, std::move(type), F};
 }
 
 function_build make_operator_unary_plus_i16() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<i16_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      i16_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{i16_type_t::get()},
-      llvm::FunctionType::get(i16_type_t::get()->get_llvm_type(),
-                              {i16_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<i16_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
-      "_O9operator+_T3i16"s, TheModule.get());
-
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
+      "_O9operator+_T3i16", TheModule.get());
 
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
@@ -61,19 +53,15 @@ function_build make_operator_unary_plus_i16() {
 }
 
 function_build make_operator_unary_plus_i32() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<i32_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      i32_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{i32_type_t::get()},
-      llvm::FunctionType::get(i32_type_t::get()->get_llvm_type(),
-                              {i32_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<i32_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator+_T3i32"s, TheModule.get());
-
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
 
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
@@ -85,19 +73,15 @@ function_build make_operator_unary_plus_i32() {
 }
 
 function_build make_operator_unary_plus_i64() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<i64_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      i64_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{i64_type_t::get()},
-      llvm::FunctionType::get(i64_type_t::get()->get_llvm_type(),
-                              {i64_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<i64_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator+_T3i64"s, TheModule.get());
-
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
 
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
@@ -109,19 +93,15 @@ function_build make_operator_unary_plus_i64() {
 }
 
 function_build make_operator_unary_plus_i128() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<i128_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      i128_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{i128_type_t::get()},
-      llvm::FunctionType::get(i128_type_t::get()->get_llvm_type(),
-                              {i128_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<i128_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator+_T4i128"s, TheModule.get());
-
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
 
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
@@ -133,19 +113,15 @@ function_build make_operator_unary_plus_i128() {
 }
 
 function_build make_operator_unary_plus_u8() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<u8_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      u8_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{u8_type_t::get()},
-      llvm::FunctionType::get(u8_type_t::get()->get_llvm_type(),
-                              {u8_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<u8_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator+_T2u8"s, TheModule.get());
-
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
 
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
@@ -157,19 +133,15 @@ function_build make_operator_unary_plus_u8() {
 }
 
 function_build make_operator_unary_plus_u16() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<u16_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      u16_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{u16_type_t::get()},
-      llvm::FunctionType::get(u16_type_t::get()->get_llvm_type(),
-                              {u16_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<u16_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator+_T3u16"s, TheModule.get());
-
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
 
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
@@ -181,19 +153,15 @@ function_build make_operator_unary_plus_u16() {
 }
 
 function_build make_operator_unary_plus_u32() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<u32_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      u32_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{u32_type_t::get()},
-      llvm::FunctionType::get(u32_type_t::get()->get_llvm_type(),
-                              {u32_type_t::get()->get_llvm_type()}, false));
-
+      std::make_unique<u32_type_t>(),
+      std::move(args_type));
+      
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator+_T3u32"s, TheModule.get());
-
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
 
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
@@ -205,19 +173,15 @@ function_build make_operator_unary_plus_u32() {
 }
 
 function_build make_operator_unary_plus_u64() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<u64_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      u64_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{u64_type_t::get()},
-      llvm::FunctionType::get(u64_type_t::get()->get_llvm_type(),
-                              {u64_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<u64_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator+_T3u64"s, TheModule.get());
-
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
 
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
@@ -229,19 +193,15 @@ function_build make_operator_unary_plus_u64() {
 }
 
 function_build make_operator_unary_plus_u128() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<u128_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      u128_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{u128_type_t::get()},
-      llvm::FunctionType::get(u128_type_t::get()->get_llvm_type(),
-                              {u128_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<u128_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator+_T4u128"s, TheModule.get());
-
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
 
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
@@ -253,19 +213,15 @@ function_build make_operator_unary_plus_u128() {
 }
 
 function_build make_operator_unary_plus_f16() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<f16_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      f16_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{f16_type_t::get()},
-      llvm::FunctionType::get(f16_type_t::get()->get_llvm_type(),
-                              {f16_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<f16_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator+_T3f16"s, TheModule.get());
-
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
 
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
@@ -277,19 +233,15 @@ function_build make_operator_unary_plus_f16() {
 }
 
 function_build make_operator_unary_plus_f32() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<f32_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      f32_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{f32_type_t::get()},
-      llvm::FunctionType::get(f32_type_t::get()->get_llvm_type(),
-                              {f32_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<f32_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator+_T3f32"s, TheModule.get());
-
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
 
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
@@ -301,19 +253,15 @@ function_build make_operator_unary_plus_f32() {
 }
 
 function_build make_operator_unary_plus_f64() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<f64_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      f64_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{f64_type_t::get()},
-      llvm::FunctionType::get(f64_type_t::get()->get_llvm_type(),
-                              {f64_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<f64_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator+_T3f64"s, TheModule.get());
-
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
 
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
@@ -325,19 +273,15 @@ function_build make_operator_unary_plus_f64() {
 }
 
 function_build make_operator_unary_plus_f128() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<f128_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      f128_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{f128_type_t::get()},
-      llvm::FunctionType::get(f128_type_t::get()->get_llvm_type(),
-                              {f128_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<f128_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator+_T4f128"s, TheModule.get());
-
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
 
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
@@ -350,31 +294,38 @@ function_build make_operator_unary_plus_f128() {
 
 } // namespace __operator_unary_plus
 
-std::vector<function_build> operator_unary_plus{
-    make_operator_unary_plus_i8(),   make_operator_unary_plus_i16(),
-    make_operator_unary_plus_i32(),  make_operator_unary_plus_i64(),
-    make_operator_unary_plus_i128(), make_operator_unary_plus_u8(),
-    make_operator_unary_plus_u16(),  make_operator_unary_plus_u32(),
-    make_operator_unary_plus_u64(),  make_operator_unary_plus_u128(),
-    make_operator_unary_plus_f16(),  make_operator_unary_plus_f32(),
-    make_operator_unary_plus_f64(),  make_operator_unary_plus_f128(),
-};
+std::vector<function_build> const  operator_unary_plus = []{
+  std::vector<function_build> val;
+  val.emplace_back(make_operator_unary_plus_i8());
+  val.emplace_back(make_operator_unary_plus_i16());
+  val.emplace_back(make_operator_unary_plus_i32());
+  val.emplace_back(make_operator_unary_plus_i64());
+  val.emplace_back(make_operator_unary_plus_i128());
+  val.emplace_back(make_operator_unary_plus_u8());
+  val.emplace_back(make_operator_unary_plus_u16());
+  val.emplace_back(make_operator_unary_plus_u32());
+  val.emplace_back(make_operator_unary_plus_u64());
+  val.emplace_back(make_operator_unary_plus_u128());
+  val.emplace_back(make_operator_unary_plus_f16());
+  val.emplace_back(make_operator_unary_plus_f32());
+  val.emplace_back(make_operator_unary_plus_f64());
+  val.emplace_back(make_operator_unary_plus_f128());
+
+  val.shrink_to_fit();
+  return val;
+}();
 
 inline namespace __operator_unary_minus {
 function_build make_operator_unary_minus_i8() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<i8_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      i8_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{i8_type_t::get()},
-      llvm::FunctionType::get(i8_type_t::get()->get_llvm_type(),
-                              {i8_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<i8_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator-_T2i8"s, TheModule.get());
-
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
 
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
@@ -386,19 +337,15 @@ function_build make_operator_unary_minus_i8() {
 }
 
 function_build make_operator_unary_minus_i16() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<i16_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      i16_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{i16_type_t::get()},
-      llvm::FunctionType::get(i16_type_t::get()->get_llvm_type(),
-                              {i16_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<i16_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator-_T3i16"s, TheModule.get());
-
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
 
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
@@ -411,19 +358,15 @@ function_build make_operator_unary_minus_i16() {
 }
 
 function_build make_operator_unary_minus_i32() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<i32_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      i32_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{i32_type_t::get()},
-      llvm::FunctionType::get(i32_type_t::get()->get_llvm_type(),
-                              {i32_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<i32_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator-_T3i32"s, TheModule.get());
-
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
 
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
@@ -436,19 +379,15 @@ function_build make_operator_unary_minus_i32() {
 }
 
 function_build make_operator_unary_minus_i64() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<i64_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      i64_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{i64_type_t::get()},
-      llvm::FunctionType::get(i64_type_t::get()->get_llvm_type(),
-                              {i64_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<i64_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator-_T3i64"s, TheModule.get());
-
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
 
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
@@ -461,19 +400,15 @@ function_build make_operator_unary_minus_i64() {
 }
 
 function_build make_operator_unary_minus_i128() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<i128_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      i128_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{i128_type_t::get()},
-      llvm::FunctionType::get(i128_type_t::get()->get_llvm_type(),
-                              {i128_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<i128_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator-_T4i128"s, TheModule.get());
-
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
 
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
@@ -486,24 +421,20 @@ function_build make_operator_unary_minus_i128() {
 }
 
 function_build make_operator_unary_minus_f16() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<f16_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      f16_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{f16_type_t::get()},
-      llvm::FunctionType::get(f16_type_t::get()->get_llvm_type(),
-                              {f16_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<f16_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator-_T3f16"s, TheModule.get());
 
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
-
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
   Builder->CreateRet(Builder->CreateFSub(
-      llvm::ConstantFP::getZero(f16_type_t::get()->get_llvm_type()),
+      llvm::ConstantFP::getZero(std::make_unique<f16_type_t>()->get_llvm_type()),
       F->getArg(0), ""));
   llvm::verifyFunction(*F);
 
@@ -511,25 +442,21 @@ function_build make_operator_unary_minus_f16() {
 }
 
 function_build make_operator_unary_minus_f32() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<f32_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      f32_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{f32_type_t::get()},
-      llvm::FunctionType::get(f32_type_t::get()->get_llvm_type(),
-                              {f32_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<f32_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator-_T3f32"s, TheModule.get());
 
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
-
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
 
   Builder->CreateRet(Builder->CreateFSub(
-      llvm::ConstantFP::getZero(f32_type_t::get()->get_llvm_type()),
+      llvm::ConstantFP::getZero(std::make_unique<f32_type_t>()->get_llvm_type()),
       F->getArg(0), ""));
   llvm::verifyFunction(*F);
 
@@ -537,25 +464,21 @@ function_build make_operator_unary_minus_f32() {
 }
 
 function_build make_operator_unary_minus_f64() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<f64_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      f64_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{f64_type_t::get()},
-      llvm::FunctionType::get(f64_type_t::get()->get_llvm_type(),
-                              {f64_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<f64_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator-_T3f64"s, TheModule.get());
 
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
-
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
 
   Builder->CreateRet(Builder->CreateFSub(
-      llvm::ConstantFP::getZero(f64_type_t::get()->get_llvm_type()),
+      llvm::ConstantFP::getZero(std::make_unique<f64_type_t>()->get_llvm_type()),
       F->getArg(0), ""));
   llvm::verifyFunction(*F);
 
@@ -563,25 +486,21 @@ function_build make_operator_unary_minus_f64() {
 }
 
 function_build make_operator_unary_minus_f128() {
+  std::vector<std::unique_ptr<build_type>> args_type;
+  args_type.emplace_back(std::make_unique<f128_type_t>());
   std::unique_ptr<function_type> type = std::make_unique<function_type>(
-      f128_type_t::get(),
-      std::vector<std::unique_ptr<build_type>>{f128_type_t::get()},
-      llvm::FunctionType::get(f128_type_t::get()->get_llvm_type(),
-                              {f128_type_t::get()->get_llvm_type()}, false));
+      std::make_unique<f128_type_t>(),
+      std::move(args_type));
 
   llvm::Function *F = llvm::Function::Create(
       type->get_llvm_type(), llvm::Function::ExternalLinkage,
       "_O9operator-_T4f128"s, TheModule.get());
 
-  /*   for (auto &Arg : F->args()) {
-      Arg.setName("self");
-    } */
-
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "", F);
   Builder->SetInsertPoint(BB);
 
   Builder->CreateRet(Builder->CreateFSub(
-      llvm::ConstantFP::getZero(f128_type_t::get()->get_llvm_type()),
+      llvm::ConstantFP::getZero(std::make_unique<f128_type_t>()->get_llvm_type()),
       F->getArg(0), ""));
   llvm::verifyFunction(*F);
 
@@ -590,11 +509,20 @@ function_build make_operator_unary_minus_f128() {
 
 } // namespace __operator_unary_minus
 
-std::vector<function_build> operator_unary_minus{
-    make_operator_unary_minus_i8(),   make_operator_unary_minus_i16(),
-    make_operator_unary_minus_i32(),  make_operator_unary_minus_i64(),
-    make_operator_unary_minus_i128(), make_operator_unary_minus_f16(),
-    make_operator_unary_minus_f32(),  make_operator_unary_plus_f64(),
-    make_operator_unary_minus_f128(),
-};
+std::vector<function_build> const operator_unary_minus = []{
+  std::vector<function_build> val;
+  val.emplace_back(make_operator_unary_minus_i8());
+  val.emplace_back(make_operator_unary_minus_i16());
+  val.emplace_back(make_operator_unary_minus_i32());
+  val.emplace_back(make_operator_unary_minus_i64());
+  val.emplace_back(make_operator_unary_minus_i128());
+  val.emplace_back(make_operator_unary_minus_f16());
+  val.emplace_back(make_operator_unary_minus_f32());
+  val.emplace_back(make_operator_unary_plus_f64());
+  val.emplace_back(make_operator_unary_minus_f128());
+
+  val.shrink_to_fit();
+  return val;
+}();
+
 } // namespace pache

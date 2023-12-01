@@ -1,126 +1,108 @@
 #include "expression.h"
 #include "../IRbuild/expression.h"
-#include "../IRbuild/function.h"
-#include <algorithm>
-#include <array>
-#include <functional>
-#include <memory>
-#include <vector>
-using namespace std::literals;
 
 namespace pache {
-std::unique_ptr<build_variable> build_exp(std::unique_ptr<exp_ast> const &ast) {
-  return ast->build();
+std::unique_ptr<build_variable const>
+pache::unary_plus::build(base_build &build) const {
+  return build_unary_plus(build, *this);
 }
 
-std::unique_ptr<build_variable> pache::unary_plus::build() const {
-  std::array<std::unique_ptr<build_variable>, 1> arges{build_exp(m_argument)};
-
-  std::unique_ptr<function_build> const &func =
-      function_lookup("operator+"s, arges.begin(), arges.end());
-
-  if (func != nullptr) {
-    std::array<llvm::Value *, 1> args_Value;
-    args_Value[0] = arges[0]->get_value();
-
-    return std::make_unique<build_prvalue_variable>(
-        func->get_function_type()->get_return_type(),
-        Builder->CreateCall(func->get_llvm_function(), args_Value,
-                            "call_operator+"));
-  } else {
-    return nullptr;
-  }
+std::unique_ptr<build_variable const>
+pache::unary_minus::build(base_build &build) const {
+  return build_unary_minus(build, *this);
 }
 
-std::unique_ptr<build_variable> pache::unary_minus::build() const {
-  std::array<std::unique_ptr<build_variable>, 1> arges{build_exp(m_argument)};
-
-  std::unique_ptr<function_build> const &func =
-      function_lookup("operator-"s, arges.begin(), arges.end());
-
-  if (func != nullptr) {
-    std::array<llvm::Value *, 1> args_Value;
-    args_Value[0] = arges[0]->get_value();
-
-    return std::make_unique<build_prvalue_variable>(
-        func->get_function_type()->get_return_type(),
-        Builder->CreateCall(func->get_llvm_function(), args_Value,
-                            "call_operator-"));
-  } else {
-    return nullptr;
-  }
+std::unique_ptr<build_variable const>
+pache::func_call_exp::build(base_build &build) const {
+  return build_func_call_exp(build, *this);
 }
 
-std::unique_ptr<build_variable> pache::func_call_exp::build() const {
-  std::vector<std::unique_ptr<build_variable>> args;
-  for (auto &arg : m_args) {
-    args.emplace_back(build_exp(arg));
-  }
-
-  std::unique_ptr<function_build> const &func =
-      function_lookup("operator-"s, args.begin(), args.end());
-
-  if (func != nullptr) {
-    std::vector<llvm::Value *> args_Value;
-    for (auto &val : args) {
-      args_Value.emplace_back(val->get_value());
-    }
-    return std::make_unique<build_prvalue_variable>(
-        func->get_function_type()->get_return_type(),
-        Builder->CreateCall(func->get_llvm_function(), args_Value, ""));
-  } else {
-    return nullptr;
-  }
+std::unique_ptr<build_variable const> var_exp::build(base_build &build) const {
+  return build_var_exp(build, *this);
 }
 
-std::unique_ptr<build_variable> binary_mul_exp::build() const {
-  std::array<std::unique_ptr<build_variable>, 2> arges{
-      build_exp(m_lhs),
-      build_exp(m_rhs),
-  };
-
-  std::unique_ptr<function_build> const &func =
-      function_lookup("operator*"s, arges.begin(), arges.end());
-
-  if (func != nullptr) {
-    std::array<llvm::Value *, 2> args_Value{
-        arges[0]->get_value(),
-        arges[1]->get_value(),
-    };
-
-    return std::make_unique<build_prvalue_variable>(
-        func->get_function_type()->get_return_type(),
-        Builder->CreateCall(func->get_llvm_function(), args_Value,
-                            "call_operator*"));
-  } else {
-    return nullptr;
-  }
+std::unique_ptr<build_variable const>
+binary_mul_exp::build(base_build &build) const {
+  return build_binary_mul_exp(build, *this);
 }
 
-std::unique_ptr<build_variable> binary_div_exp::build() const {
-  std::array<std::unique_ptr<build_variable>, 2> arges{
-      build_exp(m_lhs),
-      build_exp(m_rhs),
-  };
-
-  std::unique_ptr<function_build> const &func =
-      function_lookup("operator/"s, arges.begin(), arges.end());
-
-  if (func != nullptr) {
-    std::array<llvm::Value *, 2> args_Value{
-        arges[0]->get_value(),
-        arges[1]->get_value(),
-    };
-
-    return std::make_unique<build_prvalue_variable>(
-        func->get_function_type()->get_return_type(),
-        Builder->CreateCall(func->get_llvm_function(), args_Value,
-                            "call_operator/"));
-  } else {
-    return nullptr;
-  }
+std::unique_ptr<build_variable const>
+binary_div_exp::build(base_build &build) const {
+  return build_binary_div_exp(build, *this);
 }
 
+std::unique_ptr<build_variable const>
+binary_mod_exp::build(base_build &build) const {
+  return build_binary_mod_exp(build, *this);
+}
+
+std::unique_ptr<build_variable const>
+binary_plus_exp::build(base_build &build) const {
+  return build_binary_plus_exp(build, *this);
+}
+
+std::unique_ptr<build_variable const>
+binary_minus_exp::build(base_build &build) const {
+  return build_binary_minus_exp(build, *this);
+}
+
+std::unique_ptr<build_variable const>
+three_way_exp::build(base_build &build) const {
+  return build_three_way_exp(build, *this);
+}
+
+std::unique_ptr<build_variable const> less_exp::build(base_build &build) const {
+  return build_less_exp(build, *this);
+}
+
+std::unique_ptr<build_variable const>
+less_eq_exp::build(base_build &build) const {
+  return build_less_eq_exp(build, *this);
+}
+
+std::unique_ptr<build_variable const>
+greater_exp::build(base_build &build) const {
+  return build_greater_exp(build, *this);
+}
+
+std::unique_ptr<build_variable const>
+greater_eq_exp::build(base_build &build) const {
+  return build_greater_eq_exp(build, *this);
+}
+
+std::unique_ptr<build_variable const> eq_exp::build(base_build &build) const {
+  return build_eq_exp(build, *this);
+}
+
+std::unique_ptr<build_variable const>
+not_eq_exp::build(base_build &build) const {
+  return build_not_eq_exp(build, *this);
+}
+
+std::unique_ptr<build_variable const>
+bitwise_and_exp::build(base_build &build) const {
+  return build_bitwise_and_exp(build, *this);
+}
+
+std::unique_ptr<build_variable const>
+bitwise_xor_exp::build(base_build &build) const {
+  return build_bitwise_xor_exp(build, *this);
+}
+
+std::unique_ptr<build_variable const>
+bitwise_or_exp::build(base_build &build) const {
+  return build_bitwise_or_exp(build, *this);
+}
+
+std::unique_ptr<build_variable const>
+logical_and_exp::build(base_build &build) const {
+  return build_logical_and_exp(build, *this);
+}
+
+std::unique_ptr<build_variable const>
+logical_or_exp::build(base_build &build) const {
+  return build_logical_or_exp(build, *this);
+}
 } // namespace pache
 
 // llvm::Value *pache::var_exp::codegen() {
@@ -131,7 +113,7 @@ std::unique_ptr<build_variable> binary_div_exp::build() const {
 
 //     return val; */
 
-//   return nullptr;
+//   return {};
 // }
 
 // llvm::Value *pache::binary_mul_exp::codegen() {
@@ -140,7 +122,7 @@ std::unique_ptr<build_variable> binary_div_exp::build() const {
 //   } else if (m_lhs->codegen()->getType()->isFPOrFPVectorTy()) {
 //     return Builder->CreateFMul(m_lhs->codegen(), m_rhs->codegen(), "");
 //   } else {
-//     return nullptr;
+//     return {};
 //     // TODO log error
 //   }
 // }
@@ -152,13 +134,13 @@ std::unique_ptr<build_variable> binary_div_exp::build() const {
 //       } else if (m_lhs->get_type()->is_unsigned()) {
 //         return Builder->CreateUDiv(m_lhs->codegen(), m_rhs->codegen(), "");
 //       } else {
-//         return nullptr;
+//         return {};
 //         // TODO log error;
 //       }
 //     } else if (m_lhs->codegen()->getType()->isFPOrFPVectorTy()) {
 //       return Builder->CreateFDiv(m_lhs->codegen(), m_rhs->codegen(), "");
 //     } else {
-//       return nullptr;
+//       return {};
 //       // TODO log error
 //     } */
 // }
@@ -170,13 +152,13 @@ std::unique_ptr<build_variable> binary_div_exp::build() const {
 //      } else if (m_lhs->get_type()->is_unsigned()) {
 //        return Builder->CreateURem(m_lhs->codegen(), m_rhs->codegen(), "");
 //      } else {
-//        return nullptr;
+//        return {};
 //        // TODO log error;
 //      }
 //    } else if (m_lhs->codegen()->getType()->isFPOrFPVectorTy()) {
 //      return Builder->CreateFRem(m_lhs->codegen(), m_rhs->codegen(), "");
 //    } else {
-//      return nullptr;
+//      return {};
 //      // TODO log error
 //    } */
 // }
@@ -187,7 +169,7 @@ std::unique_ptr<build_variable> binary_div_exp::build() const {
 //   } else if (m_lhs->codegen()->getType()->isFPOrFPVectorTy()) {
 //     return Builder->CreateFAdd(m_lhs->codegen(), m_rhs->codegen(), "");
 //   } else {
-//     return nullptr;
+//     return {};
 //     // TODO log error
 //   }
 // }
@@ -198,13 +180,13 @@ std::unique_ptr<build_variable> binary_div_exp::build() const {
 //   } else if (m_lhs->codegen()->getType()->isFPOrFPVectorTy()) {
 //     return Builder->CreateFSub(m_lhs->codegen(), m_rhs->codegen(), "");
 //   } else {
-//     return nullptr;
+//     return {};
 //     // TODO log error
 //   }
 // }
 
 // llvm::Value *pache::three_way_exp::codegen() {
-//   return nullptr;
+//   return {};
 
 //   // TODO
 // }
@@ -216,14 +198,14 @@ std::unique_ptr<build_variable> binary_div_exp::build() const {
 //      } else if (m_lhs->get_type()->is_unsigned()) {
 //        return Builder->CreateICmpULT(m_lhs->codegen(), m_rhs->codegen(), "");
 //      } else {
-//        return nullptr;
+//        return {};
 //        // TODO log error;
 //      }
 //    } else if (m_lhs->codegen()->getType()->isFPOrFPVectorTy()) {
 //      return Builder->CreateFCmpOLT(m_lhs->codegen(), m_rhs->codegen(),
 //                                    ""); // ordered and less than
 //    } else {
-//      return nullptr;
+//      return {};
 //      // TODO log error
 //    } */
 // }
@@ -237,14 +219,14 @@ std::unique_ptr<build_variable> binary_div_exp::build() const {
 //         return Builder->CreateICmpULE(m_lhs->codegen(), m_rhs->codegen(),
 //         "");
 //       } else {
-//         return nullptr;
+//         return {};
 //         // TODO log error;
 //       }
 //     } else if (m_lhs->codegen()->getType()->isFPOrFPVectorTy()) {
 //       return Builder->CreateFCmpOLE(m_lhs->codegen(), m_rhs->codegen(),
 //                                     ""); // ordered and less than
 //     } else {
-//       return nullptr;
+//       return {};
 //       // TODO log error
 //     } */
 // }
@@ -256,14 +238,14 @@ std::unique_ptr<build_variable> binary_div_exp::build() const {
 //      } else if (m_lhs->get_type()->is_unsigned()) {
 //        return Builder->CreateICmpUGT(m_lhs->codegen(), m_rhs->codegen(), "");
 //      } else {
-//        return nullptr;
+//        return {};
 //        // TODO log error;
 //      }
 //    } else if (m_lhs->codegen()->getType()->isFPOrFPVectorTy()) {
 //      return Builder->CreateFCmpOGT(m_lhs->codegen(), m_rhs->codegen(),
 //                                    ""); // ordered and less than
 //    } else {
-//      return nullptr;
+//      return {};
 //      // TODO log error
 //    } */
 // }
@@ -277,14 +259,14 @@ std::unique_ptr<build_variable> binary_div_exp::build() const {
 //         return Builder->CreateICmpUGE(m_lhs->codegen(), m_rhs->codegen(),
 //         "");
 //       } else {
-//         return nullptr;
+//         return {};
 //         // TODO log error;
 //       }
 //     } else if (m_lhs->codegen()->getType()->isFPOrFPVectorTy()) {
 //       return Builder->CreateFCmpOGE(m_lhs->codegen(), m_rhs->codegen(),
 //                                     ""); // ordered and less than
 //     } else {
-//       return nullptr;
+//       return {};
 //       // TODO log error
 //     } */
 // }
@@ -296,7 +278,7 @@ std::unique_ptr<build_variable> binary_div_exp::build() const {
 //     return Builder->CreateFCmpOEQ(m_lhs->codegen(), m_rhs->codegen(),
 //                                   ""); // ordered and less than
 //   } else {
-//     return nullptr;
+//     return {};
 //     // TODO log error
 //   }
 // }
@@ -308,7 +290,7 @@ std::unique_ptr<build_variable> binary_div_exp::build() const {
 //     return Builder->CreateFCmpONE(m_lhs->codegen(), m_rhs->codegen(),
 //                                   ""); // ordered and not equal
 //   } else {
-//     return nullptr;
+//     return {};
 //     // TODO log error
 //   }
 // }

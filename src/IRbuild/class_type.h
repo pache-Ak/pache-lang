@@ -5,16 +5,17 @@
 #include "type.h"
 #include "llvm/IR/Type.h"
 
-// using namespace std::literals;
 namespace pache {
-class class_type : public build_type {
+class class_type final : public build_type {
 public:
+  explicit class_type(class_build const &ref);
   virtual llvm::StructType *get_llvm_type() const override;
-  virtual void set_const() override;
+  virtual void set_mutable() override;
   virtual void set_volatile() override;
+  virtual std::unique_ptr<build_type> clone() const override;
 
 private:
-  std::unique_ptr<class_build> m_def;
+  class_build const &m_ref;
 };
 } // namespace pache
 

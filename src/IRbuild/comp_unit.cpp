@@ -2,10 +2,33 @@
 #include "IRbuild/class.h"
 #include "IRbuild/variable.h"
 #include "function.h"
+#include <fstream>
+#include <iostream>
+#include <istream>
+#include <memory> 
+#include <boost/json/src.hpp>
+#include <fstream>
 
 namespace pache {
-file_build::file_build(compunit_ast *comp) : base_build(nullptr) {
+file_build::file_build(compunit_ast const *const comp) : base_build(nullptr) {
   // packages
+  std::ifstream pcm_in;
+  for (auto &package : comp->get_packages()) {
+    // find file by name
+    
+    for (auto const &dir : comp->get_include_dir()) {
+      pcm_in.open(dir / package->get_file_name());
+      if (pcm_in.is_open()) {
+        boost::json::error_code ec;
+
+
+        break;
+      } else {
+        continue;
+      }
+    }
+
+  }
 
   for (auto &class_ast : comp->get_class()) {
     auto [it, b] = builded_classes.try_emplace(class_ast->get_name(),
@@ -26,22 +49,24 @@ file_build::file_build(compunit_ast *comp) : base_build(nullptr) {
   }
 
   for (auto &var : comp->get_var()) {
-    auto type = type_build(this, var->get_var_type());
+    auto type = type_build(*this, var->get_var_type());
     TheModule->getOrInsertGlobal(var->get_var_name(), type->get_llvm_type());
     llvm::GlobalVariable *gVar = TheModule->getNamedGlobal(var->get_var_name());
     auto [it, b] = global_variables.try_emplace(
-        var->get_var_name(), build_global_variable(std::move(type), gVar));
+        var->get_var_name(),std::make_unique<build_global_variable>( std::move(type), gVar));
     // b is false meaning insert error
     if (!b) {
       std::cerr << "redefine variable.\n";
     }
   }
 }
-std::unique_ptr<build_variable> const &
-file_build::find_var(std::string const &name) const {
+std::unique_ptr<build_type> file_build::find_type(std::string_view name) const {}
+void file_build::make_statement_file() {}
+std::unique_ptr<build_variable >
+file_build::find_var(std::string_view name) const {
   auto it = global_variables.find(name);
   if (it != global_variables.end()) {
-    return it->second;
+    return it->second->clone();
   } else {
     for (auto file : import_packges) {
       if (file.second.get().find_var(name) != nullptr) {
@@ -51,5 +76,15 @@ file_build::find_var(std::string const &name) const {
     return nullptr;
   }
 }
+
+std::unique_ptr<file_build> build_file(compunit_ast const *const ast) {
+  return std::make_unique<file_build>(ast);
+}
+
+boost::json::value read_json_pcm(std::istream &in, boost::json::error_code &ec) {
+  boost::json::stream_parser p;
+
+}
+
 
 } // namespace pache

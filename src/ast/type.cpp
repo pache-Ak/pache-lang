@@ -7,8 +7,8 @@ func_type_ast::func_type_ast(std::vector<std::unique_ptr<type_ast>> &&args,
                      std::unique_ptr<type_ast> &&return_type)
     : m_args_type(std::move(args)), m_return_type(std::move(return_type)) {}
 
-std::unique_ptr<build_type> const_ast::build(base_build &father) const {
-  return build_const_type(father, *this);
+std::unique_ptr<build_type> mut_ast::build(base_build &father) const {
+  return build_mut_type(father, *this);
 }
 
 std::unique_ptr<build_type> volatile_ast::build(base_build &father) const {

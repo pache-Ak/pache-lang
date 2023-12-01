@@ -37,7 +37,7 @@ public:
   }
   std::vector<std::string> const &get_args_name() const { return m_args_name; }
   type_ast *const get_return_type() const { return m_type.get(); }
-  std::string const &get_name() const { return m_name; }
+  std::string_view get_name() const { return m_name; }
   std::vector<std::pair<std::unique_ptr<type_ast>, std::string>> &get_args() {
     return m_args;
   }
