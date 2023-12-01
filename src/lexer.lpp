@@ -198,7 +198,7 @@ UPPERCASE_HEXADECIMAL_PREFIX 0X
 {EQUAL}                 { return pache::parser::make_EQUAL(loc); }
 {NOT_EQUAL}             { return pache::parser::make_NOT_EQUAL(loc); }
 
-{LOGICAL_NOT}           { return pache::pache::make_LOGICAL_NOT(loc); }
+{LOGICAL_NOT}           { return pache::parser::make_LOGICAL_NOT(loc); }
 {AND}                   { return pache::parser::make_AND(loc); }
 {OR}                    { return pache::parser::make_OR(loc); }
 

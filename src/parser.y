@@ -145,7 +145,7 @@
 %token RETURN FUNC CLASS
 %token <std::string> IDENTIFIER
 %token <int> INTEGER
-%token <char const *> binary_digit octal_digit nonzero_digit decimal_digit hexadecimal_digit
+%token <char const *> BINARY_DIGIT OCTAL_DIGIT NONZERO_DIGIT DECIMAL_DIGIT HEXADECIMAL_DIGIT DIGIT
 %token EOF 0;
 // 非终结符的类型定义
 %type <std::unique_ptr<pache::compunit_ast>>   CompUnit
@@ -300,60 +300,14 @@ primary_type {
 }
 
 primary_type:
-  /*VOID
-  { $$ = pache::void_type_ast::get(); }
- | BOOL {
-    $$ = pache::bool_type_t::get();
-  }
-| SIZE {
-  $$ = pache::size_type_t::get();
-}
-| I8
-{ $$ = pache::i8_type_t::get();}
-| I16
-{ $$ = pache::i16_type_t::get(); }
-| I32
-{ $$ = pache::i32_type_t::get(); }
-| I64
-{ $$ = pache::i64_type_t::get();}
-| I128
-{ $$ = pache::i128_type_t::get(); }
-| U8
-{ $$ = pache::u8_type_t::get();}
-| U16
-{ $$ = pache::u16_type_t::get(); }
-| U32
-{ $$ = pache::u32_type_t::get(); }
-| U64
-{ $$ = pache::u64_type_t::get();}
-| U128
-{ $$ = pache::u128_type_t::get(); }
-| F16
-{ $$ = pache::f16_type_t::get(); }
-| F32
-{ $$ = pache::f32_type_t::get(); }
-| F64
-{ $$ = pache::f64_type_t::get();}
-| F128
-{ $$ = pache::f128_type_t::get(); }
-| D32
-{ $$ = pache::d32_type_t::get(); }
-| D64
-{ $$ = pache::d64_type_t::get();}
-| C8
-{ $$ = pache::c8_type_t::get();}
-| C16
-{ $$ = pache::c16_type_t::get(); }
-| C32
-{ $$ = pache::c32_type_t::get(); }
 /* | arr_ast {
   $$ = std::move($1);
 }|
 multi_array_ast {
 $$ = std::move($1);
 }*/
- IDENTIFIER {
-  $$ = std::make_unique<pache::named_ast>(std::move($1));
+scope_resolution IDENTIFIER {
+  $$ = std::make_unique<pache::named_ast>(std::move($1), std::move($2));
 }
   ;
 
@@ -602,15 +556,15 @@ binary_preix
 ;
 
 binary_digit_sequence
-: binary_digit {
+: BINARY_DIGIT {
   $$ = std::string{};
   $$ += $1;
 }
-| binary_digit_sequence binary_digit {
+| binary_digit_sequence BINARY_DIGIT {
   $$ = std::move($1);
   $$ += $2;
 }
-| binary_digit_sequence SINGLE_QUOTE binary_digit {
+| binary_digit_sequence SINGLE_QUOTE BINARY_DIGIT {
   $$ = std::move($1);
   $$ += $3;
 }
@@ -624,11 +578,11 @@ octal_digit_sequence
 : ZERO {
   $$ = std::string{};
 }
-| octal_digit_sequence octal_digit {
+| octal_digit_sequence OCTAL_DIGIT {
   $$ = std::move($1);
   $$ += $2;
 }
-| octal_digit_sequence SINGLE_QUOTE octal_digit {
+| octal_digit_sequence SINGLE_QUOTE OCTAL_DIGIT {
   $$ = std::move($1);
   $$ += $3;
 }
@@ -639,15 +593,15 @@ decimal_literal
 ;
 
 decimal_digit_sequence
-: nonzero_digit {
+: NONZERO_DIGIT {
   $$ = std::string{};
   $$ += $1;
 }
-| decimal_digit_sequence decimal_digit {
+| decimal_digit_sequence DECIMAL_DIGIT {
   $$ = std::move($1);
   $$ += $2;
 }
-| decimal_digit_sequence SINGLE_QUOTE decimal_digit {
+| decimal_digit_sequence SINGLE_QUOTE DECIMAL_DIGIT {
   $$ = std::move($1);
   $$ += $3;
 }
@@ -664,15 +618,15 @@ hexadecimal_prefix
 ;
 
 hexadecimal_digit_sequence
-: hexadecimal_digit {
+: HEXADECIMAL_DIGIT {
   $$ = std::string{};
   $$ += $1;
 }
-| hexadecimal_digit_sequence hexadecimal_digit {
+| hexadecimal_digit_sequence HEXADECIMAL_DIGIT {
   $$ = std::move($1);
   $$ += $2;
 }
-| hexadecimal_digit_sequence SINGLE_QUOTE hexadecimal_digit {
+| hexadecimal_digit_sequence SINGLE_QUOTE HEXADECIMAL_DIGIT {
   $$ = std::move($1);
   $$ += $3;
 }
@@ -718,18 +672,18 @@ unary_expression
 | B_AND unary_expression {
   $$ = std::make_unique<pache::address_of_exp>(std::move($2));
 }
-| ALLOCATION unary_expression {
-  $$ = std::make_unique<pache::allocation_exp>(std::move($2));
-}
+| ALLOCATION type unary_expression {
+  $$ = std::make_unique<pache::allocation_exp>(std::move($2), std::move($3));
+}/*
 | ALLOCATION_ARRAY unary_expression {
   $$ = std::make_unique<pache::allocation_array_exp>(std::move($2));
-}
+}*/
 | DEALLOCATION unary_expression {
   $$ = std::make_unique<pache::deallocation_exp>(std::move($2));
-}
+} /*
 | DEALLOCATION_ARRAY unary_expression {
   $$ = std::make_unique<pache::deallocation_array_exp>(std::move($2));
-}
+}*/
 ;
 
 

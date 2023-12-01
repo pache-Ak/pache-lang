@@ -2,9 +2,11 @@
 #define TYPE_H
 
 #include "ast.h"
+#include "scope.h"
 #include <cstddef>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 using namespace std::literals;
 
@@ -115,14 +117,15 @@ private:
 
 class named_ast final : public type_ast {
 public:
-  explicit named_ast(std::string &&identifier)
-      : m_iden(std::move(identifier)) {}
+  explicit named_ast(std::unique_ptr<scope_ast> &&scope, std::string &&identifier)
+      : m_scope(std::move(scope)), m_iden(std::move(identifier)) {}
   virtual std::unique_ptr<build_type> build(base_build &father) const override;
   std::string_view get_name() const {
     return m_iden;
   }
 
 private:
+  std::unique_ptr<scope_ast> m_scope;
   std::string m_iden;
 };
 
