@@ -1,0 +1,13 @@
+add_library(IRbuild
+            build.cpp
+            class_type.cpp
+            class.cpp
+            comp_unit.cpp
+            expression.cpp
+            function_type.cpp
+            function.cpp
+            literal.cpp
+            operator.cpp
+            statement.cpp
+            type.cpp
+            variable.cpp)

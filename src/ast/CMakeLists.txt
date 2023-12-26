@@ -1,0 +1,10 @@
+add_library(ast
+            ast.cpp
+            class.cpp
+            compunit.cpp
+            expression.cpp
+            function.cpp
+            literal.cpp
+            scope.cpp
+            statement.cpp
+            type.cpp)
