@@ -4,10 +4,10 @@ project(pache_lang)
 find_package(BISON)
 find_package(FLEX)
 
-BISON_TARGET(MyParser src/parser.y ${PROJECT_BINARY_DIR}/parser.tab.cc
+BISON_TARGET(MyParser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.tab.cc
             DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser.tab.hh)
 
-FLEX_TARGET(MyFlex src/lexer.lpp ${PROJECT_BINARY_DIR}/lexer.cpp)
+FLEX_TARGET(MyFlex lexer.lpp ${PROJECT_BINARY_DIR}/lexer.cpp)
 
 ADD_FLEX_BISON_DEPENDENCY(MyFlex MyParser)
 
@@ -22,7 +22,6 @@ message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 # for your compiler.
 
 include_directories(${CMAKE_BINARY_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
