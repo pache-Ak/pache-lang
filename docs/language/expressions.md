@@ -13,17 +13,12 @@
 
 ### 运算符
 
-|          常见运算符|                           | | | | | |
-| :--- |:--- |:--- |:--- |:--- |:--- |:--- |
-|赋值|~~自增<br>自减~~|算术|逻辑|比较|成员访问|其他          |
-|a = b<br>a += b<br>a -= b<br>a *= b<br>a /= b<br>a %= b<br>a &= b<br>a \|= b<br>a ^= b<br>a <<= b<br>a >>= b | ~~++a<br>--a<br>a++<br>a~~ | +a<br>-a<br>a + b<br>a - b<br>a * b<br>a / b<br>a % b<br>~a<br>a & b<br>a \| b<br>a ^ b<br>a << b<br>a >> b  | !a<br>a && b<br>a \|\| b  | a == b<br>a != b<br>a < b<br>a > b<br>a <= b<br>a >= b<br>a <=> b  | a[b]<br>*a<br>&a<br>a->b<br>a.b<br>a->*b<br>a.*b  | a(...)<br>a, b<br>? :  |
-
-| 特殊运算符 |
-|                       --- |
-| static_cast 转换一个类型为另一相关类型<br>dynamic_cast 在继承层级中转换<br>const_cast 添加或移除 cv 限定符<br>reinterpret_cast 转换类型到无关类型<br>C 风格转型 以 static_cast 、 const_cast 及 reinterpret_cast 的混合转换一个类型到另一类型<br>new 创建有动态存储期的对象<br>delete 销毁先前由 new 表达式创建的对象，并释放其所拥有的内存区域<br>sizeof 查询类型的大小<br>sizeof... 查询形参包的大小<br>typeid 查询类型的类型信息<br>noexcept 查询表达式是否能抛出异常<br>alignof 查询类型的对齐要求  |  
+|          常见运算符|                           | | | | | 
+| :--- |:--- |:--- |:--- |:--- |:--- |
+|~~自增<br>自减~~|算术|逻辑|比较|成员访问|其他          |
+| ~~++a<br>--a<br>a++<br>a~~ | +a<br>-a<br>a + b<br>a - b<br>a * b<br>a / b<br>a % b<br>~a<br>a & b<br>a \| b<br>a ^ b<br>a << b<br>a >> b  | !a<br>a && b<br>a \|\| b  | a == b<br>a != b<br>a < b<br>a > b<br>a <= b<br>a >= b<br>a <=> b  | a[b]<br>*a<br>&a<br>a->b<br>a.b<br>~~a->*b~~<br>~~a.*b~~  | a(...)<br>~~a, b<br>? :~~  |
 
 - [运算符优先级](language/operator_precedence "language/operator precedence")定义了运算符绑定到它的各个实参的顺序
-- [替代表示](language/operator_alternative "language/operator alternative")是一些运算符的其他代用书写方式
 - [运算符重载](operators.md "language/operators")允许对用户定义的类指定各运算符的行为。
 
 #### 转换

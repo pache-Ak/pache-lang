@@ -87,7 +87,7 @@ int main()
 
 #### 左值到右值转换
 
-任何非函数、非数组类型 `T` 的[泛左值](/language/value_category#泛左值 "language/value category")，可隐式转换成同类型的[纯右值](/language/value_category#纯右值 "language/value category")。如果 `T` 是非类类型，那么此转换也会移除 cv 限定符。
+任何非函数、非数组类型 `T` 的[左值](/language/value_category#左值 "language/value category")，可隐式转换成同类型的[纯右值](/language/value_category#纯右值 "language/value category")。
 
 以下情况下并不访问该左值所指代的对象：
 
@@ -103,17 +103,20 @@ int main()
 
 这项转换所塑造的是从某个内存位置中读取值到 CPU 寄存器之中的动作。
 
-如果泛左值所指代的对象含有不确定值（例如由[默认初始化](/language/default_initialization "language/default initialization")非类类型的自动变量而得），那么它的行为[未定义](/language/ub "language/ub")，除非该不确定值的类型是可有 cv 限定的 unsigned char 或 [std::byte](/types/byte "types/byte") 。
+~~如果左值所指代的对象含有不确定值（例如由[默认初始化](/language/default_initialization "language/default initialization")非类类型的自动变量而得），那么它的行为[未定义](/language/ub "language/ub")，除非该不确定值的类型是可有 cv 限定的 unsigned char 或 [std::byte](/types/byte "types/byte") 。~~
 
-如果泛左值含有已无效化的指针值，那么行为由实现定义（而非未定义）。
+如果左值含有已无效化的指针值，那么行为由实现定义（而非未定义）。
 
-#### 数组到指针转换
+#### 左值到亡值的转换
+出现在[直接赋值表达式](operator_assignment.md#直接赋值 "language/operator_assignmnet")右运算数和[delete 表达式](delete.md "language/delete")的[左值](value_category.md#左值 "language/value_category")会转换为[亡值](value_category.md#亡值 "language/value_category")。
 
-“`T` 的 `N` 元素数组”或“`T` 的未知边界数组”类型的[左值](/language/value_category#左值 "language/value category")或[右值](/language/value_category#右值 "language/value category")，可隐式转换成“指向 `T` 的指针”类型的[纯右值](/language/value_category#纯右值 "language/value category")。如果数组是纯右值，那么就会发生[临时量实质化](#临时量实质化)。 产生的指针指向数组首元素（细节参阅[数组到指针退化](/language/array#数组到指针退化 "language/array")）。
+#### 数组到未知边界数组的转换
+
+“`T` 的 `N` 元素数组”~~或“`T` 的未知边界数组”~~类型的[左值](/language/value_category#左值 "language/value category")或[右值](/language/value_category#纯右值 "language/value category")，可隐式转换成“`T` 的未知边界数组”类型的[纯右值](/language/value_category#纯右值 "language/value category")。如果数组是纯右值，那么就会发生[临时量实质化](#临时量实质化)。~~ 产生的指针指向数组首元素（细节参阅[数组到指针退化](/language/array#数组到指针退化 "language/array")）。~~
 
 #### 临时量实质化
 
-任何完整类型 `T` 的[纯右值](/language/value_category#纯右值 "language/value category")，可转换成同类型 `T` 的亡值。此转换以该纯右值初始化一个 T 类型的临时对象（以临时对象作为求值该纯右值的结果对象），并产生一个代表该临时对象的亡值。 如果 `T` 是类类型或类类型的数组，那么它必须有可访问且未被弃置的析构函数：
+任何完整类型 `T` 的[纯右值](/language/value_category#纯右值 "language/value category")，可转换成同类型 `T` 的亡值？？。此转换以该纯右值初始化一个 T 类型的临时对象（以临时对象作为求值该纯右值的结果对象），并产生一个代表该临时对象的亡值？？。 ~~如果~~ `T` ~~是类类型或类类型的数组，那么它~~必须有可访问且未被弃置的析构函数：
 
 ```cpp
 class S { public let i32 m }
@@ -125,8 +128,8 @@ let i32 k = S().m // C++17 起成员访问期待泛左值；
 
 - [绑定引用](/language/reference_initialization "language/reference initialization")到纯右值时；
 - 在类纯右值上进行[成员访问](/language/operator_member_access "language/operator member access")时；
-- 进行数组到指针转换（见上文）或在数组纯右值上[使用下标](/language/operator_member_access#内建的下标运算符 "language/operator member access")时；
-- 以[花括号初始化器列表](/language/list_initialization "language/list initialization")初始化 std::initializer\_list<T> 类型的对象时；
+- 进行数组到~~指针~~未知边界数组的转换（见上文）或在数组纯右值上[使用下标](/language/operator_member_access#内建的下标运算符 "language/operator member access")时；
+- 以[花括号初始化器列表](/language/list_initialization "language/list initialization")初始化 `std::initializer_list<T>` 类型的对象时；
 - 对纯右值应用 [`typeid`](/language/typeid "language/typeid") 时（这是不求值表达式的一部分）；
 - 对纯右值应用 [`sizeof`](/language/sizeof "language/sizeof") 时（这是不求值表达式的一部分）；
 - 纯右值作为[弃值表达式](/language/expressions#弃值表达式 "language/expressions")时；
@@ -141,15 +144,15 @@ let i32 k = S().m // C++17 起成员访问期待泛左值；
 
 #### 整型提升
 
-小整型类型（如 char）的[纯右值](/language/value_category#纯右值 "language/value category")可转换成较大整型类型（如 int）的纯右值。具体而言，[算术运算符](/language/operator_arithmetic "language/operator arithmetic")不接受小于 int 的类型作为它的实参，而在左值到右值转换后，如果适用就会自动实施整型提升。此转换始终保持原值。
+小整型类型（如 `i8` ）的[纯右值](/language/value_category#纯右值 "language/value category")可转换成较大整型类型（如 `i32` ）的纯右值。具体而言，[算术运算符](/language/operator_arithmetic "language/operator arithmetic")不接受小于 `i32` 的类型作为它的实参，而在左值到右值转换后，如果适用就会自动实施整型提升。此转换始终保持原值。
 
 以下隐式转换被归类为整型提升：
 
 - **`i8`** 或 **`i16`** 可转换到 `i32`;
 - **`u8`** 或 **`u16`** 可转换到 `u32`;
-- 底层类型不固定的无作用域 [枚举](/language/enum "language/enum")类型可转换到以下列表中能保有它的整个值范围的首个类型：i32、 u32、 i64、 u64、 扩展整数类型（以大小顺序，有符号优先于无符号） 。如果值范围更大，那么不应用整型提升；
-- 底层类型固定的无作用域 枚举类型可转换到它的底层类型，而当底层类型也适用整型提升时，那么也可以转换到提升后的底层类型。到未提升的底层类型的转换优先于[重载决议](/language/overload_resolution "language/overload resolution")；
-- 如果 `i32` 能表示位域的整个值范围，那么[*位域*](/language/bit_field "language/bit field")类型可转换到 `i32`，否则如果 `u32` 能表示位域的整个值范围，那么可转换到 `u32`，否则不实施整型提升；
+- ~~底层类型不固定的无作用域 [枚举](/language/enum "language/enum")类型可转换到以下列表中能保有它的整个值范围的首个类型：i32、 u32、 i64、 u64、 扩展整数类型（以大小顺序，有符号优先于无符号） 。如果值范围更大，那么不应用整型提升；~~
+- 底层类型固定的~~无作用域~~ 枚举类型可转换到它的底层类型，而当底层类型也适用整型提升时，那么也可以转换到提升后的底层类型。到未提升的底层类型的转换优先于[重载决议](/language/overload_resolution "language/overload resolution")；
+- ~~如果 `i32` 能表示位域的整个值范围，那么~~ ~~[*位域*](/language/bit_field "language/bit field")~~ ~~类型可转换到 `i32`，否则如果 ~~`u32` 能表示位域的整个值范围，那么可转换到 `u32`，否则不实施整型提升；
 
 注意，所有其他转换都不是提升；例如[重载决议](/language/overload_resolution "language/overload resolution")选择 i8 -> i32优先于 i8 -> i16。
 

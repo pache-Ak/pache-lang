@@ -6,12 +6,12 @@
 
 **[基本概念](/language/basic_concepts.md "language/basic concepts")**
 
-[注释](/comment.md "comment")  
+[注释](comment.md "comment")  
 [ASCII 码表](/language/ascii "language/ascii")  
 [标点](/language/punctuators "language/punctuators")  
-[名字与标识符](/language/identifiers "language/identifiers")  
-[类型](/language/type "language/type") – [基础类型](/language/types "language/types")  
-[对象](/language/object "language/object") – [作用域](/language/scope "language/scope") – [生存期](/language/lifetime "language/lifetime")  
+[名字与标识符](identifiers.md "language/identifiers")  
+[类型](type.md "language/type") – [基础类型](types.md "language/types")  
+[对象](object.md "language/object") – [作用域](/language/scope "language/scope") – [生存期](/language/lifetime "language/lifetime")  
 [定义与 ODR](/language/definition "language/definition")  
 [名字查找](/language/lookup "language/lookup")  
 [有限定](/language/qualified_lookup "language/qualified lookup") – [无限定](/language/unqualified_lookup "language/unqualified lookup")（[实参依赖](/language/adl "language/adl")）  
@@ -25,25 +25,16 @@
 
 **[关键词](/keyword.md "keyword")**
 
-~~**[预处理器](/preprocessor "preprocessor")**~~
+**[表达式](expressions.md "language/expressions")**
 
-[~~`#if` - `#ifdef` - `#ifndef` - `#elif`~~](/preprocessor/conditional "preprocessor/conditional")  
-[~~`#elifdef` - `#elifndef`~~](/preprocessor/conditional "preprocessor/conditional")  
-[~~`#define` - `#` - `##`~~](/preprocessor/replace "preprocessor/replace")  
-[~~`#include`~~](/preprocessor/include "preprocessor/include") - [~~`#pragma`~~](/preprocessor/impl "preprocessor/impl")  
-[~~`#line`~~](/preprocessor/line "preprocessor/line") - [~~`#error`~~](/preprocessor/error "preprocessor/error")  
-
-**[表达式](/language/expressions.md "language/expressions")**
-
-[值类别](/language/value_category "language/value category")  
+[值类别](value_category.md "language/value category")  
 [求值顺序与定序](/language/eval_order "language/eval order")  
 [常量表达式](/language/constant_expression "language/constant expression")  
-[运算符](/language/expressions.md#运算符 "language/expressions")  
-[赋值](/language/operator_assignment "language/operator assignment") – [算术](/language/operator_arithmetic "language/operator arithmetic")  
-[自增与自减](/language/operator_incdec "language/operator incdec")  
+[运算符](expressions.md#运算符 "language/expressions")  
+[赋值](operator_assignment.md "language/operator assignment") – [算术](/language/operator_arithmetic "language/operator arithmetic")  
 [逻辑](/language/operator_logical "language/operator logical") – [比较](/language/operator_comparison "language/operator comparison")  
 [成员访问与间接](/language/operator_member_access "language/operator member access")  
-[调用、逗号、三元](/language/operator_other "language/operator other")  
+[调用](/language/operator_call "language/operator call")  
 [`sizeof`](/language/sizeof "language/sizeof") – [`alignof`](/language/alignof "language/alignof")  
 [`new`](/language/new "language/new") – [`delete`](/language/delete "language/delete") – [`typeid`](/language/typeid "language/typeid")  
 [运算符重载](/language/operators.md "language/operators")  

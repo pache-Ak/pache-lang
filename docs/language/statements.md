@@ -5,7 +5,7 @@
 语句（statement）是依序执行的 **name** 程序片段。任何函数体都是语句的序列。例如：
 
 ```c++
-fun main(c8*[] args) void {
+func main(c8*[] args) void {
  let auto n = 1;                 // 声明语句
  n = n + 1;                       // 赋值语句
  printf(out, "n = {}\n", n);      // 表达式语句
@@ -31,16 +31,14 @@ fun main(c8*[] args) void {
 
 8. atomic 与 synchronized 块。
 
-9. 声明语句 let;
-
 ### 标签
 
 通过在语句自身之前提供后随冒号的标签，任何语句都可*带有标签*。
 |      |      |
 | :--- | :--- |
-| `lable` 标识符 `:` 语句 | (1) |
-| `case` 常量表达式 `:` 语句 | (2) |
-| `default :` 语句 | (3) |
+| attr(optional) `lable` identifier `:` | (1) |
+| attr(optional) `case` constexpr `:`  | (2) |
+| attr(optional) `default :`  | (3) |
 
 1. [goto](language/goto "language/goto") 的目标；
 
@@ -65,9 +63,15 @@ func f() void {
  goto Label; // Label 忽略块作用域
 }
 
-fun g() void {
+func g() void {
  goto Label; // 错误： label 不在 g() 的作用域内
 }
+```
+
+### 赋值语句
+```cpp
+attr(optional)
+var = exp;
 ```
 
 ### 表达式语句
@@ -76,31 +80,40 @@ fun g() void {
 
 不鼓励，或禁止将多个语句放在一行  TODO
 
-|      |      |
-| :--- | :--- |
-|  表达式;  | (1) |
+```cpp
+attr(optional)
+expression;
+```
 
-|      |       |      |
-| :--- | :---: | :--- |
-| 表达式 | - | 一个[表达式](/language/expressions.md "language/expressions") |>
+- *attr*
+    
+    任意数量[属性]()的序列
 
-典型 name 程序的大部分语句都是表达式语句，例如赋值和函数调用。
+- *expression*
+    
+    一个[表达式](/language/expressions.md "language/expressions")
 
-没有表达式的表达式语句被称作*空语句（null statement）*。它通常用来为 [for](language/for "language/for") 或 [while](language/while "language/while") 循环提供空体。它也可用于在复合语句的末尾引入标签。
+
+典型 name 程序的大部分语句都是表达式语句，例如~~赋值~~和函数调用。
+
+~~没有表达式的表达式语句被称作*空语句（null statement）*。它通常用来为 [for](language/for "language/for") 或 [while](language/while "language/while") 循环提供空体。它也可用于在复合语句的末尾引入标签。~~
 
 ### 复合语句
 
 复合语句或（代码）块是花括号环绕的语句序列。
 
-|      |      |
-| :--- | :--- |
-|  { 语句...(可选) } | (1) |
+```cpp
+attr(optional)
+{
+    statement...(optional)
+    label...(optional)
+}
+```
 
-当需要一条语句，但要按顺序执行多条语句时，可以使用复合语句：
-
+例：
 ```C++
 if x > 5 {
- auto n = 1
+ let auto n = 1
  println(out, n)
 }
 
@@ -109,7 +122,7 @@ if x > 5 {
 每个复合语句都引入其自身的块[作用域](/language/scope "language/scope")；在块中声明的变量在闭花括号处以逆序销毁：
 
 ```c++
-fun main() {
+func main() i32 {
     {                                // 块的开始
         std::ofstream f("test.txt") // 声明语句
         println(f, "abc")                // 表达式语句
@@ -143,11 +156,9 @@ fun main() {
 |      |      |
 | :--- | :--- |
 | `loop` 复合语句 | (1) |
-| `for`  初始化语句 `;` 条件(可选) `;` 表达式(可选)  复合语句 |(3) |
-| `for` for-范围声明 `:` for-范围初始化器  复合语句| (4)|
+| `for` for-范围声明 `:` for-范围初始化器  复合语句| (2)|
 
 1. [loop](/language/loop.md "language/loop") 循环；
-2. [for](/language/for.md "language/for") 循环；
 3. [范围 for](/language/range-for.md "language/range-for") 循环。
 
 ### 跳转语句
@@ -173,9 +184,9 @@ fun main() {
 
 声明语句在块中引入一个或多个标识符。
 
-|      |      |
-| :--- | :--- |
-| 块声明 | (1) |
+```
+block-declaration
+```
 
 1. 细节见[声明](/language/declarations.md "language/declarations")及[初始化](/language/initialization.md "language/initialization")。
 

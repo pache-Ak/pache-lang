@@ -32,10 +32,10 @@
 
 > `let` *类型说明符*  *名字*`;`
 
-|   |    |    |
-| ---: | --- |  :--- |
-| 声明说明符序列<br>（decl-specifier-seq）|-|*说明符（specifier）*的序列（见下文） |
-| 初始化声明符列表<br>（init-declarator-list）|-|可以带有*初始化器（initializer）*的*声明符（declarator）*的逗号分隔列表。 初始化声明符列表 在声明具名的 class/struct/union 或具名枚举时可以省略 |
+|   |    |    
+| ---: |   :--- |
+| 声明说明符序列<br>（decl-specifier-seq）|*说明符（specifier）*的序列（见下文） |
+| 初始化声明符列表<br>（init-declarator-list）|可以带有*初始化器（initializer）*的*声明符（declarator）*的逗号分隔列表。 初始化声明符列表 在声明具名的 class/struct/union 或具名枚举时可以省略 |
 
 [结构化绑定声明](/language/structured_binding "language/structured binding")也是简单声明。
 
@@ -56,7 +56,9 @@
 - [`constinit`](/language/constinit "language/constinit") 说明符，只允许在拥有静态或线程存储期的变量声明中使用。`constexpr`、`consteval` 和 `constinit` 说明符在一个 声明说明符序列 中最多只能出现一个。
 
 - [存储类说明符](/language/storage_duration "language/storage duration")（~~[register](/keyword/register "keyword/register")、 (C++17 前)~~ [static](/keyword/static "keyword/static")、[`thread_local`](/keyword/thread_local "keyword/thread local") 、~~[extern](/keyword/extern "keyword/extern")~~ ）只能使用一个存储类说明符。
-- [mutable](/keyword/mutable "keyword/mutable")说明符， TODO :
+- ~~[mutable](/keyword/mutable "keyword/mutable")说明符， TODO :~~
+
+
 - **类型说明符**（类型说明符序列），指名一个类型的说明符的序列。声明所引入的每个实体都是这个类型，并可以被声明符修饰（见下文）。这个说明符序列也用于[类型标识（type-id）](/language/type#类型的命名 "language/type")。只有下列说明符是 类型说明符序列 的一部分，顺序不限：
 
   - [类说明符](/language/class "language/class")
@@ -115,11 +117,11 @@
 
 4) [指针声明符](/language/pointer "language/pointer")：声明 S \* D; 将 `D` 声明为指向 声明说明符序列 所确定的类型 `S` 的指针。
 
-5) [成员指针声明](/w/cpp/language/pointer "cpp/language/pointer")：声明 S C::\* D; 将 `D` 声明为指向 `C` 中的类型是 声明说明符序列 所确定的类型 `S` 的成员的指针。嵌套名说明符 是[名字和作用域解析运算符 `**::**` 的序列](/w/cpp/language/identifiers#.E6.9C.89.E9.99.90.E5.AE.9A.E7.9A.84.E6.A0.87.E8.AF.86.E7.AC.A6 "cpp/language/identifiers")
+5) ~~[成员指针声明](/w/cpp/language/pointer "cpp/language/pointer")：声明 S C::\* D; 将 `D` 声明为指向 `C` 中的类型是 声明说明符序列 所确定的类型 `S` 的成员的指针。嵌套名说明符 是[名字和作用域解析运算符 `**::**` 的序列](/w/cpp/language/identifiers#.E6.9C.89.E9.99.90.E5.AE.9A.E7.9A.84.E6.A0.87.E8.AF.86.E7.AC.A6 "cpp/language/identifiers")~~
 
 6) [左值引用声明符](/language/reference "language/reference")：声明 S & D; 将 `D` 声明为到 声明说明符序列 所确定的类型 `S` 的左值引用。
 
-7) [右值引用声明符](/language/reference "language/reference")：声明 S && D; 将 `D` 声明为到 声明说明符序列 所确定的类型 `S` 的右值引用。
+7) ~~[右值引用声明符](/language/reference "language/reference")：声明 S && D; 将 `D` 声明为到 声明说明符序列 所确定的类型 `S` 的右值引用。~~
 
 8) [数组声明符](/language/array "language/array")。非指针声明符 是任意合法声明符，但如果它以 \*、& 或 && 起始，那么就必须用括号环绕它。
 

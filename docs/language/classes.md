@@ -17,9 +17,9 @@
 3. 嵌套类型：
     1. 在类定义之中定义的嵌套类及枚举
     2. 既存类型的别名，~~以 typedef 或~~类型别名 声明定义
-    3. 就[查找](/language/unqualified_lookup#.E6.B3.A8.E5.85.A5.E7.B1.BB.E5.90.8D "language/unqualified lookup")而言（除非在用作[构造函数](/language/initializer_list "language/initializer list")名时），类的名字在该类自身的定义中，表现为一个作为其自身的类型别名的公开成员：这被称作*[注入类名](/language/injected-class-name "language/injected-class-name")*
-4. 来自定义于类中的所有无作用域枚举，或由 using 声明或 using enum 声明引入的枚举项
-5. [成员模板](/language/member_template "language/member template")（变量模板、类模板或函数模板）可以在任何非局部 class/struct/union 定义体内出现。
+    3. 就[查找](/language/unqualified_lookup#.E6.B3.A8.E5.85.A5.E7.B1.BB.E5.90.8D "language/unqualified lookup")而言 ~~（除非在用作~~ ~~[构造函数](/language/initializer_list "language/initializer list")~~ ~~名时）~~，类的名字在该类自身的定义中，表现为一个作为其自身的类型别名的公开成员：这被称作*[注入类名](/language/injected-class-name "language/injected-class-name")*
+4. ~~来自定义于类中的所有无作用域枚举，或由 using 声明或 using enum 声明引入的枚举项~~
+5. [成员模板](/language/member_template "language/member template")（变量模板、类模板或函数模板）可以在任何非局部 class/ ~~struct/~~ union 定义体内出现。
 
 所有成员都在类定义中一次性定义，不能向已定义的类添加成员（与命名空间成员不同）
 
