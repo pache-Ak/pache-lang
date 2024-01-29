@@ -16,7 +16,7 @@ public:
   explicit exp_ast() = default;
   virtual ~exp_ast() = 0;
 
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const = 0;
 
 protected:
@@ -55,7 +55,7 @@ class unary_plus final : public exp_ast {
 public:
   explicit unary_plus(std::unique_ptr<exp_ast> &&argument)
       : m_argument(std::move(argument)) {}
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_arg() const { return *m_argument; }
 
@@ -68,7 +68,7 @@ public:
   explicit unary_minus(std::unique_ptr<exp_ast> &&argument)
       : m_argument(std::move(argument)) {}
 
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_arg() const { return *m_argument; }
 
@@ -84,7 +84,7 @@ public:
   std::vector<std::unique_ptr<exp_ast>> const &get_args() const {
     return m_args;
   }
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
 
 private:
@@ -98,7 +98,7 @@ public:
   explicit var_exp(std::unique_ptr<scope_ast> &&scope, std::string &&name) :m_scope(std::move(scope)), m_name(std::move(name)) {}
 
   std::string const &get_name() const { return m_name; }
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
 
 private:
@@ -112,7 +112,7 @@ public:
                           std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
 
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
@@ -128,7 +128,7 @@ public:
                           std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
 
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
 
   exp_ast const &get_lhs() const { return *m_lhs; }
@@ -145,7 +145,7 @@ public:
                           std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
 
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
@@ -161,7 +161,7 @@ public:
                            std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
 
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
@@ -177,7 +177,7 @@ public:
                             std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
 
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
@@ -192,7 +192,7 @@ public:
   explicit three_way_exp(std::unique_ptr<exp_ast> &&lhs,
                          std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
 
   exp_ast const &get_lhs() const { return *m_lhs; }
@@ -208,7 +208,7 @@ public:
   explicit less_exp(std::unique_ptr<exp_ast> &&lhs,
                     std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
 
   exp_ast const &get_lhs() const { return *m_lhs; }
@@ -224,7 +224,7 @@ public:
   explicit less_eq_exp(std::unique_ptr<exp_ast> &&lhs,
                        std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
 
   exp_ast const &get_lhs() const { return *m_lhs; }
@@ -240,7 +240,7 @@ public:
   explicit greater_exp(std::unique_ptr<exp_ast> &&lhs,
                        std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
 
   exp_ast const &get_lhs() const { return *m_lhs; }
@@ -257,7 +257,7 @@ public:
                           std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
 
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
@@ -273,7 +273,7 @@ public:
                   std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
 
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
@@ -288,7 +288,7 @@ public:
   explicit not_eq_exp(std::unique_ptr<exp_ast> &&lhs,
                       std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
 
   exp_ast const &get_lhs() const { return *m_lhs; }
@@ -304,7 +304,7 @@ public:
   explicit bitwise_and_exp(std::unique_ptr<exp_ast> &&lhs,
                            std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
 
   exp_ast const &get_lhs() const { return *m_lhs; }
@@ -320,7 +320,7 @@ public:
   explicit bitwise_xor_exp(std::unique_ptr<exp_ast> &&lhs,
                            std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
 
   exp_ast const &get_lhs() const { return *m_lhs; }
@@ -337,7 +337,7 @@ public:
                           std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
 
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
@@ -353,7 +353,7 @@ public:
                            std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
 
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
@@ -369,7 +369,7 @@ public:
                           std::unique_ptr<exp_ast> &&rhs)
       : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {}
 
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
@@ -388,7 +388,7 @@ public:
   std::vector<std::unique_ptr<exp_ast>> const &get_args() const {
     return m_args;
   }
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
 private:
   std::unique_ptr<exp_ast> m_function;
@@ -400,7 +400,7 @@ public:
   dot_exp(std::unique_ptr<exp_ast> &&expr, std::string_view id_expr)
     : m_expr(std::move(expr)), m_id_expr(id_expr){}
 
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
 private:
   std::unique_ptr<exp_ast> m_expr;
@@ -412,7 +412,7 @@ public:
   arrow_exp(std::unique_ptr<exp_ast> &&expr, std::string_view id_expr)
     : m_expr(std::move(expr)), m_id_expr(id_expr){}
 
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
 private:
   std::unique_ptr<exp_ast> m_expr;
@@ -423,7 +423,7 @@ class logical_not_exp final : public exp_ast {
 public:
   explicit logical_not_exp(std::unique_ptr<exp_ast> &&argument)
       : m_argument(std::move(argument)) {}
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_arg() const { return *m_argument; }
 
@@ -435,7 +435,7 @@ class bitwise_not_exp final : public exp_ast {
 public:
   explicit bitwise_not_exp(std::unique_ptr<exp_ast> &&argument)
       : m_argument(std::move(argument)) {}
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_arg() const { return *m_argument; }
 
@@ -447,7 +447,7 @@ class indirection_exp final : public exp_ast {
 public:
   explicit indirection_exp(std::unique_ptr<exp_ast> &&argument)
       : m_argument(std::move(argument)) {}
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_arg() const { return *m_argument; }
 
@@ -459,7 +459,7 @@ class address_of_exp final : public exp_ast {
 public:
   explicit address_of_exp(std::unique_ptr<exp_ast> &&argument)
       : m_argument(std::move(argument)) {}
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_arg() const { return *m_argument; }
 
@@ -472,7 +472,7 @@ public:
   allocation_exp(std::unique_ptr<type_ast> &&type, std::unique_ptr<exp_ast> &&init)
     : m_type(std::move(type)), m_init(std::move(init)){}
 
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
 
 private:
@@ -482,16 +482,17 @@ private:
 
 class deallocation_exp final : public exp_ast {
 public:
-  explicit deallocation_exp(std::unique_ptr<exp_ast> exp);
+  explicit deallocation_exp(std::unique_ptr<exp_ast> &&exp)
+    : m_exp(std::move(exp)) {}
 
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_arg() const { return *m_exp; }
 private:
   std::unique_ptr<exp_ast> m_exp;
 };
 
-class allocation_array_exp final : public exp_ast {
+/* class allocation_array_exp final : public exp_ast {
 // maybe not used
 };
 
@@ -501,19 +502,19 @@ public:
 
   explicit deallocation_array_exp(std::unique_ptr<exp_ast> exp);
 
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_arg() const { return *m_exp; }
 private:
   std::unique_ptr<exp_ast> m_exp;
-};
+}; */
 
 class left_shift_exp final : public exp_ast {
 public:
   left_shift_exp(std::unique_ptr<exp_ast> &&lhs, std::unique_ptr<exp_ast> &&rhs)
     : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)){}
 
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
@@ -527,7 +528,7 @@ public:
   right_shift_exp(std::unique_ptr<exp_ast> &&lhs, std::unique_ptr<exp_ast> &&rhs)
     : m_lhs(std::move(lhs)), m_rhs(std::move(rhs)){}
 
-  virtual std::unique_ptr<build_variable const>
+  virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }

@@ -1,14 +1,11 @@
 #include "type.h"
 #include "../ast/type.h"
 #include "build.h"
-#include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Type.h"
-#include <cstddef>
-#include <functional>
 #include <iostream>
 #include <memory>
-#include <numeric>
 #include <string>
+#include <numeric>
 
 using namespace std::literals;
 
@@ -17,12 +14,16 @@ llvm::Type *get_llvm_type(std::unique_ptr<build_type> const &type) {
   return type->get_llvm_type();
 }
 
+build_type::~build_type(){}
 bool build_type::is_integral() const { return false; }
 bool build_type::is_signed() const { return false; }
 bool build_type::is_unsigned() const { return false; }
+bool build_type::is_floating_point() const { return false; }
+bool build_type::is_decimal_floating_pointer() const { return false; }
 std::string const build_type::decorated_name() const { return ""s; }
 bool build_type::is_const() const { return m_is_const; }
 bool build_type::is_volatile() const { return m_is_volatile; }
+bool build_type::is_character() const { return false; }
 
 void primary_type::set_mutable() {
   if (!is_const()) {
@@ -80,7 +81,7 @@ std::string const i64_type_t::decorated_name() const { return "_i64"s; }
 std::unique_ptr<build_type> i64_type_t::clone() const {
   return std::unique_ptr<i64_type_t>(new i64_type_t(*this));
 }
-
+/* 
 llvm::Type *i128_type_t::get_llvm_type() const {
   return Builder->getInt128Ty();
 }
@@ -88,7 +89,7 @@ std::string const i128_type_t::decorated_name() const { return "_i128"s; }
 std::unique_ptr<build_type> i128_type_t::clone() const {
   return std::unique_ptr<i128_type_t>(new i128_type_t(*this));
 }
-
+ */
 llvm::Type *u8_type_t::get_llvm_type() const { return Builder->getInt8Ty(); }
 std::string const u8_type_t::decorated_name() const { return "_u8"s; }
 std::unique_ptr<build_type> u8_type_t::clone() const {
@@ -112,13 +113,17 @@ std::string const u64_type_t::decorated_name() const { return "_u64"s; }
 std::unique_ptr<build_type> u64_type_t::clone() const {
   return std::unique_ptr<u64_type_t>(new u64_type_t(*this));
 }
-
+/* 
 llvm::Type *u128_type_t::get_llvm_type() const {
   return Builder->getInt128Ty();
 }
 std::string const u128_type_t::decorated_name() const { return "_u128"s; }
 std::unique_ptr<build_type> u128_type_t::clone() const {
   return std::unique_ptr<u128_type_t>(new u128_type_t(*this));
+} */
+
+bool floating_pointer_type::is_floating_point() const {
+  return true;
 }
 
 llvm::Type *f16_type_t::get_llvm_type() const { return Builder->getHalfTy(); }
@@ -147,6 +152,10 @@ std::unique_ptr<build_type> f128_type_t::clone() const {
   return std::unique_ptr<f128_type_t>(new f128_type_t(*this));
 }
 
+bool decimal_floating_pointer_type::is_decimal_floating_pointer() const {
+  return true;
+}
+
 llvm::Type *d32_type_t::get_llvm_type() const { return Builder->getFloatTy();}
 std::string const d32_type_t::decorated_name() const { return "_d32"s; }
 std::unique_ptr<build_type> d32_type_t::clone() const {
@@ -163,6 +172,10 @@ llvm::Type *d128_type_t::get_llvm_type() const {}
 std::string const d128_type_t::decorated_name() const { return "_d128"s; }
 std::unique_ptr<build_type> d128_type_t::clone() const {
   return std::unique_ptr<d128_type_t>(new d128_type_t{*this});
+}
+
+bool character_type::is_character() const {
+  return true;
 }
 
 llvm::Type *c8_type_t::get_llvm_type() const { return Builder->getInt8Ty(); }
@@ -219,6 +232,10 @@ void multi_array_type::set_volatile() {
   std::cerr << "array type can't set volatile.\n";
 }
 
+std::unique_ptr<build_type> multi_array_type::clone() const {
+  return std::make_unique<multi_array_type>(m_element_type->clone(), m_size);
+}
+
 pointer_type::pointer_type(std::unique_ptr<build_type> &&element_type)
     : m_element_type(std::move(element_type)) {}
 llvm::Type *pointer_type::get_llvm_type() const {
@@ -241,6 +258,9 @@ void pointer_type::set_volatile() {
     m_is_volatile = true;
   }
 }
+std::unique_ptr<build_type> pointer_type::clone() const {
+  return std::make_unique<pointer_type>(m_element_type->clone());
+}
 
 reference_type::reference_type(std::unique_ptr<build_type> &&element_type)
     : m_element_type(std::move(element_type)) {}
@@ -255,6 +275,9 @@ llvm::Type *reference_type::get_llvm_type() const {
 }
 std::string const reference_type::decorated_name() const {
   return "_ref"s + m_element_type->decorated_name();
+}
+std::unique_ptr<build_type> reference_type::clone() const {
+  return std::make_unique<reference_type>(m_element_type->clone());
 }
 
 std::unique_ptr<build_type>
@@ -273,7 +296,7 @@ build_mut_type(base_build &father, mut_ast const &ast) {
   return element;
 }
 std::unique_ptr<build_type>
-build_volatile_type(base_build &father, reference_ast const &ast) {
+build_volatile_type(base_build &father, volatile_ast const &ast) {
   auto element = type_build(father, *ast.get_element_type());
   element->set_volatile();
   return element;

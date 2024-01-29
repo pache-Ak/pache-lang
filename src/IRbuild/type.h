@@ -1,7 +1,9 @@
 #ifndef IR_TYPE_H
 #define IR_TYPE_H
 
+#include <cstdint>
 #include "../ast/type.h"
+#include "build.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Type.h"
 #include <cstddef>
@@ -115,6 +117,7 @@ protected:
 
 class i8_type_t final : public signed_type {
 public:
+  using c_type =std::int8_t;
   virtual llvm::Type *get_llvm_type() const override;
   virtual std::string const decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
@@ -122,6 +125,7 @@ public:
 
 class i16_type_t final : public signed_type {
 public:
+  using c_type = std::int16_t;
   virtual llvm::Type *get_llvm_type() const override;
   virtual std::string const decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
@@ -129,6 +133,7 @@ public:
 
 class i32_type_t final : public signed_type {
 public:
+  using c_type = std::int32_t;
   virtual llvm::Type *get_llvm_type() const override;
   virtual std::string const decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
@@ -136,20 +141,23 @@ public:
 
 class i64_type_t final : public signed_type {
 public:
+  using c_type = std::int64_t;
   virtual llvm::Type *get_llvm_type() const override;
   virtual std::string const decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
 };
 
-class i128_type_t final : public signed_type {
-public:
-  virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
-  virtual std::unique_ptr<build_type> clone() const override;
-};
+// class i128_type_t final : public signed_type {
+// public:
+//   using c_type = std::int128_t;
+//   virtual llvm::Type *get_llvm_type() const override;
+//   virtual std::string const decorated_name() const override;
+//   virtual std::unique_ptr<build_type> clone() const override;
+// };
 
 class u8_type_t final : public unsigned_type {
 public:
+  using c_type = std::uint8_t;
   virtual llvm::Type *get_llvm_type() const override;
   virtual std::string const decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
@@ -157,6 +165,7 @@ public:
 
 class u16_type_t final : public unsigned_type {
 public:
+  using c_type = std::uint16_t;
   virtual llvm::Type *get_llvm_type() const override;
   virtual std::string const decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
@@ -164,6 +173,7 @@ public:
 
 class u32_type_t final : public unsigned_type {
 public:
+  using c_type = std::uint32_t;
   virtual llvm::Type *get_llvm_type() const override;
   virtual std::string const decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
@@ -171,17 +181,20 @@ public:
 
 class u64_type_t final : public unsigned_type {
 public:
+  using c_type = std::uint64_t;
   virtual llvm::Type *get_llvm_type() const override;
   virtual std::string const decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
 };
 
-class u128_type_t final : public primary_type {
-public:
-  virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
-  virtual std::unique_ptr<build_type> clone() const override;
-};
+
+// class u128_type_t final : public primary_type {
+// public:
+//   using c_type = std::uint_128_t;
+//   virtual llvm::Type *get_llvm_type() const override;
+//   virtual std::string const decorated_name() const override;
+//   virtual std::unique_ptr<build_type> clone() const override;
+// };
 } // namespace integral
 
 inline namespace floating_pointer {
@@ -272,7 +285,7 @@ public:
 inline namespace character {
 class character_type : public primary_type {
 public:
-  virtual bool is_character() const override { return true; }
+  virtual bool is_character() const override;
 
 protected:
   character_type(character_type const &other) = default;

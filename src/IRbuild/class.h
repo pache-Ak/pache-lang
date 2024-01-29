@@ -33,7 +33,7 @@ public:
   llvm::StructType *get_IRtype() const { return m_type; }
   virtual std::unique_ptr<build_variable >
   find_var(std::string_view name) const override;
-  // llvm::Value *get_value(llvm::Value *class_value) const {}
+  llvm::Value *get_value(llvm::Value *class_value) const {}
   virtual std::unique_ptr<build_type> find_type(std::string_view name) const override;
 
 private:

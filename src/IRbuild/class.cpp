@@ -41,7 +41,7 @@ class_build::class_build(base_build *const father,
   m_type = llvm::StructType::create(vars_type, ast->get_name());
 
   for (auto &func : ast->get_func_def()) {
-    m_functions.emplace(func->get_name(), function_build{this, func});
+   // TODO m_functions.emplace(std::make_pair(  func->get_name(), function_build{this, *func}));
   }
 }
 

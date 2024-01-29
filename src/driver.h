@@ -2,8 +2,8 @@
 #define DRIVER_H
 
 #include <string>
-#include "../build/parser.tab.hh"
-#include "../build/location.hh"
+#include "parser.tab.hh"
+#include "location.hh"
 #include "ast/compunit.h"
 
 namespace pache {
@@ -19,7 +19,7 @@ public:
   void scan_begin ();
   void scan_end ();
      // The token's location used by the scanner.
-  location location; 
+  pache::location location; 
 
   // The name of the file being parsed.
   std::string file_name;

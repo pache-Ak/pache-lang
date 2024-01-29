@@ -31,9 +31,9 @@ public:
 
   virtual std::unique_ptr<build_type> find_type(std::string_view name) const override;
   virtual void insert(std::string &&name,
-                      std::unique_ptr<build_variable> &&value) override;
+                      std::unique_ptr<build_variable> &&value) ;
   virtual void insert(std::string_view name,
-                      std::unique_ptr<build_variable> &&value) override;
+                      std::unique_ptr<build_variable> &&value) ;
   void deallco_all();
   ~block_scope() { deallco_all(); }
   virtual llvm::BasicBlock *get_loop_begin() const override;
@@ -66,8 +66,8 @@ void build_if_else(block_scope &father, if_else_stmt const &ast);
 void build_break(block_scope &father, break_stmt const &ast);
 void build_continue(block_scope &father, continue_stmt const &ast);
 void build_let(block_scope &father, let_stmt const &ast);
-void build_assign(block_scope &father, assign_stmt const &ast);
-void build_exp_stmt(block_scope &father, exp_stmt const &ast);
+void build_assign(base_build &father, assign_stmt const &ast);
+void build_exp_stmt(base_build &father, exp_stmt const &ast);
 } // namespace pache
 
 #endif

@@ -1,11 +1,12 @@
 #include "literal.h"
+#include "build.h"
 #include "llvm/IR/Constants.h"
 #include <cstdint>
 #include <string_view>
 #include <limits>
-#include "build.h"
 
 namespace pache {
+    inline namespace integer {
     int chartoi(char c) {
         switch (c) {
         case '0':
@@ -50,7 +51,7 @@ namespace pache {
         return 0;
         }
     }
-std::intmax_t strvtoint(std::string_view sv, std::intmax_t base) {
+std::intmax_t strvtoint(std::string_view const sv, std::intmax_t base) {
     // sv must in range of base
     intmax_t i{0};
     for (auto c : sv) {
@@ -60,16 +61,56 @@ std::intmax_t strvtoint(std::string_view sv, std::intmax_t base) {
     return i;
 }
 
-
-std::unique_ptr<build_constant_variable> build_i8(std::intmax_t i) {
-    if (i > std::numeric_limits<int8_t>::max()) {
+template <class Integral>
+std::unique_ptr<build_constant_variable> build_integral(std::intmax_t i) {
+    if (i > std::numeric_limits<typename Integral::c_type>::max()) {
         // TODO log error out of range
         return nullptr;
     }
     return std::make_unique<build_constant_variable>(
-        std::make_unique<i8_type_t>(),
-        llvm::ConstantInt::get(Builder->getInt8Ty(), i));
+        std::make_unique<Integral>(),
+        llvm::ConstantInt::get(Integral().get_llvm_type(), i));
+}
+
+std::function<std::unique_ptr<build_variable> (std::intmax_t)>
+  find_integer_literal_operator(base_build &build, std::string_view const suffix) {
+    if (auto it = integer_literal_operators.find(suffix); it != integer_literal_operators.end()) {
+      return it->second;
+    } else {
+      //return build.unqualified_lookup(suffix);
+    }
+  }
+
+
+std::unique_ptr<build_variable>
+build_integer_literal(base_build &build, binary_integer_literal const&ast) {
+    std::intmax_t i{strvtoint(ast.m_literal, 2)};
+    auto f{find_integer_literal_operator(build, ast.m_suffix)};
+    return f(i);
+}
+
+std::unique_ptr<build_variable>
+build_integer_literal(base_build &build, octal_integer_literal const&ast) {
+    std::intmax_t i{strvtoint(ast.m_literal, 8)};
+    auto f{find_integer_literal_operator(build, ast.m_suffix)};
+    return f(i);
 }
 
 
+std::unique_ptr<build_variable>
+build_integer_literal(base_build &build, decimal_integer_literal const&ast) {
+    std::intmax_t i{strvtoint(ast.m_literal, 10)};
+    auto f{find_integer_literal_operator(build, ast.m_suffix)};
+    return f(i);
+}
+
+
+std::unique_ptr<build_variable>
+build_integer_literal(base_build &build, hexadecimal_integer_literal const&ast) {
+    std::intmax_t i{strvtoint(ast.m_literal, 16)};
+    auto f{find_integer_literal_operator(build, ast.m_suffix)};
+    return f(i);
+}
+
+    }
 } // namespace pache

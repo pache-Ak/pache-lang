@@ -5,8 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <istream>
-#include <memory> 
-#include <boost/json/src.hpp>
+#include <memory>
 #include <fstream>
 
 namespace pache {
@@ -19,7 +18,7 @@ file_build::file_build(compunit_ast const *const comp) : base_build(nullptr) {
     for (auto const &dir : comp->get_include_dir()) {
       pcm_in.open(dir / package->get_file_name());
       if (pcm_in.is_open()) {
-        boost::json::error_code ec;
+        
 
 
         break;
@@ -41,7 +40,7 @@ file_build::file_build(compunit_ast const *const comp) : base_build(nullptr) {
 
   for (auto &func_ast : comp->get_funcs_ast()) {
     auto [it, b] = builded_functions.try_emplace(
-        func_ast->get_name(), function_build(this, func_ast));
+        func_ast->get_name(), function_build(this, *func_ast));
     // b is false meaning insert error
     if (!b) {
       std::cerr << "redefine function.\n";
@@ -80,11 +79,5 @@ file_build::find_var(std::string_view name) const {
 std::unique_ptr<file_build> build_file(compunit_ast const *const ast) {
   return std::make_unique<file_build>(ast);
 }
-
-boost::json::value read_json_pcm(std::istream &in, boost::json::error_code &ec) {
-  boost::json::stream_parser p;
-
-}
-
 
 } // namespace pache

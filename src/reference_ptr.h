@@ -16,9 +16,13 @@ class reference_ptr{
   explicit reference_ptr( std::shared_ptr<T>const & p ) noexcept :m_ptr(p.get()){};
 
 
-friend bool operator==(reference_ptr lhs, std::nullptr_t rhs) noexcept;
+friend bool operator==(reference_ptr lhs, std::nullptr_t rhs) noexcept {
+  return lhs.m_ptr == nullptr;
+}
 
-friend bool operator!=(reference_ptr lhs, std::nullptr_t rhs) noexcept;
+friend bool operator!=(reference_ptr lhs, std::nullptr_t rhs) noexcept {
+  return lhs.m_ptr != nullptr;
+}
 
 
 typename std::add_lvalue_reference<T>::type operator*() const
@@ -45,22 +49,10 @@ class reference_ptr<T []>{
 T& operator[]( std::size_t i ) const {
   return m_ptr[i];
 }
-
-friend bool operator==(reference_ptr lhs, std::nullptr_t rhs) noexcept;
-
-friend bool operator!=(reference_ptr lhs, std::nullptr_t rhs) noexcept;
-
 private:
   T *const m_ptr;
 };
-template<class T>
- bool operator==(reference_ptr<T> lhs, std::nullptr_t rhs) noexcept{
-  return lhs.m_ptr == rhs;
-}
-template<class T>
- bool operator!=(reference_ptr<T> lhs, std::nullptr_t rhs) noexcept{
-  return lhs.m_ptr != rhs;
-}
+
 }
 
 #endif

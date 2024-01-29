@@ -1,6 +1,10 @@
 #include "statement.h"
 #include "../IRbuild/statement.h"
 
+namespace pache {
+stmt_ast::~stmt_ast(){}
+}
+
 void pache::block_ast::build(block_scope &father) const {
   block_build(father, *this);
 }

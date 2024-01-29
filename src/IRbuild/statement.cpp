@@ -18,7 +18,7 @@ void statement_build(block_scope &father, stmt_ast const &ast) {
 }
 
 void assign_stmt_build(block_scope &father, assign_stmt const &ast) {
-  if (auto var = father.find_var(ast.get_var().get_name()); var != nullptr) {
+  if (auto var =build_exp(father, ast.get_var()) ; var != nullptr) {
     // TODO log error
     // maybe like this
     // std::cerr << "Unknown variable name.\n";
@@ -155,17 +155,17 @@ void build_loop(block_scope &father, block_ast const &ast) {
   IR::Builder->CreateBr(entryBB);
 }
 
-void build_break(block_scope *const father, break_stmt const &ast) {
+void build_break(block_scope & father, break_stmt const &ast) {
 
-  if (father->get_loop_end() != nullptr) {
-    IR::Builder->CreateBr(father->get_loop_end());
+  if (father.get_loop_end() != nullptr) {
+    IR::Builder->CreateBr(father.get_loop_end());
   } else {
     std::cerr << "break not in loop.\n";
   }
 }
-void build_continue(block_scope *const father, continue_stmt const &ast) {
-  if (father->get_loop_begin() != nullptr) {
-    IR::Builder->CreateBr(father->get_loop_begin());
+void build_continue(block_scope &father, continue_stmt const &ast) {
+  if (father.get_loop_begin() != nullptr) {
+    IR::Builder->CreateBr(father.get_loop_begin());
   } else {
     std::cerr << "break not in loop.\n";
   }
@@ -235,7 +235,7 @@ void build_let(block_scope &father, let_stmt const &ast) {
 
 void build_assign(base_build &father, assign_stmt const &ast) {
   std::unique_ptr<build_variable> const &var =
-      father.find_var(ast.get_var().get_name());
+      build_exp(father, ast.get_var());
   if (var == nullptr) {
     std::cerr << "variable hasn't defined.\n";
   } else {

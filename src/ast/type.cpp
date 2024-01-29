@@ -3,6 +3,8 @@
 #include "../IRbuild/function_type.h"
 
 namespace pache {
+type_ast::~type_ast(){}
+
 func_type_ast::func_type_ast(std::vector<std::unique_ptr<type_ast>> &&args,
                      std::unique_ptr<type_ast> &&return_type)
     : m_args_type(std::move(args)), m_return_type(std::move(return_type)) {}

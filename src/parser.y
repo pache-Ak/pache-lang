@@ -43,16 +43,14 @@
 #include <iostream>
 #include <memory>
 #include <string>
-  #include "../src/ast/ast.h"
-  #include "../src/ast/expression.h"
-  #include "../src/ast/statement.h"
-  #include "../src/ast/compunit.h"
+  #include "ast/ast.h"
+  #include "ast/expression.h"
+  #include "ast/statement.h"
+  #include "ast/compunit.h"
 
-#include "../src/ast/type.h"
-#include "../src/driver.h"
-#include "../src/ast/literal.h"
-
+#include "ast/type.h"
 #include "driver.h"
+#include "ast/literal.h"
 }
 
 %token
@@ -505,11 +503,10 @@ qualified_scope_resolution
   $$ = std::make_unique<root_scope_ast>();
 }
 | IDENTIFIER SCOPE {
-  $$ = std::make_unique<relative_scope_ast>();
-  $$->append($1);
+  $$ = std::make_unique<relative_scope_ast>(std::make_unique<unqualified_scope_ast>(), $1);
 }
 | scope_resolution IDENTIFIER SCOPE {
-  $$->append($2);
+  $$ = std::make_unique<relative_scope_ast>(std::move($1), $2);
 }
 ;
 primary_expression:

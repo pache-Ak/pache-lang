@@ -106,7 +106,7 @@ public:
   explicit func_type_ast(std::vector<std::unique_ptr<type_ast>> &&args,
                      std::unique_ptr<type_ast> &&return_type);
   virtual std::unique_ptr<build_type> build(base_build &father) const override;
-  std::unique_ptr<type_ast> const & get_return_type() const { return m_return_type; }
+  type_ast const & get_return_type() const { return *m_return_type; }
   std::vector<std::unique_ptr<type_ast>> const& get_args_type() const {
     return m_args_type;
   }

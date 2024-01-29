@@ -8,7 +8,6 @@
 #include <memory>
 
 namespace pache {
-class build_type;
 // every value related a type,
 // so vaiable type has a build_type
 // build_type is a polymorphic objects
@@ -31,8 +30,7 @@ protected:
 private:
   std::unique_ptr<build_type const> const m_type;
 };
-
-llvm::Value *get_value(std::unique_ptr<build_variable const> const &var);
+llvm::Value *get_value(std::unique_ptr<build_variable> const &var);
 
 class build_lvalue : public build_variable {};
 

@@ -1,13 +1,19 @@
 #ifndef IR_FUNCTION_TYPE_H
 #define IR_FUNCTION_TYPE_H
 
+#include "build.h"
 #include "type.h"
 #include <memory>
 #include <vector>
 
 namespace pache {
-class function_type : public build_type {
+class function_type final : public build_type {
 public:
+  function_type(const function_type &) = delete;
+  function_type(function_type &&) = default;
+  function_type &operator=(const function_type &) = delete;
+  function_type &operator=(function_type &&) = default;
+  explicit function_type(base_build &build, func_type_ast const &ast);
   explicit function_type(std::unique_ptr<build_type> &&return_type,
                          std::vector<std::unique_ptr<build_type>> &&args_type,
                          llvm::FunctionType *llvm_type);
