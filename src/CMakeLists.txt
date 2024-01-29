@@ -7,9 +7,9 @@ find_package(FLEX)
 BISON_TARGET(MyParser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.tab.cc
             DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser.tab.hh)
 
-FLEX_TARGET(MyScanner lexer.lpp ${CMAKE_CURRENT_BINARY_DIR}/lexer.cpp)
+FLEX_TARGET(MyScanner  lexer.lpp ${PROJECT_BINARY_DIR}/lexer.cpp)
 
-ADD_FLEX_BISON_DEPENDENCY(MyScanner MyParser)
+ADD_FLEX_BISON_DEPENDENCY(MyScanner  MyParser)
 
 find_package(LLVM REQUIRED CONFIG)
 
@@ -31,6 +31,7 @@ include_directories(${LLVM_INCLUDE_DIRS})
 separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 add_definitions(${LLVM_DEFINITIONS_LIST})
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 # Now build our tools
 add_executable(${PROJECT_NAME}
                 main.cpp driver.cpp
@@ -51,6 +52,10 @@ target_include_directories(${PROJECT_NAME} PUBLIC
                            ${PROJECT_BINARY_DIR}
                            ${PROJECT_SOURCE_DIR}/IRbuild
                            )
+
+
+
+
 
 # Find the libraries that correspond to the LLVM components
 # that we wish to use
