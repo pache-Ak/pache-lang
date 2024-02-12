@@ -1,10 +1,18 @@
 #include "build.h"
 #include "type.h"
-#include "literal.h"
 
 namespace pache {
-base_build::~base_build(){}
+inline namespace IR {
+ void InitializeModule() {
+  // Open a new context and module.
+  TheContext = std::make_unique<llvm::LLVMContext>();
+  TheModule =  std::make_unique<llvm::Module>("first modlue", *TheContext);
 
+  // Create a new builder for the module.
+  Builder  = std::make_unique<llvm::IRBuilder<>>(*TheContext);
+}
+}
+base_build::~base_build(){}
 std::unordered_map<std::string_view, std::unique_ptr<build_type>> const
 base_build::prprimary_type{
   []{

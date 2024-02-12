@@ -2,6 +2,7 @@
 #include "function.h"
 #include "function_type.h"
 #include "type.h"
+#include "variable.h"
 #include <array>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
@@ -16,12 +17,14 @@ namespace pache {
 
 inline namespace __operator_unary_plus {
 template<class Arithmetic>
-function_build make_operator_unary_plus() {
+std::unique_ptr<build_variable> make_operator_unary_plus() {
   std::vector<std::unique_ptr<build_type>> args_type;
   args_type.emplace_back(std::make_unique<Arithmetic>());
-  function_type type(
+  std::unique_ptr<build_type>  type_ptr{std::make_unique<function_type>(
       std::make_unique<Arithmetic>(),
-      std::move(args_type));
+      std::move(args_type))};
+
+  function_type &type{static_cast<function_type &>(*type_ptr)};
 
     std::string_view name{name_mangling(type)};
 
@@ -49,7 +52,7 @@ function_build make_operator_unary_plus() {
   Builder->CreateRet(F->getArg(0));
   llvm::verifyFunction(*F);
 
-  return function_build{nullptr, name, std::move(type), F, std::move(var)};
+  return std::make_unique<function_build>( std::move(type_ptr), name, F);
 }
 /* 
 function_build make_operator_unary_plus_i16() {
@@ -314,8 +317,8 @@ function_build make_operator_unary_plus_f128() {
  */
 } // namespace __operator_unary_plus
 
-std::vector<function_build> const  operator_unary_plus = []{
-  std::vector<function_build> val;
+std::vector<std::unique_ptr<build_variable>> const  operator_unary_plus = []{
+  std::vector<std::unique_ptr<build_variable>> val;
   val.emplace_back(make_operator_unary_plus<i8_type_t>());
   val.emplace_back(make_operator_unary_plus<i16_type_t>());
   val.emplace_back(make_operator_unary_plus<i32_type_t>());
@@ -337,12 +340,15 @@ std::vector<function_build> const  operator_unary_plus = []{
 
 inline namespace __operator_unary_minus {
 template<class Arithmetic>
-function_build make_operator_unary_minus() {
+std::unique_ptr<build_variable> make_operator_unary_minus() {
   std::vector<std::unique_ptr<build_type>> args_type;
   args_type.emplace_back(std::make_unique<Arithmetic>());
-  function_type type(
+
+    std::unique_ptr<build_type>  type_ptr{std::make_unique<function_type>(
       std::make_unique<Arithmetic>(),
-      std::move(args_type));
+      std::move(args_type))};
+
+  function_type &type{static_cast<function_type &>(*type_ptr)};
 
     std::string_view name{name_mangling(type)};
   llvm::Function *F = llvm::Function::Create(
@@ -371,7 +377,7 @@ function_build make_operator_unary_minus() {
         F->getArg(0), ""));
   llvm::verifyFunction(*F);
 
-  return function_build{nullptr, name, std::move(type), F, std::move(var)};
+  return std::make_unique<function_build>( std::move(type_ptr), name, F);
 }
 /* 
 function_build make_operator_unary_minus_i16() {
@@ -547,8 +553,8 @@ function_build make_operator_unary_minus_f128() {
  */
 } // namespace __operator_unary_minus
 
-std::vector<function_build> const operator_unary_minus = []{
-  std::vector<function_build> val;
+std::vector<std::unique_ptr<build_variable>> const operator_unary_minus = []{
+  std::vector<std::unique_ptr<build_variable>> val;
   val.emplace_back(make_operator_unary_minus<i8_type_t>());
   val.emplace_back(make_operator_unary_minus<i16_type_t>());
   val.emplace_back(make_operator_unary_minus<i32_type_t>());

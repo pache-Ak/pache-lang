@@ -80,8 +80,8 @@ public:
   explicit assign_stmt(std::unique_ptr<exp_ast> &&var,
                        std::unique_ptr<exp_ast> &&val)
       : m_var(std::move(var)), m_val(std::move(val)) {
-    m_var->set_father(get_father());
-    m_val->set_father(get_father());
+   // m_var->set_father(get_father());
+  //  m_val->set_father(get_father());
   }
 
   exp_ast const &get_var() const { return *m_var; }
@@ -99,10 +99,10 @@ public:
                     std::unique_ptr<exp_ast> init)
       : type(std::move(type_)), var_name(std::move(name)),
         m_init(std::move(init)) {
-    set_father(get_father());
-    if (m_init != nullptr) {
-      m_init->set_father(get_father());
-    }
+   // set_father(get_father());
+   // if (m_init != nullptr) {
+   // //  m_init->set_father(get_father());
+//}
   }
 
   virtual void build(block_scope &father) const override;
@@ -148,8 +148,8 @@ public:
   explicit if_stmt(std::unique_ptr<exp_ast> &&exp,
                    std::unique_ptr<block_ast> &&then)
       : m_condition(std::move(exp)), m_then_block(std::move(then)) {
-    m_condition->set_father(get_father());
-    m_then_block->set_father(get_father());
+   // m_condition->set_father(get_father());
+   // m_then_block->set_father(get_father());
   }
 
   virtual void build(block_scope &father) const override;
@@ -168,11 +168,11 @@ public:
                         std::unique_ptr<stmt_ast> &&elses)
       : m_condition(std::move(exp)), m_then_block(std::move(then)),
         m_else_block(std::move(elses)) {
-    m_condition->set_father(get_father());
-    m_then_block->set_father(get_father());
-    if (m_else_block != nullptr) {
-      m_else_block->set_father(get_father());
-    }
+   // m_condition->set_father(get_father());
+   // m_then_block->set_father(get_father());
+   // if (m_else_block != nullptr) {
+    //  m_else_block->set_father(get_father());
+  //  }
   }
 
   virtual void build(block_scope &father) const override;

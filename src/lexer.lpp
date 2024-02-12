@@ -1,6 +1,6 @@
 %{ /* -*- C++ -*- */
-#include <cstdlib>
-#include <string>
+//#include <cstdlib>
+//#include <string>
 
 // 因为 Flex 会用到 Bison 中关于 token 的定义
 // 所以需要 include Bison 生成的头文件
@@ -48,7 +48,7 @@ C8                   "c8"
 C16                  "c16"
 C32                  "c32"
 
-CONST                "const"
+MUTABLE                "mut"
 VOLATILE             "volatile"
 
 MAIN                 "main"
@@ -104,8 +104,8 @@ operand_start         [(A-Za-z0-9_\"]
 
 
 
-BINARY_DIGIT      [01]
 ZERO              0
+BINARY_DIGIT      [01]
 OCTAL_DIGIT       [0-7]
 NONZERO_DIGIT     [1-9]
 DIGIT             [0-9]
@@ -174,7 +174,7 @@ UPPERCASE_HEXADECIMAL_PREFIX 0X
 {C16}           { return pache::parser::make_C16(loc); }
 {C32}           { return pache::parser::make_C32(loc); }
 
-{CONST}         { return pache::parser::make_CONST(loc);}
+{MUTABLE}         { return pache::parser::make_MUTABLE(loc);}
 {VOLATILE}         { return pache::parser::make_VOLATILE(loc);}
 "return"        { return pache::parser::make_RETURN(loc); }
 "func"          { return pache::parser::make_FUNC(loc); }
@@ -212,8 +212,8 @@ UPPERCASE_HEXADECIMAL_PREFIX 0X
 {SEMICOLON}           { return pache::parser::make_SEMICOLON(loc); }
 {IDENTIFIER}   { return pache::parser::make_IDENTIFIER(yytext, loc);}
 
-{BINARY_DIGIT} {return pache::parser::make_BINARY_DIGIT(yytext, loc); }
 {ZERO} {return pache::parser::make_ZERO(loc); }
+{BINARY_DIGIT} {return pache::parser::make_BINARY_DIGIT(yytext, loc); }
 {OCTAL_DIGIT} {return pache::parser::make_OCTAL_DIGIT(yytext, loc); }
 {NONZERO_DIGIT} {return pache::parser::make_NONZERO_DIGIT(yytext, loc); }
 {DIGIT} {return pache::parser::make_DIGIT(yytext, loc); }

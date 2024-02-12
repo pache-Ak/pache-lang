@@ -6,7 +6,7 @@
 #include "scope.h"
 #include "type.h"
 #include <memory>
-#include <string>
+//#include <string>
 #include <string_view>
 #include <utility>
 
@@ -22,6 +22,8 @@ public:
 protected:
   exp_ast(exp_ast const &other) = default;
   exp_ast &operator=(exp_ast const &other) = default;
+  exp_ast(exp_ast &&) = default;
+  exp_ast &operator=(exp_ast &&) = default;
 };
 /* enum class Operator {
   Add,
@@ -84,6 +86,9 @@ public:
   std::vector<std::unique_ptr<exp_ast>> const &get_args() const {
     return m_args;
   }
+  exp_ast const &get_func() const {
+    return *m_exp;
+  }
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
 
@@ -95,15 +100,18 @@ private:
 
 class var_exp final : public exp_ast {
 public:
-  explicit var_exp(std::unique_ptr<scope_ast> &&scope, std::string &&name) :m_scope(std::move(scope)), m_name(std::move(name)) {}
+  explicit var_exp(named_ast &&ast) : m_iden(std::move(ast)) {}
+  explicit var_exp(std::unique_ptr<scope_ast> &&scope, std::string_view name)
+    :m_iden(std::move(scope), name) {}
 
-  std::string const &get_name() const { return m_name; }
+  std::string_view get_name() const {
+    return m_iden.get_name();
+  }
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
 
 private:
-  std::unique_ptr<scope_ast> m_scope;
-  std::string m_name;
+named_ast m_iden;
 };
 
 class binary_mul_exp final : public exp_ast {
@@ -388,6 +396,7 @@ public:
   std::vector<std::unique_ptr<exp_ast>> const &get_args() const {
     return m_args;
   }
+  exp_ast const&get_arr() const { return *m_function;}
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
 private:
@@ -402,6 +411,8 @@ public:
 
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
+  exp_ast const &get_exp() const { return *m_expr;}
+  std::string_view get_id() const { return m_id_expr;}
 private:
   std::unique_ptr<exp_ast> m_expr;
   std::string_view m_id_expr;

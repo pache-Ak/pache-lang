@@ -8,7 +8,7 @@
 #include "statement.h"
 #include <cstddef>
 #include <memory>
-#include <string>
+//#include <string>
 #include <string_view>
 #include <vector>
 #include <filesystem>
@@ -18,7 +18,7 @@ class compunit_ast final : public base_ast {
 public:
   explicit compunit_ast() {}
   void insert_class_def(std::unique_ptr<class_ast> &&p) {
-    p->set_father(this->get_father());
+  //  p->set_father(this->get_father());
     class_def.push_back(std::move(p));
   }
 
@@ -51,7 +51,7 @@ private:
   std::vector<std::unique_ptr<let_stmt>> m_var_table;
   std::vector<std::unique_ptr<class_ast>> class_def;
   std::vector<std::unique_ptr<func_ast>> m_func_asts;
-  std::string m_file_name;
+  std::string_view m_file_name;
   std::vector<std::string> m_lines;
 
   static thread_local std::vector<std::filesystem::path> m_include_dir;

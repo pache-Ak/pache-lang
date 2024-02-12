@@ -14,10 +14,14 @@ namespace pache {
 // so type is pointer
 class build_variable {
 public:
+  build_variable(const build_variable &) = delete;
+  build_variable(build_variable &&) = delete;
+  build_variable &operator=(const build_variable &) = delete;
+  build_variable &operator=(build_variable &&) = delete;
   explicit build_variable(std::unique_ptr<build_type const> &&type)
       : m_type(std::move(type)) {}
 
-  std::unique_ptr<build_type const> get_type() const { return m_type->clone(); }
+  build_type const & get_type() const { return *m_type; }
   virtual llvm::Value *get_value() const = 0;
   virtual ~build_variable() = 0;
   virtual std::unique_ptr<build_variable> clone() const = 0;
@@ -27,8 +31,8 @@ protected:
   //build_variable(build_variable const &other) = default;
   //build_variable &operator=(build_variable const &other) = default;
 
-private:
   std::unique_ptr<build_type const> const m_type;
+private:
 };
 llvm::Value *get_value(std::unique_ptr<build_variable> const &var);
 

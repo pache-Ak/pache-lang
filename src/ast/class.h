@@ -5,6 +5,7 @@
 #include "function.h"
 #include "statement.h"
 #include <memory>
+#include <string_view>
 #include <vector>
 
 namespace pache {
@@ -19,7 +20,7 @@ public:
   };
   explicit class_ast(std::string &&name, class_body &&body);
 
-  std::string const get_name() const { return m_name; }
+  std::string_view const get_name() const { return m_name; }
 
   std::vector<std::unique_ptr<let_stmt>> const &get_var_def() const {
     return m_body.var_def;
@@ -32,7 +33,7 @@ public:
   }
 
 private:
-  std::string const m_name;
+  std::string_view const m_name;
   class_body m_body;
 };
 

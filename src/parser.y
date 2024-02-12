@@ -124,13 +124,13 @@
   COMMA                 // ,
   SEMICOLON             // ;
  NEW_LINE              // \n
-  CONST                 // const
+  MUTABLE                 // mut
   VOLATILE              // volatile
   SINGLE_QUOTE          // '
   ALLOCATION            // new
   DEALLOCATION          // delete
-  ALLOCATION_ARRAY      // new[]
-  DEALLOCATION_ARRAY    // delete[]
+//  ALLOCATION_ARRAY      // new[]
+//  DEALLOCATION_ARRAY    // delete[]
   UNARY_STAR "unary *"
   PREFIX_STAR "prefix *"
   POSTFIX_STAR "postfix *"
@@ -147,7 +147,7 @@
 %token EOF 0;
 // 非终结符的类型定义
 %type <std::unique_ptr<pache::compunit_ast>>   CompUnit
-%type <std::unique_ptr<pache::type_ast>> type arr_ast const_ast volatile_ast multi_array_ast primary_type
+%type <std::unique_ptr<pache::type_ast>> type mut_ast volatile_ast multi_array_ast primary_type
 %type <std::unique_ptr<pache::exp_ast>>    primary_expression unary_expression call_expression
 %type <std::unique_ptr<pache::block_ast>> block /*optional_else*/  loop_stmt
 %type <std::unique_ptr<pache::let_stmt>> let_stmt
@@ -268,11 +268,11 @@ class_def:
     $$ = std::make_unique<pache::class_ast>(std::move($2), std::move($4));
   };
 // 同上, 不再解释
-const_ast:
-  primary_type CONST {
+mut_ast:
+  primary_type MUTABLE {
     $$ = std::move($1);
   }
-| const_ast CONST {
+| mut_ast MUTABLE {
   $$ = std::move($1);
   // TODO log error
 };
@@ -287,7 +287,7 @@ volatile_ast:
 };
 
 type :
-const_ast {
+mut_ast {
   $$ = std::move($1);
 } |
 volatile_ast {
@@ -311,12 +311,12 @@ scope_resolution IDENTIFIER {
 
 
 
-arr_ast:
+/* arr_ast:
   type LEFT_SQUARE_BRACKET INTEGER RIGHT_SQUARE_BRACKET {
     $$ = std::make_unique<arr_ast_t>(std::move($1), $3);
 
   }
-;
+; */
 size_list:
   INTEGER COMMA {
     $$ = std::vector<std::size_t>{};
@@ -347,9 +347,9 @@ statement_list:
 block
   : LEFT_CURLY_BRACE statement_list RIGHT_CURLY_BRACE {
     $$ = std::make_unique<pache::block_ast>(std::move($2));
-    for (auto & ast : $2) {
-      ast->set_father($$->get_father());
-    }
+  //  for (auto & ast : $2) {
+   //   ast->set_father($$->get_father());
+   // }
   }
 
   ;

@@ -4,14 +4,15 @@
 #include <cstdint>
 #include "../ast/type.h"
 #include "build.h"
-#include "llvm/IR/DerivedTypes.h"
+//#include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Type.h"
 #include <cstddef>
 #include <memory>
-#include <type_traits>
-#include <utility>
+#include <string_view>
+//#include <type_traits>
+//#include <utility>
 #include <vector>
-#include <algorithm>
+//#include <algorithm>
 
 namespace pache {
 llvm::Type *get_llvm_type(std::unique_ptr<build_type> const &type);
@@ -29,14 +30,18 @@ public:
   virtual bool is_floating_point() const;
   virtual bool is_decimal_floating_pointer() const;
   virtual bool is_character() const;
-  virtual std::string const decorated_name() const;
+  virtual std::string_view decorated_name() const;
   virtual llvm::Type *get_llvm_type() const = 0;
   virtual void set_mutable() = 0;
   virtual void set_volatile() = 0;
   virtual bool is_const() const;
   virtual bool is_volatile() const;
   virtual ~build_type() = 0;
-  virtual bool is_reference() { return false; }
+  virtual bool is_reference() const { return false; }
+  virtual bool is_array() const {return false;}
+  virtual bool is_struct() const { return false;}
+  virtual bool is_function() const { return false;}
+  virtual bool is_pointer() const { return false;}
   explicit build_type() : m_is_const(true), m_is_volatile(false) {}
 
   virtual std::unique_ptr<build_type> clone() const = 0;
@@ -49,6 +54,9 @@ protected:
   bool m_is_const;
   bool m_is_volatile;
 };
+
+bool operator==(build_type const &lhs, build_type const &rhs);
+bool operator!=(build_type const &lhs, build_type const &rhs);
 
 std::unique_ptr<build_type> type_build(base_build &father, type_ast const &ast);
 
@@ -68,22 +76,24 @@ protected:
 
 class void_type_t final : public primary_type {
 public:
+  void_type_t()=default;
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
+  virtual ~void_type_t() =default;
 };
 
 class bool_type_t final : public primary_type {
 public:
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
 };
 
 class size_type_t final : public primary_type {
 public:
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
 };
 
@@ -119,7 +129,7 @@ class i8_type_t final : public signed_type {
 public:
   using c_type =std::int8_t;
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
 };
 
@@ -127,7 +137,7 @@ class i16_type_t final : public signed_type {
 public:
   using c_type = std::int16_t;
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
 };
 
@@ -135,7 +145,7 @@ class i32_type_t final : public signed_type {
 public:
   using c_type = std::int32_t;
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
 };
 
@@ -143,7 +153,7 @@ class i64_type_t final : public signed_type {
 public:
   using c_type = std::int64_t;
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
 };
 
@@ -151,7 +161,7 @@ public:
 // public:
 //   using c_type = std::int128_t;
 //   virtual llvm::Type *get_llvm_type() const override;
-//   virtual std::string const decorated_name() const override;
+//   virtual std::string_view decorated_name() const override;
 //   virtual std::unique_ptr<build_type> clone() const override;
 // };
 
@@ -159,7 +169,7 @@ class u8_type_t final : public unsigned_type {
 public:
   using c_type = std::uint8_t;
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
 };
 
@@ -167,7 +177,7 @@ class u16_type_t final : public unsigned_type {
 public:
   using c_type = std::uint16_t;
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
 };
 
@@ -175,7 +185,7 @@ class u32_type_t final : public unsigned_type {
 public:
   using c_type = std::uint32_t;
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
 };
 
@@ -183,7 +193,7 @@ class u64_type_t final : public unsigned_type {
 public:
   using c_type = std::uint64_t;
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
 };
 
@@ -192,7 +202,7 @@ public:
 // public:
 //   using c_type = std::uint_128_t;
 //   virtual llvm::Type *get_llvm_type() const override;
-//   virtual std::string const decorated_name() const override;
+//   virtual std::string_view decorated_name() const override;
 //   virtual std::unique_ptr<build_type> clone() const override;
 // };
 } // namespace integral
@@ -212,7 +222,7 @@ protected:
 class f16_type_t final : public floating_pointer_type {
 public:
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
 };
 
@@ -222,14 +232,14 @@ public:
 class f32_type_t final : public floating_pointer_type {
 public:
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
 };
 
 class f64_type_t final : public floating_pointer_type {
 public:
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
 };
 
@@ -239,7 +249,7 @@ public:
 class f128_type_t final : public floating_pointer_type {
 public:
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
 };
 
@@ -258,26 +268,26 @@ protected:
   operator=(decimal_floating_pointer_type const &other) = default;
 };
 
-class d32_type_t final : public decimal_floating_pointer_type {
-public:
-  virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
-  virtual std::unique_ptr<build_type> clone() const override;
-};
+// class d32_type_t final : public decimal_floating_pointer_type {
+// public:
+//   virtual llvm::Type *get_llvm_type() const override;
+//   virtual std::string_view decorated_name() const override;
+//   virtual std::unique_ptr<build_type> clone() const override;
+// };
 
-class d64_type_t final : public decimal_floating_pointer_type {
-public:
-  virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
-  virtual std::unique_ptr<build_type> clone() const override;
-};
+// class d64_type_t final : public decimal_floating_pointer_type {
+// public:
+//   virtual llvm::Type *get_llvm_type() const override;
+//   virtual std::string_view decorated_name() const override;
+//   virtual std::unique_ptr<build_type> clone() const override;
+// };
 
-class d128_type_t final : public decimal_floating_pointer_type {
-public:
-  virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
-  virtual std::unique_ptr<build_type> clone() const override;
-};
+// class d128_type_t final : public decimal_floating_pointer_type {
+// public:
+//   virtual llvm::Type *get_llvm_type() const override;
+//   virtual std::string_view decorated_name() const override;
+//   virtual std::unique_ptr<build_type> clone() const override;
+// };
 } // namespace decimal_floating_pointer
 
 } // namespace floating_pointer
@@ -295,20 +305,20 @@ protected:
 class c8_type_t final : public character_type {
 public:
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
 };
 
 class c16_type_t final : public character_type {
 public:
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
 };
 class c32_type_t final : public character_type {
 public:
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual std::unique_ptr<build_type> clone() const override;
 };
 } // namespace character
@@ -317,23 +327,28 @@ public:
 class arr_type final : public build_type {
 public:
   explicit arr_type(std::unique_ptr<build_type> &&element_type,
-                    const std::size_t size)
-      : m_element_type(std::move(element_type)), m_size(size) {}
+                            std::vector<std::size_t> &&size)
+      : m_element_type(std::move(element_type)), m_size(std::move(size)) {}
+  explicit arr_type(std::unique_ptr<build_type> &&element_type,
+                            std::vector<std::size_t> const&size)
+      : m_element_type(std::move(element_type)), m_size(size) {}    
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual void set_mutable() override;
   virtual void set_volatile() override;
   virtual bool is_const() const override { return m_element_type->is_const(); }
   virtual bool is_volatile() const override {
     return m_element_type->is_volatile();
   }
+  build_type const &get_element_type() const { return *m_element_type;}
   virtual std::unique_ptr<build_type> clone() const override;
-
+  virtual bool is_array() const override { return true;}
 private:
   std::unique_ptr<build_type> m_element_type;
-  const std::size_t m_size;
+public:
+  std::vector<std::size_t> const m_size;
 };
-
+/* 
 class multi_array_type final : public build_type {
 public:
   explicit multi_array_type(std::unique_ptr<build_type> &&element_type,
@@ -343,7 +358,7 @@ public:
                             std::vector<std::size_t> const&size)
       : m_element_type(std::move(element_type)), m_size(size) {}    
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual void set_mutable() override;
   virtual void set_volatile() override;
   virtual bool is_const() const override { return m_element_type->is_const(); }
@@ -356,12 +371,12 @@ private:
   std::unique_ptr<build_type> m_element_type;
   std::vector<std::size_t> const m_size;
 };
-
+ */
 class pointer_type final : public build_type {
 public:
   explicit pointer_type(std::unique_ptr<build_type> &&element_type);
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
+  virtual std::string_view decorated_name() const override;
   virtual void set_mutable() override;
   virtual void set_volatile() override;
   virtual bool is_const() const override { return m_element_type->is_const(); }
@@ -369,7 +384,10 @@ public:
     return m_element_type->is_volatile();
   }
   virtual std::unique_ptr<build_type> clone() const override;
-
+  build_type &get_element_type() const{
+    return *m_element_type;
+  }
+  virtual bool is_pointer() const override{ return true;}
 private:
   std::unique_ptr<build_type> m_element_type;
 };
@@ -384,8 +402,8 @@ public:
     return m_element_type->is_volatile();
   }
   virtual llvm::Type *get_llvm_type() const override;
-  virtual std::string const decorated_name() const override;
-  virtual bool is_reference() override final { return true; }
+  virtual std::string_view decorated_name() const override;
+  virtual bool is_reference() const override final { return true; }
   virtual std::unique_ptr<build_type> clone() const override;
 
 private:
@@ -408,11 +426,11 @@ build_reference_type(base_build &father, reference_ast const &ast);
 std::unique_ptr<arr_type>
 build_arr_type(base_build &father, arr_ast const &ast);
 
-std::unique_ptr<multi_array_type>
+ std::unique_ptr<arr_type>
 build_multi_array_type(base_build &father, multi_array_ast const &ast);
 
 std::unique_ptr<build_type>
-build_named_type(base_build &father, named_ast const &ast);
+build_named_type(base_build &father, named_type_ast const &ast);
 } // namespace pache
 
 #endif

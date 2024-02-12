@@ -1,12 +1,15 @@
 #include "comp_unit.h"
 #include "IRbuild/class.h"
 #include "IRbuild/variable.h"
+#include "build.h"
 #include "function.h"
 #include <fstream>
 #include <iostream>
 #include <istream>
 #include <memory>
 #include <fstream>
+#include <unordered_set>
+#include "../reference_ptr.h"
 
 namespace pache {
 file_build::file_build(compunit_ast const *const comp) : base_build(nullptr) {
@@ -31,7 +34,7 @@ file_build::file_build(compunit_ast const *const comp) : base_build(nullptr) {
 
   for (auto &class_ast : comp->get_class()) {
     auto [it, b] = builded_classes.try_emplace(class_ast->get_name(),
-                                               class_build(this, class_ast));
+                                               class_build(this, *class_ast));
     // b is false meaning insert error
     if (!b) {
       std::cerr << "redefine class.\n";
@@ -39,10 +42,11 @@ file_build::file_build(compunit_ast const *const comp) : base_build(nullptr) {
   }
 
   for (auto &func_ast : comp->get_funcs_ast()) {
-    auto [it, b] = builded_functions.try_emplace(
-        func_ast->get_name(), function_build(this, *func_ast));
+
+    auto it= builded_functions.emplace(
+        func_ast->get_name(), std::make_unique<function_build>(this, *func_ast));
     // b is false meaning insert error
-    if (!b) {
+    if (0) { // TODO
       std::cerr << "redefine function.\n";
     }
   }
@@ -59,25 +63,42 @@ file_build::file_build(compunit_ast const *const comp) : base_build(nullptr) {
     }
   }
 }
-std::unique_ptr<build_type> file_build::find_type(std::string_view name) const {}
-void file_build::make_statement_file() {}
-std::unique_ptr<build_variable >
-file_build::find_var(std::string_view name) const {
-  auto it = global_variables.find(name);
-  if (it != global_variables.end()) {
-    return it->second->clone();
+std::unique_ptr<build_type> file_build::find_type(std::string_view name) const {
+  if (auto it = builded_classes.find(name); it != builded_classes.end()) {
+    return it->second.get_type().clone();
+  } else if (m_father != nullptr) {
+    return m_father->find_type(name);
   } else {
-    for (auto file : import_packges) {
-      if (file.second.get().find_var(name) != nullptr) {
-        return file.second.get().find_var(name);
-      }
-    }
     return nullptr;
   }
+}
+void file_build::make_statement_file() {}
+reference_ptr<build_variable >
+file_build::find_var(std::string_view name) const {
+  std::unordered_set<reference_ptr<build_variable>> s;
+  if (auto it = global_variables.find(name); it != global_variables.end()) {
+    s.emplace(it->second);
+  } 
+  for (auto file : import_packges) {
+    if (file.second.get().find_var(name) != nullptr) {
+      s.emplace(file.second.get().find_var(name));
+    }
+  }
+  // using import space
+
+  if (s.empty()) {
+    // TODO log error
+    // not find
+  } else if (s.size() == 1) {
+    return *s.begin();
+  } else {
+    // TODO  log error
+    // is amibious
+  }
+    return nullptr;
 }
 
 std::unique_ptr<file_build> build_file(compunit_ast const *const ast) {
   return std::make_unique<file_build>(ast);
 }
-
 } // namespace pache

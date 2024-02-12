@@ -114,7 +114,7 @@ subscript_exp::build(base_build &build) const {
 
 std::unique_ptr<build_variable>
 dot_exp::build(base_build &build) const {
-  // TODO return build_dot_exp(build, *this);
+  return build_dot_exp(build, *this);
 }
 
 std::unique_ptr<build_variable>

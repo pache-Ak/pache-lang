@@ -29,15 +29,15 @@ std::unique_ptr<build_type> arr_ast::build(base_build &father) const {
   return build_arr_type(father, *this);
 }
 
-std::unique_ptr<build_type> multi_array_ast::build(base_build &father) const {
-  return build_multi_array_type(father, *this);
-}
+// std::unique_ptr<build_type> multi_array_ast::build(base_build &father) const {
+//   return build_multi_array_type(father, *this);
+// }
 
 std::unique_ptr<build_type> func_type_ast::build(base_build &father) const {
   return build_func_type(father, *this);
 }
 
-std::unique_ptr<build_type> named_ast::build(base_build &father) const {
+std::unique_ptr<build_type> named_type_ast::build(base_build &father) const {
   return build_named_type(father, *this);
 }
 /* std::unique_ptr<build_type> void_type_ast::build(base_build &father) const {

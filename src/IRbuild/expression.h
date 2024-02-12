@@ -9,7 +9,7 @@
 #include <memory>
 
 namespace pache {
-std::unique_ptr<build_variable> build_exp(base_build &build,
+std::unique_ptr<build_variable> build_expression(base_build &build,
                                                 exp_ast const &ast);
 std::unique_ptr<build_variable> build_unary_plus(base_build &build,
                                                        unary_plus const &ast);
@@ -63,6 +63,11 @@ reference_ptr<function_build>
 ADL(base_build const &build, std::string_view function_name, Iterator begin,
     Iterator end);
 
+
+// args:
+// 1.
+// 2. function name
+// 3. 4. the range of arguments build_variable ptr
 template <class Iterator>
 reference_ptr<function_build>
 function_lookup(base_build const &build, std::string_view name, Iterator begin,
@@ -74,7 +79,8 @@ function_lookup(base_build const &build, std::string_view name, Iterator begin,
 
   return nullptr;
 }
-
+std::unique_ptr<build_variable>
+build_dot_exp(base_build &build, dot_exp const &ast);
 } // namespace pache
 
 #endif

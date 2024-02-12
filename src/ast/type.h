@@ -5,11 +5,11 @@
 #include "scope.h"
 #include <cstddef>
 #include <memory>
-#include <string>
+//#include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
-using namespace std::literals;
-
+//using namespace std::literals;
 namespace pache {
 /* enum class value_category {
   prvalue,
@@ -35,7 +35,7 @@ public:
   mut_ast(std::unique_ptr<type_ast> &&type) : m_type(std::move(type)) {}
 
   virtual std::unique_ptr<build_type> build(base_build &father) const override;
-  std::unique_ptr<type_ast> const & get_element_type() const { return m_type; }
+  type_ast const & get_element_type() const { return *m_type; }
 
 private:
   std::unique_ptr<type_ast> m_type;
@@ -46,7 +46,7 @@ public:
   volatile_ast(std::unique_ptr<type_ast> &&type) : m_type(std::move(type)) {}
 
   virtual std::unique_ptr<build_type> build(base_build &father) const override;
-  std::unique_ptr<type_ast> const & get_element_type() const { return m_type; }
+  type_ast const & get_element_type() const { return *m_type; }
 
 private:
   std::unique_ptr<type_ast> m_type;
@@ -56,7 +56,7 @@ class reference_ast : type_ast {
 public:
   reference_ast(std::unique_ptr<type_ast> &&type) : m_type(std::move(type)) {}
   virtual std::unique_ptr<build_type> build(base_build &father) const override;
-  std::unique_ptr<type_ast> const & get_element_type() const { return m_type; }
+  type_ast const & get_element_type() const { return *m_type; }
 
 private:
   std::unique_ptr<type_ast> m_type;
@@ -66,7 +66,7 @@ class pointer_ast : public type_ast {
 public:
   pointer_ast(std::unique_ptr<type_ast> &&type) : m_type(std::move(type)) {}
   virtual std::unique_ptr<build_type> build(base_build &father) const override;
-  std::unique_ptr<type_ast> const & get_element_type() const { return m_type; }
+  type_ast const & get_element_type() const { return *m_type; }
 private:
   std::unique_ptr<type_ast> m_type;
 };
@@ -74,16 +74,16 @@ private:
 class arr_ast : public type_ast {
 public:
   explicit arr_ast(std::unique_ptr<type_ast> &&element_type,
-                   const std::size_t size)
-      : m_element_type(std::move(element_type)), m_size(size) {}
+                           std::vector<std::size_t> &&size)
+      : m_element_type(std::move(element_type)), m_size(std::move(size)) {}
   virtual std::unique_ptr<build_type> build(base_build &father) const override;
   std::unique_ptr<type_ast> const & get_element_type() const { return m_element_type; }
-  std::size_t const get_size() const {
+  std::vector<std::size_t> const& get_size() const {
     return m_size;
   }
 private:
   std::unique_ptr<type_ast> m_element_type;
-  const std::size_t m_size;
+  std::vector<std::size_t> const m_size;
 };
 
 class multi_array_ast : public type_ast {
@@ -115,18 +115,17 @@ private:
   std::unique_ptr<type_ast> m_return_type;
 };
 
-class named_ast final : public type_ast {
+class named_type_ast final : public type_ast  {
 public:
-  explicit named_ast(std::unique_ptr<scope_ast> &&scope, std::string &&identifier)
-      : m_scope(std::move(scope)), m_iden(std::move(identifier)) {}
+  explicit named_type_ast(named_ast &&ast) : m_iden(std::move(ast)) {}
+  explicit named_type_ast(std::unique_ptr<scope_ast> &&scope, std::string_view identifier)
+      :m_iden(std::move(scope), identifier) {}
   virtual std::unique_ptr<build_type> build(base_build &father) const override;
   std::string_view get_name() const {
-    return m_iden;
+    return m_iden.get_name();
   }
-
 private:
-  std::unique_ptr<scope_ast> m_scope;
-  std::string m_iden;
+  named_ast m_iden;
 };
 
 /* class void_type_ast final : public type_ast {

@@ -24,8 +24,9 @@ public:
   }
   virtual void set_mutable() override;
   virtual void set_volatile() override;
-  std::unique_ptr<build_type> const get_return_type() const {
-    return m_return_type->clone();
+  virtual bool is_function() const override { return true;}
+  build_type const& get_return_type() const {
+    return *m_return_type;
   }
   std::vector<std::unique_ptr<build_type>> const &get_args_type() const {
     return m_args_type;

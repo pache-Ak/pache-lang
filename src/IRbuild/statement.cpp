@@ -1,6 +1,7 @@
 #include "statement.h"
 #include "build.h"
 #include "expression.h"
+#include "reference_ptr.h"
 #include "type.h"
 #include "variable.h"
 #include <iostream>
@@ -18,7 +19,7 @@ void statement_build(block_scope &father, stmt_ast const &ast) {
 }
 
 void assign_stmt_build(block_scope &father, assign_stmt const &ast) {
-  if (auto var =build_exp(father, ast.get_var()) ; var != nullptr) {
+  if (auto var =build_expression(father, ast.get_var()) ; var != nullptr) {
     // TODO log error
     // maybe like this
     // std::cerr << "Unknown variable name.\n";
@@ -56,17 +57,22 @@ void return_exp_stmt_build(block_scope &father, return_ast const &ast) {
 
   Builder->CreateRet(val);
 }
-std::unique_ptr<build_variable>
+reference_ptr<build_variable>
 block_scope::find_var(std::string_view name) const {
+  // 首先会查找包含这次名字使用的块中这次使用之前的部分
   for (auto &it: named_values) {
     if (it.first == name) {
-      return it.second->clone();
+      return it.second;
     }
   }
 
   if (base_build::m_father != nullptr) {
+    // 然后查找外围块在该块开头之前的部分
     return base_build::m_father->find_var(name);
   } else {
+    // TODO
+    // block should be in function 
+    // base_build::m_father shouldn't be null
     std::cerr << "file_name: line: "
               << "name " << name << "not found!\n";
     return nullptr;
@@ -177,7 +183,7 @@ void build_if(block_scope &father, if_stmt const &ast) {
   llvm::BasicBlock *merge_BB = llvm::BasicBlock::Create(
       *IR::TheContext, "merge", IR::Builder->GetInsertBlock()->getParent());
 
-  auto condition = build_exp(father, ast.get_condition())->get_value();
+  auto condition = build_expression(father, ast.get_condition())->get_value();
   // need implicit cast to boolean
   Builder->CreateCondBr(condition, then_BB, merge_BB);
 
@@ -194,7 +200,7 @@ void build_if_else(block_scope &father, if_else_stmt const &ast) {
   llvm::BasicBlock *merge_BB = llvm::BasicBlock::Create(
       *IR::TheContext, "merge", IR::Builder->GetInsertBlock()->getParent());
 
-  auto condition = build_exp(father, ast.get_condition());
+  auto condition = build_expression(father, ast.get_condition());
   // need implicit cast to boolean
   Builder->CreateCondBr(condition->get_value(), then_BB, merge_BB);
 
@@ -225,7 +231,7 @@ void build_let(block_scope &father, let_stmt const &ast) {
   }
 
   if (ast.get_init_exp() != nullptr) {
-    auto exp = build_exp(father,*ast.get_init_exp().get());
+    auto exp = build_expression(father,*ast.get_init_exp().get());
     IR::Builder->CreateStore(
         exp->get_value(), father.find_var(ast.get_var_name())->get_value());
   } else {
@@ -235,11 +241,11 @@ void build_let(block_scope &father, let_stmt const &ast) {
 
 void build_assign(base_build &father, assign_stmt const &ast) {
   std::unique_ptr<build_variable> const &var =
-      build_exp(father, ast.get_var());
+      build_expression(father, ast.get_var());
   if (var == nullptr) {
     std::cerr << "variable hasn't defined.\n";
   } else {
-    auto exp = build_exp(father, ast.get_exp());
+    auto exp = build_expression(father, ast.get_exp());
     if (exp == nullptr) {
       std::cerr << "expression is not valid.\n";
     } else {
@@ -249,7 +255,7 @@ void build_assign(base_build &father, assign_stmt const &ast) {
 }
 
 void build_exp_stmt(base_build &father, exp_stmt const &ast) {
-  build_exp(father, ast.get_exp());
+  build_expression(father, ast.get_exp());
 }
 llvm::BasicBlock *loop_label::get_loop_begin() const {
   if (m_father != nullptr) {
