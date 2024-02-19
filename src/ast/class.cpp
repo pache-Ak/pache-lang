@@ -1,16 +1,24 @@
 #include "class.h"
-#include "ast.h"
-#include <algorithm>
+#include <iostream>
 
-pache::class_ast::class_ast(std::string &&name, class_body &&body)
-    : m_name(std::move(name)), m_body(std::move(body)) {
-  for (auto &p : m_body.var_def) {
-   // p->set_father(this);
+pache::class_ast::class_ast(std::string_view name, class_body &&body)
+    : m_name(name), m_body(std::move(body)) {
+}
+void pache::class_ast::print() const {
+  std::cout << "class_ast:\n"
+            << "inner_class_def:{\n";
+  for (auto const &ast : m_body.inner_class_def) {
+    ast->print();
   }
-  for (auto &p : m_body.func_def) {
-  //  p->set_father(get_father());
+  std::cout << "}\n"
+            << "var_def:{\n";
+  for (auto const &ast : m_body.var_def) {
+    ast->print();
   }
-  for (auto &p : m_body.inner_class_def) {
-  //  p->set_father(this);
+  std::cout << "}\n"
+            << "func_def:{\n";
+  for (auto const &ast : m_body.func_def) {
+    ast->print();
   }
+  std::cout << "}\n";
 }

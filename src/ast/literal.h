@@ -11,7 +11,7 @@ class literal_ast : public exp_ast {
 public:
   explicit literal_ast(std::string_view l, std::string_view s): m_literal(l), m_suffix(s) {}
   virtual ~literal_ast() = 0;
-
+  
   std::string_view const m_literal;
   std::string_view const m_suffix;
 protected:
@@ -43,8 +43,7 @@ public:
 
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
-
-
+  virtual void print() const override;
 };
 
 class octal_integer_literal final : public literal_ast {
@@ -53,16 +52,14 @@ public:
 
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
-
-
+  virtual void print() const override;
 };class decimal_integer_literal final : public literal_ast {
 public:
   explicit decimal_integer_literal(std::string_view l, std::string_view s): literal_ast(l, s) {}
 
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
-
-
+  virtual void print() const override;
 };
 class hexadecimal_integer_literal final : public literal_ast {
 public:
@@ -70,8 +67,7 @@ public:
 
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
-
-
+  virtual void print() const override;
 };
 } // namespace pache
 

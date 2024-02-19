@@ -1,5 +1,6 @@
 #include "type.h"
 #include "../IRbuild/type.h"
+#include <iostream>
 #include "../IRbuild/function_type.h"
 
 namespace pache {
@@ -25,13 +26,13 @@ std::unique_ptr<build_type> pointer_ast::build(base_build &father) const {
   return build_pointer_type(father, *this);
 }
 
-std::unique_ptr<build_type> arr_ast::build(base_build &father) const {
-  return build_arr_type(father, *this);
-}
-
-// std::unique_ptr<build_type> multi_array_ast::build(base_build &father) const {
-//   return build_multi_array_type(father, *this);
+// std::unique_ptr<build_type> arr_ast::build(base_build &father) const {
+//   return build_arr_type(father, *this);
 // }
+
+ std::unique_ptr<build_type> multi_array_ast::build(base_build &father) const {
+   return build_multi_array_type(father, *this);
+ }
 
 std::unique_ptr<build_type> func_type_ast::build(base_build &father) const {
   return build_func_type(father, *this);
@@ -165,10 +166,55 @@ std::unique_ptr<type_ast> void_type_ast::get() {
 //   return std::unique_ptr<size_type_t>(&size_type);
 // }
 
+void func_type_ast::print() const {
+  std::cout << "func_type_ast:\n"
+            << "\targuments types:(\n";
+  for (auto &arg : m_args_type) {
 
-
-
-
+    arg->print();
+  }
+  std::cout << "\treturn typr:\n";
+  m_return_type->print();
+}
+std::vector<std::unique_ptr<type_ast>> const &
+func_type_ast::get_args_type() const {
+  return m_args_type;
+}
+std::string_view named_type_ast::get_name() const { return m_iden.get_name(); }
+void named_type_ast::print() const {
+  std::cout << "named_type_ast:\n"
+            << "\ttype name:\n\t" << m_iden.get_name() << "\n";
+}
+void mut_ast::print() const {
+  std::cout << "mut_ast:\n"
+            << "m_type:\n";
+  m_type->print();
+}
+void reference_ast::print() const {
+  std::cout << "reference_ast:\n"
+            << "m_type:\n";
+  m_type->print();
+}
+void volatile_ast::print() const {
+  std::cout << "volatile_ast:\n"
+            << "m_type:\n";
+  m_type->print();
+}
+void pointer_ast::print() const {
+  std::cout << "pointer_ast:\n"
+            << "m_type:\n";
+  m_type->print();
+}
+void multi_array_ast::print() const {
+  std::cout << "multi_array_ast:\n"
+            << "m_element_type:\n";
+  m_element_type->print();
+  std::cout << "m_size:{\n";
+  for (auto const s : m_size) {
+    std::cout << s << ", ";
+  }
+  std::cout << "}\n";
+}
 } // namespace pache
 
 // llvm::Type *pache::i8_type_t::codegen() {

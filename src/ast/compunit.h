@@ -6,9 +6,7 @@
 #include "function.h"
 #include "import.h"
 #include "statement.h"
-#include <cstddef>
 #include <memory>
-//#include <string>
 #include <string_view>
 #include <vector>
 #include <filesystem>
@@ -18,8 +16,7 @@ class compunit_ast final : public base_ast {
 public:
   explicit compunit_ast() {}
   void insert_class_def(std::unique_ptr<class_ast> &&p) {
-  //  p->set_father(this->get_father());
-    class_def.push_back(std::move(p));
+    class_def.emplace_back(std::move(p));
   }
 
   void insert_func_def(std::unique_ptr<func_ast> &&p) {
@@ -46,13 +43,16 @@ public:
   std::vector<std::filesystem::path> const &get_include_dir() const {
     return m_include_dir;
   }
+
+  virtual void print() const override;
+
 private:
   std::vector<std::unique_ptr<import_ast>> m_packages;
   std::vector<std::unique_ptr<let_stmt>> m_var_table;
   std::vector<std::unique_ptr<class_ast>> class_def;
   std::vector<std::unique_ptr<func_ast>> m_func_asts;
   std::string_view m_file_name;
-  std::vector<std::string> m_lines;
+  std::vector<std::string_view> m_lines;
 
   static thread_local std::vector<std::filesystem::path> m_include_dir;
 };

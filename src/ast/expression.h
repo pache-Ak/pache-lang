@@ -6,7 +6,6 @@
 #include "scope.h"
 #include "type.h"
 #include <memory>
-//#include <string>
 #include <string_view>
 #include <utility>
 
@@ -60,6 +59,7 @@ public:
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_arg() const { return *m_argument; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_argument;
@@ -73,6 +73,7 @@ public:
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_arg() const { return *m_argument; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_argument;
@@ -80,23 +81,18 @@ private:
 class func_call_exp final : public exp_ast {
 public:
   explicit func_call_exp(std::unique_ptr<exp_ast> &&func,
-                         std::vector<std::unique_ptr<exp_ast>> &&args)
-      : m_exp(std::move(func)), m_args(std::move(args)) {}
+                         std::vector<std::unique_ptr<exp_ast>> &&args);
   //std::string const &get_name() const { return m_name; }
-  std::vector<std::unique_ptr<exp_ast>> const &get_args() const {
-    return m_args;
-  }
-  exp_ast const &get_func() const {
-    return *m_exp;
-  }
+  std::vector<std::unique_ptr<exp_ast>> const &get_args() const;
+  exp_ast const &get_func() const;
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_exp;
   std::vector<std::unique_ptr<exp_ast>> m_args;
 };
-
 
 class var_exp final : public exp_ast {
 public:
@@ -104,11 +100,10 @@ public:
   explicit var_exp(std::unique_ptr<scope_ast> &&scope, std::string_view name)
     :m_iden(std::move(scope), name) {}
 
-  std::string_view get_name() const {
-    return m_iden.get_name();
-  }
+  std::string_view get_name() const;
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
+  virtual void print() const override;
 
 private:
 named_ast m_iden;
@@ -124,6 +119,8 @@ public:
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
+
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -141,6 +138,7 @@ public:
 
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -157,6 +155,7 @@ public:
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -173,6 +172,7 @@ public:
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -189,6 +189,7 @@ public:
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -205,6 +206,7 @@ public:
 
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -221,6 +223,7 @@ public:
 
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -237,6 +240,7 @@ public:
 
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -253,6 +257,7 @@ public:
 
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -269,6 +274,7 @@ public:
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -285,6 +291,7 @@ public:
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -301,6 +308,7 @@ public:
 
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -317,6 +325,7 @@ public:
 
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -333,6 +342,7 @@ public:
 
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -349,6 +359,7 @@ public:
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -365,6 +376,7 @@ public:
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -381,6 +393,7 @@ public:
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_lhs;
@@ -399,6 +412,8 @@ public:
   exp_ast const&get_arr() const { return *m_function;}
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
+  virtual void print() const override;
+
 private:
   std::unique_ptr<exp_ast> m_function;
   std::vector<std::unique_ptr<exp_ast>> m_args;
@@ -413,6 +428,8 @@ public:
   build(base_build &build) const override;
   exp_ast const &get_exp() const { return *m_expr;}
   std::string_view get_id() const { return m_id_expr;}
+  virtual void print() const override;
+
 private:
   std::unique_ptr<exp_ast> m_expr;
   std::string_view m_id_expr;
@@ -425,6 +442,8 @@ public:
 
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
+  virtual void print() const override;
+
 private:
   std::unique_ptr<exp_ast> m_expr;
   std::string_view m_id_expr;
@@ -437,6 +456,7 @@ public:
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_arg() const { return *m_argument; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_argument;
@@ -449,6 +469,7 @@ public:
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_arg() const { return *m_argument; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_argument;
@@ -461,6 +482,7 @@ public:
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_arg() const { return *m_argument; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_argument;
@@ -473,6 +495,7 @@ public:
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_arg() const { return *m_argument; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_argument;
@@ -485,6 +508,7 @@ public:
 
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
+  virtual void print() const override;
 
 private:
   std::unique_ptr<type_ast> m_type;
@@ -499,6 +523,8 @@ public:
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   exp_ast const &get_arg() const { return *m_exp; }
+  virtual void print() const override;
+
 private:
   std::unique_ptr<exp_ast> m_exp;
 };
@@ -529,6 +555,8 @@ public:
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
+  virtual void print() const override;
+
 private:
   std::unique_ptr<exp_ast> m_lhs;
   std::unique_ptr<exp_ast> m_rhs;
@@ -543,6 +571,8 @@ public:
   build(base_build &build) const override;
   exp_ast const &get_lhs() const { return *m_lhs; }
   exp_ast const &get_rhs() const { return *m_rhs; }
+  virtual void print() const override;
+
 private:
   std::unique_ptr<exp_ast> m_lhs;
   std::unique_ptr<exp_ast> m_rhs;

@@ -2,6 +2,7 @@
 
 namespace pache {
 base_ast::~base_ast(){}
+void base_ast::print() const {}
 }
 
 //pache::base_ast *const pache::base_ast::get_father() const { return m_father; }

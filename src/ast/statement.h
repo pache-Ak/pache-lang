@@ -3,7 +3,6 @@
 
 #include "ast.h"
 #include "expression.h"
-
 #include <memory>
 #include <string_view>
 #include <vector>
@@ -31,6 +30,7 @@ public:
     return m_statements;
   }
   virtual void build(block_scope &father) const override;
+  virtual void print() const override;
 
 protected:
   block_ast(block_ast &&other) = default;
@@ -52,16 +52,20 @@ private:
 class break_stmt final : public stmt_ast {
 public:
   virtual void build(block_scope &father) const override;
+
+  virtual void print() const override;
 };
 
 class continue_stmt final : public stmt_ast {
 public:
   virtual void build(block_scope &father) const override;
+  virtual void print() const override;
 };
 
 class return_void_stmt final : public stmt_ast {
 public:
   virtual void build(block_scope &father) const override;
+  virtual void print() const override;
 };
 
 class return_ast final : public stmt_ast {
@@ -70,6 +74,7 @@ public:
 
   exp_ast const *const get_exp() const { return m_exp.get(); }
   virtual void build(block_scope &father) const override;
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_exp;
@@ -87,6 +92,7 @@ public:
   exp_ast const &get_var() const { return *m_var; }
   exp_ast const &get_exp() const { return *m_val; }
   virtual void build(block_scope &father) const override;
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_var;
@@ -117,6 +123,7 @@ public:
   type_ast const &get_var_type() const { return *type; }
   std::string_view get_var_name() const { return var_name; }
   std::unique_ptr<exp_ast> const &get_init_exp() const { return m_init; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<type_ast> type;
@@ -129,6 +136,7 @@ public:
   explicit exp_stmt(std::unique_ptr<exp_ast> &&exp) : m_exp(std::move(exp)) {}
   exp_ast const &get_exp() const { return *m_exp; }
   virtual void build(block_scope &father) const override;
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_exp;
@@ -155,6 +163,7 @@ public:
   virtual void build(block_scope &father) const override;
   exp_ast const & get_condition() const { return *m_condition; }
   block_ast const & get_then_block() const { return *m_then_block; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_condition;
@@ -180,6 +189,7 @@ public:
   exp_ast const & get_condition() const { return *m_condition; }
   block_ast const & get_then_block() const { return *m_then_block; }
   stmt_ast const & get_else_block() const { return *m_else_block; }
+  virtual void print() const override;
 
 private:
   std::unique_ptr<exp_ast> m_condition;

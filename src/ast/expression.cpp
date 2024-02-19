@@ -161,6 +161,222 @@ std::unique_ptr<build_variable>
 right_shift_exp::build(base_build &build) const {
   // TODO return build_right_shift_exp(build, *this);
 }
+void unary_plus::print() const {
+  std::cout << "unary_plus:\n";
+  m_argument->print();
+}
+void unary_minus::print() const {
+  std::cout << "unary_minus:\n";
+  m_argument->print();
+}
+std::vector<std::unique_ptr<exp_ast>> const &func_call_exp::get_args() const {
+  return m_args;
+}
+exp_ast const &func_call_exp::get_func() const { return *m_exp; }
+func_call_exp::func_call_exp(std::unique_ptr<exp_ast> &&func,
+                             std::vector<std::unique_ptr<exp_ast>> &&args)
+    : m_exp(std::move(func)), m_args(std::move(args)) {}
+void func_call_exp::print() const {
+  std::cout << "func_call_exp:\n"
+            << "m_exp:\n";
+  m_exp->print();
+  std::cout << "m_args:{\n";
+  for (auto const &ast : m_args) {
+    ast->print();
+  }
+  std::cout << "}\n";
+}
+void var_exp::print() const {
+  std::cout << "var_exp:\n" << m_iden.get_name() << "\n";
+}
+std::string_view var_exp::get_name() const { return m_iden.get_name(); }
+void binary_mul_exp::print() const {
+  std::cout << "binary_mul_exp:\n"
+            << "m_lhs:\n";
+  m_lhs->print();
+  std::cout << "m_rhs:\n";
+  m_rhs->print();
+}
+void binary_div_exp::print() const {
+  std::cout << "binary_div_exp:\n"
+            << "m_lhs:\n";
+  m_lhs->print();
+  std::cout << "m_rhs:\n";
+  m_rhs->print();
+}
+void binary_mod_exp::print() const {
+  std::cout << "binary_mod_exp:\n"
+            << "m_lhs:\n";
+  m_lhs->print();
+  std::cout << "m_rhs:\n";
+  m_rhs->print();
+}
+void binary_plus_exp::print() const {
+  std::cout << "binary_plus_exp:\n"
+            << "m_lhs:\n";
+  m_lhs->print();
+  std::cout << "m_rhs:\n";
+  m_rhs->print();
+}
+void binary_minus_exp::print() const {
+  std::cout << "binary_minus_exp:\n"
+            << "m_lhs:\n";
+  m_lhs->print();
+  std::cout << "m_rhs:\n";
+  m_rhs->print();
+}
+void three_way_exp::print() const {
+  std::cout << "three_way_exp:\n"
+            << "m_lhs:\n";
+  m_lhs->print();
+  std::cout << "m_rhs:\n";
+  m_rhs->print();
+}
+void less_exp::print() const {
+  std::cout << "less_exp:\n"
+            << "m_lhs:\n";
+  m_lhs->print();
+  std::cout << "m_rhs:\n";
+  m_rhs->print();
+}
+void less_eq_exp::print() const {
+  std::cout << "less_eq_exp:\n"
+            << "m_lhs:\n";
+  m_lhs->print();
+  std::cout << "m_rhs:\n";
+  m_rhs->print();
+}
+void greater_exp::print() const {
+  std::cout << "greater_exp:\n"
+            << "m_lhs:\n";
+  m_lhs->print();
+  std::cout << "m_rhs:\n";
+  m_rhs->print();
+}
+void greater_eq_exp::print() const {
+  std::cout << "greater_eq_exp:\n"
+            << "m_lhs:\n";
+  m_lhs->print();
+  std::cout << "m_rhs:\n";
+  m_rhs->print();
+}
+void eq_exp::print() const {
+  std::cout << "eq_exp:\n"
+            << "m_lhs:\n";
+  m_lhs->print();
+  std::cout << "m_rhs:\n";
+  m_rhs->print();
+}
+void not_eq_exp::print() const {
+  std::cout << "not_eq_exp:\n"
+            << "m_lhs:\n";
+  m_lhs->print();
+  std::cout << "m_rhs:\n";
+  m_rhs->print();
+}
+void bitwise_and_exp::print() const {
+  std::cout << "bitwise_and_exp:\n"
+            << "m_lhs:\n";
+  m_lhs->print();
+  std::cout << "m_rhs:\n";
+  m_rhs->print();
+}
+void bitwise_xor_exp::print() const {
+  std::cout << "bitwise_xor_exp:\n"
+            << "m_lhs:\n";
+  m_lhs->print();
+  std::cout << "m_rhs:\n";
+  m_rhs->print();
+}
+void bitwise_or_exp::print() const {
+  std::cout << "bitwise_or_exp:\n"
+            << "m_lhs:\n";
+  m_lhs->print();
+  std::cout << "m_rhs:\n";
+  m_rhs->print();
+}
+void logical_and_exp::print() const {
+  std::cout << "logical_and_exp:\n"
+            << "m_lhs:\n";
+  m_lhs->print();
+  std::cout << "m_rhs:\n";
+  m_rhs->print();
+}
+void logical_or_exp::print() const {
+  std::cout << "logical_or_exp:\n"
+            << "m_lhs:\n";
+  m_lhs->print();
+  std::cout << "m_rhs:\n";
+  m_rhs->print();
+}
+void subscript_exp::print() const {
+  std::cout << "subscript_exp:\n"
+            << "m_function:\n";
+  m_function->print();
+  std::cout << "m_rhs:{\n";
+  for (auto const &ast : m_args) {
+    ast->print();
+  }
+  std::cout << "}\n";
+}
+void dot_exp::print() const {
+  std::cout << "dot_exp:\n"
+            << "m_expr:\n";
+  m_expr->print();
+  std::cout << "m_id_expr:\n" << m_id_expr << "\n";
+}
+void arrow_exp::print() const {
+  std::cout << "arrow_exp:\n"
+            << "m_expr:\n";
+  m_expr->print();
+  std::cout << "m_id_expr:\n" << m_id_expr << "\n";
+}
+void bitwise_not_exp::print() const {
+  std::cout << "bitwise_not_exp:\n"
+            << "m_argument:\n";
+  m_argument->print();
+}
+void address_of_exp::print() const {
+  std::cout << "address_of_exp:\n"
+            << "m_argument:\n";
+  m_argument->print();
+}
+void allocation_exp::print() const {
+  std::cout << "allocation_exp:\n"
+            << "m_type:\n";
+  m_type->print();
+  std::cout << "m_init:\n";
+  m_init->print();
+}
+void deallocation_exp::print() const {
+  std::cout << "deallocation_exp:\n"
+            << "m_exp:\n";
+  m_exp->print();
+}
+void left_shift_exp::print() const {
+  std::cout << "left_shift_exp:\n"
+            << "m_lhs:\n";
+  m_lhs->print();
+  std::cout << "m_rhs:\n";
+  m_rhs->print();
+}
+void right_shift_exp::print() const {
+  std::cout << "right_shift_exp:\n"
+            << "m_lhs:\n";
+  m_lhs->print();
+  std::cout << "m_rhs:\n";
+  m_rhs->print();
+}
+void logical_not_exp::print() const {
+  std::cout << "logical_not_exp:\n"
+            << "m_argument:\n";
+  m_argument->print();
+}
+void indirection_exp::print() const {
+  std::cout << "indirection_exp:\n"
+            << "m_argument:\n";
+  m_argument->print();
+}
 } // namespace pache
 
 // llvm::Value *pache::var_exp::codegen() {

@@ -1,5 +1,5 @@
-#ifndef SCOPE_H
-#define SCOPE_H
+#ifndef AST_SCOPE_H
+#define AST_SCOPE_H
 
 #include "ast.h"
 #include <memory>
@@ -8,9 +8,11 @@
 #include <vector>
 
 namespace pache {
-  class scope_ast;
-  class named_ast  final{
+class scope_ast;
+
+class named_ast  final{
 public:
+  named_ast() = default;
   explicit named_ast(std::unique_ptr<scope_ast> &&scope, std::string_view identifier)
       : m_scope(std::move(scope)), m_iden(identifier) {}
 
@@ -28,7 +30,9 @@ public:
 
 class unqualified_scope_ast final : public scope_ast {
 public:
-  virtual ~unqualified_scope_ast() = default;
+  virtual ~unqualified_scope_ast();
+
+  virtual void print() const override;
 }; 
 
 class qualified_scope_ast : public scope_ast {
@@ -43,6 +47,8 @@ public:
 explicit relative_scope_ast(std::unique_ptr<scope_ast> &&father, std::string_view name)
   : m_iden(std::move(father), name){}
 
+virtual void print() const override;
+  virtual ~relative_scope_ast() = default;
 private:
   named_ast m_iden;
 };
@@ -50,6 +56,8 @@ private:
 class root_scope_ast final : public qualified_scope_ast{
 public:
   virtual ~root_scope_ast() = default;
+  virtual void print() const override;
+
 private:
 };
 }

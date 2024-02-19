@@ -315,10 +315,10 @@ build_pointer_type(base_build &father, pointer_ast const &ast) {
   return std::make_unique<pointer_type>(type_build(father, ast.get_element_type()));
 }
 
-std::unique_ptr<arr_type>
-build_arr_type(base_build &father, arr_ast const &ast) {
-  return std::make_unique<arr_type>(type_build(father, *ast.get_element_type()), ast.get_size());
-}
+// std::unique_ptr<arr_type>
+// build_arr_type(base_build &father, arr_ast const &ast) {
+//   return std::make_unique<arr_type>(type_build(father, *ast.get_element_type()), ast.get_size());
+// }
 
  std::unique_ptr<arr_type>
  build_multi_array_type(base_build &father, multi_array_ast const &ast) {

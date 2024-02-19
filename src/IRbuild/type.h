@@ -423,8 +423,8 @@ build_pointer_type(base_build &father, pointer_ast const &ast);
 std::unique_ptr<reference_type>
 build_reference_type(base_build &father, reference_ast const &ast);
 
-std::unique_ptr<arr_type>
-build_arr_type(base_build &father, arr_ast const &ast);
+// std::unique_ptr<arr_type>
+// build_arr_type(base_build &father, arr_ast const &ast);
 
  std::unique_ptr<arr_type>
 build_multi_array_type(base_build &father, multi_array_ast const &ast);
