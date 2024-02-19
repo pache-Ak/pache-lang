@@ -54,36 +54,9 @@
 }
 
 %token
-  VOID                 "void"
+  HORIZONTAL_WHITESPACE
+  WHITESPACE 
 
-  BOOL                 "bool"
-
-  SIZE                 "size"
-
-  I8                   "i8"
-  I16                  "i16"
-  I32                  "i32"
-  I64                  "i64"
-  I128                 "i128"
-
-  U8                   "u8"
-  U16                  "u16"
-  U32                  "u32"
-  U64                  "u64"
-  U128                 "u128"
-
-  F16                  "f16"
-  F32                  "f32"
-  F64                  "f64"
-  F128                 "f128"
-
-  D32                  "d32"
-  D64                  "d64"
-
-  C8                   "c8"
-  C16                  "c16"
-  C32                  "c32"
-%token
   SCOPE                 // ::
   BITWISE_NOT          "~"
   B_AND                "&"
@@ -129,8 +102,6 @@
   SINGLE_QUOTE          // '
   ALLOCATION            // new
   DEALLOCATION          // delete
-//  ALLOCATION_ARRAY      // new[]
-//  DEALLOCATION_ARRAY    // delete[]
   UNARY_STAR "unary *"
   PREFIX_STAR "prefix *"
   POSTFIX_STAR "postfix *"
@@ -141,11 +112,12 @@
   UPPERCASE_HEXADECIMAL_PREFIX // 0X
   ZERO                          // 0
 %token RETURN FUNC CLASS
-%token <std::string> IDENTIFIER
+%token <std::string> IDENTIFIER 
 %token <int> INTEGER
 %token <char const *> BINARY_DIGIT OCTAL_DIGIT NONZERO_DIGIT DECIMAL_DIGIT HEXADECIMAL_DIGIT DIGIT
 %token EOF 0;
 // 非终结符的类型定义
+%type <pache::named_ast>namespace_name
 %type <std::unique_ptr<pache::compunit_ast>>   CompUnit
 %type <std::unique_ptr<pache::type_ast>> type mut_ast volatile_ast multi_array_ast primary_type
 %type <std::unique_ptr<pache::exp_ast>>    primary_expression unary_expression call_expression
@@ -158,7 +130,6 @@
 %type <std::unique_ptr<pache::exp_ast>> three_way_expression rel_expression eq_expression logical_and_expression logical_or_expression
 %type <std::pair<std::unique_ptr<pache::type_ast>, std::string>> FuncFParam
 %type <std::pair<std::vector<std::unique_ptr<pache::type_ast>>, std::vector<std::string>>> FuncFParams
-%type <std::vector<std::unique_ptr<pache::exp_ast>>> FuncRParams
 %type <std::unique_ptr<pache::class_ast>> class_def
 %type <pache::class_ast::class_body> class_body
 %type <std::unique_ptr<pache::exp_ast>> bitwise_and_expression
@@ -167,8 +138,6 @@
 %type <std::unique_ptr<pache::func_ast>> FuncDef  // main_func
 %type <std::vector<std::size_t>> size_list
 %type <std::unique_ptr<pache::scope_ast>> scope_resolution
-%type <std::unique_ptr<pache::unqualified_scope_ast>> unqualified_scope_resolution
-%type <std::unique_ptr<pache::qualified_scope_ast>> qualified_scope_resolution
 %type <std::unique_ptr<pache::exp_ast>> LITERAL INTEGER_LITERAL
 %type <std::string> binary_digit_sequence octal_digit_sequence decimal_digit_sequence hexadecimal_digit_sequence
 %type <std::string> binary_literal octal_literal decimal_literal hexadecimal_literal
@@ -197,12 +166,15 @@ CompUnit
     $$->insert_class_def(std::move($1));
 }
 | CompUnit FuncDef {
+  $$ = std::move($1);
       $$->insert_func_def(std::move($2));
 }
 | CompUnit let_stmt {
+  $$ = std::move($1);
     $$->insert_dec(std::move($2));
 }
 | CompUnit class_def {
+  $$ = std::move($1);
   $$->insert_class_def(std::move($2));
 };
 
@@ -298,25 +270,16 @@ primary_type {
 }
 
 primary_type:
-/* | arr_ast {
-  $$ = std::move($1);
-}|
+  namespace_name {
+    $$ = std::make_unique<pache::named_type_ast>(std::move($1));
+  }
+ |
 multi_array_ast {
 $$ = std::move($1);
-}*/
-scope_resolution IDENTIFIER {
-  $$ = std::make_unique<pache::named_ast>(std::move($1), std::move($2));
 }
   ;
 
 
-
-/* arr_ast:
-  type LEFT_SQUARE_BRACKET INTEGER RIGHT_SQUARE_BRACKET {
-    $$ = std::make_unique<arr_ast_t>(std::move($1), $3);
-
-  }
-; */
 size_list:
   INTEGER COMMA {
     $$ = std::vector<std::size_t>{};
@@ -331,6 +294,7 @@ size_list:
     $$.push_back($2);
   }
   ;
+
   multi_array_ast:
   type LEFT_SQUARE_BRACKET size_list RIGHT_SQUARE_BRACKET {
     $$ = std::make_unique<pache::multi_array_ast>(std::move($1), std::move($3));
@@ -464,41 +428,20 @@ loop_stmt:
   }
 ;
 expression:
-  logical_or_expression {
+  primary_expression {
     $$ = std::move($1);
   }
 ;
 
-FuncRParams:
-%empty
-  {
-    $$ = std::vector<std::unique_ptr<pache::exp_ast>>();
-  }|
-  expression {
-    $$ = std::vector<std::unique_ptr<pache::exp_ast>>{};
-    $$.emplace_back(std::move($1));
-  }
-| FuncRParams COMMA expression {
-  $$ = std::move($1);
-  $$.emplace_back(std::move($3));
+namespace_name: IDENTIFIER {
+ $$ =  pache::named_ast(std::make_unique<unqualified_scope_ast>(), $1);
+}
+| scope_resolution IDENTIFIER {
+  $$ = pache::named_ast(std::move($1), std::move($2));
 };
 
+
 scope_resolution
-: unqualified_scope_resolution {
-  $$ = std::move($1);
-}
-| qualified_scope_resolution {
-  $$ = std::move($1);
-}
-;
-
-unqualified_scope_resolution
-: %empty {
-$$ = std::make_unique<unqualified_scope_ast>();
-}
-;
-
-qualified_scope_resolution
 : SCOPE {
   $$ = std::make_unique<root_scope_ast>();
 }
@@ -516,8 +459,8 @@ primary_expression:
 | LITERAL {
     $$ = std::move($1);
   }
-| scope_resolution IDENTIFIER {
-    $$ = std::make_unique<pache::var_exp>(std::move($1), std::move($2));
+| namespace_name {
+  $$ = std::make_unique<pache::var_exp>(std::move($1));
 }
 ;
 
@@ -629,14 +572,15 @@ hexadecimal_digit_sequence
 }
 ;
 
+
 call_expression:
   primary_expression {
     $$ = std::move($1);
   }
-| call_expression LEFT_PARENTHESIS FuncRParams RIGHT_PARENTHESIS {
+| call_expression LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS {
   $$ = std::make_unique<pache::func_call_exp>(std::move($1), std::move($3));
 }
-| call_expression LEFT_SQUARE_BRACKET FuncRParams RIGHT_SQUARE_BRACKET {
+| call_expression LEFT_SQUARE_BRACKET FuncFParams RIGHT_SQUARE_BRACKET {
   $$ = std::make_unique<pache::subscript_exp>(std::move($1), std::move($3));
 }
 | call_expression DOT IDENTIFIER {
@@ -805,11 +749,6 @@ logical_or_expression:
   $$ = std::make_unique<pache::logical_or_exp>(std::move($1), std::move($3));
 }
 ;
-
-
-
-
-
 
 %%
 
