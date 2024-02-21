@@ -434,7 +434,7 @@ expression:
 ;
 
 namespace_name: IDENTIFIER {
- $$ =  pache::named_ast(std::make_unique<unqualified_scope_ast>(), $1);
+ $$ =  pache::named_ast(std::make_unique<unqualified_scope_ast>(), std::move($1));
 }
 | scope_resolution IDENTIFIER {
   $$ = pache::named_ast(std::move($1), std::move($2));
@@ -446,10 +446,10 @@ scope_resolution
   $$ = std::make_unique<root_scope_ast>();
 }
 | IDENTIFIER SCOPE {
-  $$ = std::make_unique<relative_scope_ast>(std::make_unique<unqualified_scope_ast>(), $1);
+  $$ = std::make_unique<relative_scope_ast>(std::make_unique<unqualified_scope_ast>(), std::move($1));
 }
 | scope_resolution IDENTIFIER SCOPE {
-  $$ = std::make_unique<relative_scope_ast>(std::move($1), $2);
+  $$ = std::make_unique<relative_scope_ast>(std::move($1), std::move($2));
 }
 ;
 primary_expression:
@@ -473,16 +473,16 @@ LITERAL
 
 INTEGER_LITERAL
 : binary_literal IDENTIFIER {
-  $$ = std::make_unique<binary_integer_literal>($1, $2);
+  $$ = std::make_unique<binary_integer_literal>(std::move($1), std::move($2));
 }
 | octal_literal IDENTIFIER {
-  $$ = std::make_unique<octal_integer_literal>($1, $2);
+  $$ = std::make_unique<octal_integer_literal>(std::move($1), std::move($2));
 }
 | decimal_literal IDENTIFIER {
-  $$ = std::make_unique<decimal_integer_literal>($1, $2);
+  $$ = std::make_unique<decimal_integer_literal>(std::move($1), std::move($2));
 }
 | hexadecimal_literal IDENTIFIER {
-  $$ = std::make_unique<hexadecimal_integer_literal>($1, $2);
+  $$ = std::make_unique<hexadecimal_integer_literal>(std::move($1), std::move($2));
 }
 
 binary_literal

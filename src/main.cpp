@@ -13,4 +13,5 @@ int main(int argc, const char *argv[]) {
 std::cout<< "begin!\n";
     pache::driver drv(input);
     drv.parse();
+    drv.print();
 }

@@ -4,16 +4,18 @@
 #include "../IRbuild/variable.h"
 #include "expression.h"
 #include <memory>
+#include <string>
 #include <string_view>
+#include <utility>
 
 namespace pache {
 class literal_ast : public exp_ast {
 public:
-  explicit literal_ast(std::string_view l, std::string_view s): m_literal(l), m_suffix(s) {}
+  explicit literal_ast(std::string &&l, std::string &&s): m_literal(std::move(l)), m_suffix(std::move(s)) {}
   virtual ~literal_ast() = 0;
   
-  std::string_view const m_literal;
-  std::string_view const m_suffix;
+  std::string const m_literal;
+  std::string const m_suffix;
 protected:
   literal_ast(literal_ast const &other) = default;
   literal_ast &operator=(literal_ast const &other) = delete;
@@ -39,7 +41,7 @@ protected:
 // inline void_literal_t void_literal = void_literal_t::make_void_literal_t();
 class binary_integer_literal final : public literal_ast {
 public:
-  explicit binary_integer_literal(std::string_view l, std::string_view s): literal_ast(l, s) {}
+  explicit binary_integer_literal(std::string&& l, std::string&& s): literal_ast(std::move(l), std::move(s)) {}
 
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
@@ -48,14 +50,14 @@ public:
 
 class octal_integer_literal final : public literal_ast {
 public:
-  explicit octal_integer_literal(std::string_view l, std::string_view s): literal_ast(l, s) {}
+  explicit octal_integer_literal(std::string&& l, std::string&& s): literal_ast(std::move(l), std::move(s)){}
 
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   virtual void print() const override;
 };class decimal_integer_literal final : public literal_ast {
 public:
-  explicit decimal_integer_literal(std::string_view l, std::string_view s): literal_ast(l, s) {}
+  explicit decimal_integer_literal(std::string&& l, std::string&& s): literal_ast(std::move(l), std::move(s)) {}
 
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
@@ -63,7 +65,7 @@ public:
 };
 class hexadecimal_integer_literal final : public literal_ast {
 public:
-  explicit hexadecimal_integer_literal(std::string_view l, std::string_view s): literal_ast(l, s) {}
+  explicit hexadecimal_integer_literal(std::string&& l, std::string&& s): literal_ast(std::move(l), std::move(s)){}
 
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;

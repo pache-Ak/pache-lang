@@ -5,6 +5,7 @@
 #include "scope.h"
 #include <cstddef>
 #include <memory>
+#include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -123,8 +124,8 @@ private:
 class named_type_ast final : public type_ast  {
 public:
   explicit named_type_ast(named_ast &&ast) : m_iden(std::move(ast)) {}
-  explicit named_type_ast(std::unique_ptr<scope_ast> &&scope, std::string_view identifier)
-      :m_iden(std::move(scope), identifier) {}
+  explicit named_type_ast(std::unique_ptr<scope_ast> &&scope, std::string&& identifier)
+      :m_iden(std::move(scope), std::move(identifier)) {}
   virtual std::unique_ptr<build_type> build(base_build &father) const override;
   std::string_view get_name() const;
   virtual void print() const override;

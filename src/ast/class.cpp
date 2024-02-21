@@ -1,8 +1,9 @@
 #include "class.h"
 #include <iostream>
+#include <utility>
 
-pache::class_ast::class_ast(std::string_view name, class_body &&body)
-    : m_name(name), m_body(std::move(body)) {
+pache::class_ast::class_ast(std::string && name, class_body &&body)
+    : m_name(std::move(name)), m_body(std::move(body)) {
 }
 void pache::class_ast::print() const {
   std::cout << "class_ast:\n"

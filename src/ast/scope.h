@@ -2,7 +2,9 @@
 #define AST_SCOPE_H
 
 #include "ast.h"
+#include <algorithm>
 #include <memory>
+#include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -13,14 +15,14 @@ class scope_ast;
 class named_ast  final{
 public:
   named_ast() = default;
-  explicit named_ast(std::unique_ptr<scope_ast> &&scope, std::string_view identifier)
-      : m_scope(std::move(scope)), m_iden(identifier) {}
+  explicit named_ast(std::unique_ptr<scope_ast> &&scope, std::string && identifier)
+      : m_scope(std::move(scope)), m_iden(std::move(identifier)) {}
 
   std::string_view get_name() const;
 
 private:
   std::unique_ptr<scope_ast> m_scope;
-  std::string_view m_iden;
+  std::string m_iden;
 };
 
 class scope_ast : public base_ast {
@@ -44,8 +46,8 @@ private:
 class relative_scope_ast final : public qualified_scope_ast {
 public:
   explicit relative_scope_ast(named_ast &&ast) : m_iden(std::move(ast)){}
-explicit relative_scope_ast(std::unique_ptr<scope_ast> &&father, std::string_view name)
-  : m_iden(std::move(father), name){}
+explicit relative_scope_ast(std::unique_ptr<scope_ast> &&father, std::string &&name)
+  : m_iden(std::move(father), std::move(name)){}
 
 virtual void print() const override;
   virtual ~relative_scope_ast() = default;

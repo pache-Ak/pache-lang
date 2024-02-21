@@ -5,6 +5,7 @@
 #include "function.h"
 #include "statement.h"
 #include <memory>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -18,9 +19,9 @@ public:
     std::vector<std::unique_ptr<func_ast>> func_def;
     std::vector<std::unique_ptr<class_ast>> inner_class_def;
   };
-  explicit class_ast(std::string_view name, class_body &&body);
+  explicit class_ast(std::string && name, class_body &&body);
 
-  std::string_view const get_name() const { return m_name; }
+  std::string_view  get_name() const { return m_name; }
 
   std::vector<std::unique_ptr<let_stmt>> const &get_var_def() const {
     return m_body.var_def;
@@ -34,7 +35,7 @@ public:
   virtual void print() const override;
 
 private:
-  std::string_view const m_name;
+  std::string m_name;
   class_body m_body;
 };
 

@@ -10,7 +10,7 @@ class import_ast final : public base_ast {
         return m_file_name;
     }
 private:
-    std::string_view m_file_name;
+    std::string m_file_name;
 };
 } // namespace pache
 

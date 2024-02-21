@@ -4,6 +4,7 @@
 #include "ast.h"
 #include "expression.h"
 #include <memory>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -101,7 +102,7 @@ private:
 
 class let_stmt final : public stmt_ast {
 public:
-  explicit let_stmt(std::unique_ptr<type_ast> &&type_, std::string_view name,
+  explicit let_stmt(std::unique_ptr<type_ast> &&type_, std::string &&name,
                     std::unique_ptr<exp_ast> init)
       : type(std::move(type_)), var_name(std::move(name)),
         m_init(std::move(init)) {
@@ -127,7 +128,7 @@ public:
 
 private:
   std::unique_ptr<type_ast> type;
-  std::string_view var_name;
+  std::string var_name;
   std::unique_ptr<exp_ast> m_init;
 };
 

@@ -6,6 +6,7 @@
 #include "scope.h"
 #include "type.h"
 #include <memory>
+#include <string>
 #include <string_view>
 #include <utility>
 
@@ -97,8 +98,8 @@ private:
 class var_exp final : public exp_ast {
 public:
   explicit var_exp(named_ast &&ast) : m_iden(std::move(ast)) {}
-  explicit var_exp(std::unique_ptr<scope_ast> &&scope, std::string_view name)
-    :m_iden(std::move(scope), name) {}
+  explicit var_exp(std::unique_ptr<scope_ast> &&scope, std::string &&name)
+    :m_iden(std::move(scope), std::move(name)) {}
 
   std::string_view get_name() const;
   virtual std::unique_ptr<build_variable>
@@ -421,8 +422,8 @@ private:
 
 class dot_exp final : public exp_ast {
 public:
-  dot_exp(std::unique_ptr<exp_ast> &&expr, std::string_view id_expr)
-    : m_expr(std::move(expr)), m_id_expr(id_expr){}
+  dot_exp(std::unique_ptr<exp_ast> &&expr, std::string&& id_expr)
+    : m_expr(std::move(expr)), m_id_expr(std::move(id_expr)){}
 
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
@@ -432,13 +433,13 @@ public:
 
 private:
   std::unique_ptr<exp_ast> m_expr;
-  std::string_view m_id_expr;
+  std::string m_id_expr;
 };
 
 class arrow_exp final : public exp_ast {
 public:
-  arrow_exp(std::unique_ptr<exp_ast> &&expr, std::string_view id_expr)
-    : m_expr(std::move(expr)), m_id_expr(id_expr){}
+  arrow_exp(std::unique_ptr<exp_ast> &&expr, std::string &&id_expr)
+    : m_expr(std::move(expr)), m_id_expr(std::move(id_expr)){}
 
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
@@ -446,7 +447,7 @@ public:
 
 private:
   std::unique_ptr<exp_ast> m_expr;
-  std::string_view m_id_expr;
+  std::string m_id_expr;
 };
 
 class logical_not_exp final : public exp_ast {

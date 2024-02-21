@@ -7,7 +7,7 @@
 #include "import.h"
 #include "statement.h"
 #include <memory>
-#include <string_view>
+#include <string>
 #include <vector>
 #include <filesystem>
 
@@ -51,8 +51,8 @@ private:
   std::vector<std::unique_ptr<let_stmt>> m_var_table;
   std::vector<std::unique_ptr<class_ast>> class_def;
   std::vector<std::unique_ptr<func_ast>> m_func_asts;
-  std::string_view m_file_name;
-  std::vector<std::string_view> m_lines;
+  std::string m_file_name;
+  std::vector<std::string> m_lines;
 
   static thread_local std::vector<std::filesystem::path> m_include_dir;
 };

@@ -14,15 +14,17 @@ public:
 
   // Run the parser on file f.  Return 0 on success.
   int parse ();
-  
+  void print() const {
+    root_ast->print();
+  }
     // Handling the scanner.
   void scan_begin ();
   void scan_end ();
      // The token's location used by the scanner.
+  std::string file_name;
   pache::location location; 
 
   // The name of the file being parsed.
-  std::string file_name;
 
   // Whether to generate parser debug traces.
   bool trace_parsing;
