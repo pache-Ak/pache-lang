@@ -35,7 +35,12 @@ void let_stmt::print() const {
   type->print();
   std::cout << "var_name:\n" << var_name << "\n";
   std::cout << "m_init:\n";
+  if (m_init == nullptr) {
+    std::cout << "NULL\n";
+  } else {
   m_init->print();
+
+  }
 }
 void exp_stmt::print() const {
   std::cout << "exp_stmt\n"
