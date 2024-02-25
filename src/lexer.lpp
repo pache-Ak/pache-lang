@@ -9,44 +9,12 @@
 %}
 
 %option noyywrap nounput noinput batch debug
+/* 空白符和注释 */
+WHITESPACE            [ \t\r\n]+
+NEW_LINE              [\n]
+HORIZONTAL_WHITESPACE [ \t\r]*
+one_line_comment      \/\/[^\n]*\n
 
-/* Lexing a token immediately after consuming some whitespace. */
-%s AFTER_WHITESPACE
-/*
- * Lexing a token immediately after consuming an operand-ending token:
- * a closing bracket, IDENTIFIER, or literal.
- */
-%s AFTER_OPERAND
-
-VOID                 "void"
-
-BOOL                 "bool"
-
-SIZE                 "size"
-
-I8                   "i8"
-I16                  "i16"
-I32                  "i32"
-I64                  "i64"
-I128                 "i128"
-
-U8                   "u8"
-U16                  "u16"
-U32                  "u32"
-U64                  "u64"
-U128                 "u128"
-
-F16                  "f16"
-F32                  "f32"
-F64                  "f64"
-F128                 "f128"
-
-D32                  "d32"
-D64                  "d64"
-
-C8                   "c8"
-C16                  "c16"
-C32                  "c32"
 
 MUTABLE                "mut"
 VOLATILE             "volatile"
@@ -60,62 +28,27 @@ ELSE                 "else"
 LOOP                 "loop"
 BREAK                "break"
 CONTINUE             "continue"
-SEMICOLON            ";"
 ASSIGN               ":="
-BITWISE_NOT          "~"
-B_AND                "&"
-B_XOR                "^"
-B_OR                 "|"
-LEFT_CURLY_BRACE     "{"
-LEFT_PARENTHESIS     "("
-LEFT_SQUARE_BRACKET  "["
-PLUS                 "+"
-MINUS                "-"
-PERCENT              "%"
-SLASH                "/"
-DOT                  "."
-RIGHT_CURLY_BRACE    "}"
-RIGHT_PARENTHESIS    ")"
-RIGHT_SQUARE_BRACKET "]"
-
-THREE_WAY_COMPARISON "<=>"
-LESS                 "<"
-LESS_EQUAL           "<="
-GREATER              ">"
-GREATER_EQUAL        ">="
-EQUAL                "=="
-NOT_EQUAL            "!="
-
-LOGICAL_NOT          "!"
-AND                  "&&"
-OR                   "||"
-
-COMMA                ","
-
-/* 空白符和注释 */
-horizontal_whitespace [ \t\r]
-whitespace            [ \t\r\n]
-
-one_line_comment      \/\/[^\n]*\n
 
 /* 标识符 */
 IDENTIFIER    [a-zA-Z_][a-zA-Z0-9_]*
 operand_start         [(A-Za-z0-9_\"]
 
+%x BINARY
+%x OCTAL
+%x DECIMAL
+%x HEXADECIMAL
+%s LINE_END
 
 
-ZERO              0
-BINARY_DIGIT      [01]
-OCTAL_DIGIT       [0-7]
-NONZERO_DIGIT     [1-9]
-DIGIT             [0-9]
-HEXADECIMAL_DIGIT [0-9a-fA-F]
 /* 整数字面量 */
 
 LOWERCASE_BINARY_PREFIX 0b
 UPPERCASE_BINARY_PREFIX 0B
 LOWERCASE_HEXADECIMAL_PREFIX 0x
 UPPERCASE_HEXADECIMAL_PREFIX 0X
+
+ZERO              0
 %{
   // Code run each time a pattern is matched.
   # define YY_USER_ACTION  loc.columns (yyleng);
@@ -127,52 +60,22 @@ UPPERCASE_HEXADECIMAL_PREFIX 0X
   // Code run each time yylex is called.
   loc.step ();
 %}
+<INITIAL>{WHITESPACE} { return pache::parser::make_WHITESPACE(loc); }
+<LINE_END>{NEW_LINE} { 
+  BEGIN(INITIAL);
+  return pache::parser::make_NEW_LINE(loc);
+}
+<LINE_END>{HORIZONTAL_WHITESPACE} { 
+//  BEGIN(INITIAL);  
+  return pache::parser::make_HORIZONTAL_WHITESPACE(loc);
+}
 {MAIN}          { return pache::parser::make_MAIN(loc); }
 {LET}           { return pache::parser::make_LET(loc); }
-{BITWISE_NOT}   { return pache::parser::make_BITWISE_NOT(loc); }
-{B_AND}         { return pache::parser::make_B_AND(loc); }
-{B_XOR}         { return pache::parser::make_B_XOR(loc); }
-{B_OR}         { return pache::parser::make_B_OR(loc); }
 {IF}            { return pache::parser::make_IF(loc); }
 {ELSE}          { return pache::parser::make_ELSE(loc); }
 
 {ASSIGN}        { return pache::parser::make_ASSIGN(loc); }
-{one_line_comment}   { /* 忽略, 不做任何操作 */ }
-{horizontal_whitespace}+ {
-  // Make the span empty by setting start to end.
-  //context.current_token_position.step();
-  BEGIN(AFTER_WHITESPACE);
-}
-
-{VOID}          { return pache::parser::make_VOID(loc); }
-
-{BOOL}          { return pache::parser::make_BOOL(loc); }
-
-{SIZE}          { return pache::parser::make_SIZE(loc); }
-
-{I8}            { return pache::parser::make_I8(loc); }
-{I16}           { return pache::parser::make_I16(loc); }
-{I32}           { return pache::parser::make_I32(loc); }
-{I64}           { return pache::parser::make_I64(loc); }
-{I128}          { return pache::parser::make_I128(loc); }
-
-{U8}            { return pache::parser::make_U8(loc); }
-{U16}           { return pache::parser::make_U16(loc); }
-{U32}           { return pache::parser::make_U32(loc); }
-{U64}           { return pache::parser::make_U64(loc); }
-{U128}          { return pache::parser::make_U128(loc); }
-
-{F16}           { return pache::parser::make_F16(loc); }
-{F32}           { return pache::parser::make_F32(loc); }
-{F64}           { return pache::parser::make_F64(loc); }
-{F128}          { return pache::parser::make_F128(loc); }
-
-{D32}           { return pache::parser::make_D32(loc); }
-{D64}           { return pache::parser::make_D64(loc); }
-
-{C8}            { return pache::parser::make_C8(loc); }
-{C16}           { return pache::parser::make_C16(loc); }
-{C32}           { return pache::parser::make_C32(loc); }
+{one_line_comment}+   { /* 忽略, 不做任何操作 */ }
 
 {MUTABLE}         { return pache::parser::make_MUTABLE(loc);}
 {VOLATILE}         { return pache::parser::make_VOLATILE(loc);}
@@ -180,87 +83,111 @@ UPPERCASE_HEXADECIMAL_PREFIX 0X
 "func"          { return pache::parser::make_FUNC(loc); }
 {CLASS}                 { return pache::parser::make_CLASS(loc); }
 
-
-{LEFT_CURLY_BRACE}      { return pache::parser::make_LEFT_CURLY_BRACE(loc); }
-{LEFT_PARENTHESIS}      { return pache::parser::make_LEFT_PARENTHESIS(loc); }
-{LEFT_SQUARE_BRACKET}   { return pache::parser::make_LEFT_SQUARE_BRACKET(loc); }
-{PLUS}                  { return pache::parser::make_PLUS(loc); }
-{MINUS}                 { return pache::parser::make_MINUS(loc); }
-{PERCENT}               { return pache::parser::make_PERCENT(loc); }
-{SLASH}                 { return pache::parser::make_SLASH(loc); }
-{DOT}                { return pache::parser::make_DOT(loc); }
-
-{THREE_WAY_COMPARISON}  { return pache::parser::make_THREE_WAY_COMPARISON(loc); }
-{LESS}                  { return pache::parser::make_LESS(loc); }
-{LESS_EQUAL}            { return pache::parser::make_LESS_EQUAL(loc); }
-{GREATER}               { return pache::parser::make_GREATER(loc); }
-{GREATER_EQUAL}         { return pache::parser::make_GREATER_EQUAL(loc); }
-{EQUAL}                 { return pache::parser::make_EQUAL(loc); }
-{NOT_EQUAL}             { return pache::parser::make_NOT_EQUAL(loc); }
-
-{LOGICAL_NOT}           { return pache::parser::make_LOGICAL_NOT(loc); }
-{AND}                   { return pache::parser::make_AND(loc); }
-{OR}                    { return pache::parser::make_OR(loc); }
+"{"    { return pache::parser::make_LEFT_CURLY_BRACE(loc); }
+"("     { return pache::parser::make_LEFT_PARENTHESIS(loc); }
+"["   { return pache::parser::make_LEFT_SQUARE_BRACKET(loc); }
+"}"     { return pache::parser::make_RIGHT_CURLY_BRACE(loc); }
+")"      { return pache::parser::make_RIGHT_PARENTHESIS(loc); }
+"]"  { return pache::parser::make_RIGHT_SQUARE_BRACKET(loc); }
 
 {LOOP}                  { return pache::parser::make_LOOP(loc); }
 {BREAK}                 { return pache::parser::make_BREAK(loc); }
 {CONTINUE}              { return pache::parser::make_CONTINUE(loc); }
 
+"~"   { return pache::parser::make_BITWISE_NOT(loc); }
+{WHITESPACE}"&"{WHITESPACE}         { return pache::parser::make_B_AND(loc); }
+{WHITESPACE}"|"{WHITESPACE}        { return pache::parser::make_B_XOR(loc); }
+{WHITESPACE}"^"{WHITESPACE}        { return pache::parser::make_B_OR(loc); }
 
+"+"                  { return pache::parser::make_PLUS(loc); }
+{WHITESPACE}"+"{WHITESPACE}            { return pache::parser::make_BINARY_PLUS(loc); }
 
-{COMMA}                 { return pache::parser::make_COMMA(loc); }
-{SEMICOLON}           { return pache::parser::make_SEMICOLON(loc); }
-{IDENTIFIER}   { return pache::parser::make_IDENTIFIER(yytext, loc);}
+"-"              { return pache::parser::make_MINUS(loc); }
+{WHITESPACE}"-"{WHITESPACE}            { return pache::parser::make_BINARY_MINUS(loc); }
 
-{ZERO} {return pache::parser::make_ZERO(loc); }
-{BINARY_DIGIT} {return pache::parser::make_BINARY_DIGIT(yytext, loc); }
-{OCTAL_DIGIT} {return pache::parser::make_OCTAL_DIGIT(yytext, loc); }
-{NONZERO_DIGIT} {return pache::parser::make_NONZERO_DIGIT(yytext, loc); }
-{DIGIT} {return pache::parser::make_DIGIT(yytext, loc); }
-{HEXADECIMAL_DIGIT} {return pache::parser::make_HEXADECIMAL_DIGIT(yytext, loc); }
-
-{LOWERCASE_BINARY_PREFIX} { return pache::parser::make_LOWERCASE_BINARY_PREFIX(loc); }
-{UPPERCASE_BINARY_PREFIX} { return pache::parser::make_UPPERCASE_BINARY_PREFIX(loc); }
-{LOWERCASE_HEXADECIMAL_PREFIX} { return pache::parser::make_LOWERCASE_HEXADECIMAL_PREFIX(loc); }
-{UPPERCASE_HEXADECIMAL_PREFIX} { return pache::parser::make_UPPERCASE_HEXADECIMAL_PREFIX(loc); }
-
-\n+    {   // Advance end by yyleng lines, resetting the column to zero.
-  //context.current_token_position.lines(yyleng);
-  // Make the span empty by setting start to end.
-  //context.current_token_position.step();
-  BEGIN(AFTER_WHITESPACE);
-   }
-{RIGHT_PARENTHESIS} {
-  BEGIN(AFTER_OPERAND);
-  return pache::parser::make_RIGHT_PARENTHESIS(loc);
-}
-{RIGHT_CURLY_BRACE} {
-  BEGIN(AFTER_OPERAND);
-  return pache::parser::make_RIGHT_CURLY_BRACE(loc);
-}
-{RIGHT_SQUARE_BRACKET} {
-  BEGIN(AFTER_OPERAND);
-  return pache::parser::make_RIGHT_SQUARE_BRACKET(loc);
-}
-
- /* `*` operator case 1: */
-<AFTER_WHITESPACE>"*"{whitespace}+ {
-  BEGIN(AFTER_WHITESPACE);
+<INITIAL>"*" { return pache::parser::make_UNARY_STAR(loc); }
+{WHITESPACE}"*"{WHITESPACE} {
   return pache::parser::make_BINARY_STAR(loc);
 }
- /* `*` operator case 2: */
-{horizontal_whitespace}"*"{horizontal_whitespace} { return pache::parser::make_BINARY_STAR(loc); }
- /* `*` operator case 3: */
-<AFTER_WHITESPACE>"*" { return pache::parser::make_PREFIX_STAR(loc); }
- /* `*` operator case 4: */
-<INITIAL,AFTER_OPERAND>"*"{whitespace}+ {
-  BEGIN(AFTER_WHITESPACE);
-  return pache::parser::make_POSTFIX_STAR(loc);
-}
- /* `*` operator case 5: */
-<INITIAL,AFTER_OPERAND>"*" { return pache::parser::make_UNARY_STAR(loc); }
+{WHITESPACE}"%"{WHITESPACE}               { return pache::parser::make_PERCENT(loc); }
+{WHITESPACE}"/"{WHITESPACE}                { return pache::parser::make_SLASH(loc); }
+"."                { return pache::parser::make_DOT(loc); }
 
-<<EOF>>  return pache::parser::make_EOF (loc);
+{WHITESPACE}"<<"{WHITESPACE}            { return pache::parser::make_LEFT_SHITF(loc); }
+{WHITESPACE}">>"{WHITESPACE}            { return pache::parser::make_RIGHT_SHIFT(loc); }
+
+{WHITESPACE}"<=>"{WHITESPACE}  { return pache::parser::make_THREE_WAY_COMPARISON(loc); }
+{WHITESPACE}"<"{WHITESPACE}           { return pache::parser::make_LESS(loc); }
+{WHITESPACE}"<="{WHITESPACE}            { return pache::parser::make_LESS_EQUAL(loc); }
+{WHITESPACE}">"{WHITESPACE}             { return pache::parser::make_GREATER(loc); }
+{WHITESPACE}">="{WHITESPACE}        { return pache::parser::make_GREATER_EQUAL(loc); }
+{WHITESPACE}"="{WHITESPACE}                { return pache::parser::make_EQUAL(loc); }
+{WHITESPACE}"!="{WHITESPACE}           { return pache::parser::make_NOT_EQUAL(loc); }
+
+"!"           { return pache::parser::make_LOGICAL_NOT(loc); }
+{WHITESPACE}"&&"{WHITESPACE}                   { return pache::parser::make_AND(loc); }
+{WHITESPACE}"||"{WHITESPACE}                  { return pache::parser::make_OR(loc); }
+
+","                 { return pache::parser::make_COMMA(loc); }
+
+";"          { 
+  //BEGIN(LINE_END);
+  return pache::parser::make_SEMICOLON(loc);
+}
+{IDENTIFIER}   { return pache::parser::make_IDENTIFIER(yytext, loc);}
+
+<BINARY,OCTAL,DECIMAL,HEXADECIMAL>"'" { return pache::parser::make_SINGLE_QUOTE(loc); }
+
+{LOWERCASE_BINARY_PREFIX} {
+  BEGIN(BINARY);
+  return pache::parser::make_LOWERCASE_BINARY_PREFIX(loc);
+}
+{UPPERCASE_BINARY_PREFIX} {
+  BEGIN(BINARY);
+  return pache::parser::make_UPPERCASE_BINARY_PREFIX(loc);
+}
+<BINARY>[01]+ {
+  return pache::parser::make_BINARY_DIGIT(yytext, loc);
+}
+<BINARY>. { 
+  BEGIN(INITIAL);
+  yyless(0);
+}
+
+<INITIAL>{ZERO} {
+  BEGIN(OCTAL);
+  return pache::parser::make_ZERO(loc);
+}
+<OCTAL>[0-7]+ {return pache::parser::make_OCTAL_DIGIT(yytext, loc); }
+<OCTAL>. { 
+  BEGIN(INITIAL);
+  yyless(0);
+}
+
+<INITIAL>[1-9] {
+  BEGIN(DECIMAL);
+  return pache::parser::make_NONZERO_DIGIT(yytext, loc); }
+<DECIMAL>[0-9]+ {return pache::parser::make_DIGIT(yytext, loc); }
+<DECIMAL>. { 
+  BEGIN(INITIAL);
+  yyless(0);
+}
+
+{LOWERCASE_HEXADECIMAL_PREFIX} {
+  BEGIN(HEXADECIMAL);
+  return pache::parser::make_LOWERCASE_HEXADECIMAL_PREFIX(loc);
+}
+{UPPERCASE_HEXADECIMAL_PREFIX} {
+  BEGIN(HEXADECIMAL);
+  return pache::parser::make_UPPERCASE_HEXADECIMAL_PREFIX(loc);
+}
+<HEXADECIMAL>[0-9a-fA-F]+ {return pache::parser::make_HEXADECIMAL_DIGIT(yytext, loc); }
+<HEXADECIMAL>. {
+  BEGIN(INITIAL);
+  yyless(0);
+}
+
+<<EOF>>  return pache::parser::make_EOF(loc);
 %%
 
 void
