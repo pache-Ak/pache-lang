@@ -97,6 +97,14 @@ public:
   virtual std::unique_ptr<build_type> clone() const override;
 };
 
+class byte_t final : public primary_type {
+public:
+  using c_type = std::byte;
+  virtual llvm::Type *get_llvm_type() const override;
+  virtual std::string_view decorated_name() const override;
+  virtual std::unique_ptr<build_type> clone() const override;
+};
+
 inline namespace integral {
 class integral_type : public primary_type {
 public:

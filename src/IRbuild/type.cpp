@@ -1,6 +1,7 @@
 #include "type.h"
 #include "../ast/type.h"
 #include "build.h"
+#include "scope.h"
 #include "llvm/IR/Type.h"
 #include <iostream>
 #include <memory>
@@ -56,6 +57,12 @@ llvm::Type *size_type_t::get_llvm_type() const { return Builder->getInt64Ty(); }
 std::string_view size_type_t::decorated_name() const { return "_size"sv; }
 std::unique_ptr<build_type> size_type_t::clone() const {
   return std::unique_ptr<size_type_t>(new size_type_t(*this));
+}
+
+llvm::Type *byte_t::get_llvm_type() const { return Builder->getInt8Ty(); }
+std::string_view byte_t::decorated_name() const { return "_byte"sv; }
+std::unique_ptr<build_type> byte_t::clone() const {
+  return std::unique_ptr<byte_t>(new byte_t(*this));
 }
 
 llvm::Type *i8_type_t::get_llvm_type() const { return Builder->getInt8Ty(); }
@@ -327,7 +334,14 @@ build_pointer_type(base_build &father, pointer_ast const &ast) {
 
 std::unique_ptr<build_type>
 build_named_type(base_build &father, named_type_ast const &ast) {
-  return father.find_type(ast.get_name());
+  std::unique_ptr<build_scope> p{ast.get_father_scope().build(father)};
+  if (p != nullptr) {
+    if (auto it = p->find_type(ast.get_name()); it != nullptr) {
+      return it->clone();
+    }
+  }
+
+  return nullptr;
 }
 bool operator==(build_type const &lhs, build_type const &rhs) {
   return lhs.decorated_name() == rhs.decorated_name();
