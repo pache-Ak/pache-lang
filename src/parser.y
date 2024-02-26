@@ -490,7 +490,19 @@ LITERAL
 ;
 
 INTEGER_LITERAL
-: binary_literal IDENTIFIER {
+: binary_literal  {
+  $$ = std::make_unique<binary_integer_literal>(std::move($1));
+}
+| octal_literal  {
+  $$ = std::make_unique<octal_integer_literal>(std::move($1));
+}
+| decimal_literal  {
+  $$ = std::make_unique<decimal_integer_literal>(std::move($1));
+}
+| hexadecimal_literal  {
+  $$ = std::make_unique<hexadecimal_integer_literal>(std::move($1));
+}
+| binary_literal IDENTIFIER {
   $$ = std::make_unique<binary_integer_literal>(std::move($1), std::move($2));
 }
 | octal_literal IDENTIFIER {
