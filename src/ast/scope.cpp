@@ -1,5 +1,6 @@
 #include "scope.h"
 #include <iostream>
+#include <memory>
 #include "IRbuild/scope.h"
 namespace pache {
 unqualified_scope_ast::~unqualified_scope_ast(){}
@@ -13,15 +14,15 @@ void relative_scope_ast::print() const {
 }
 void root_scope_ast::print() const { std::cout << "root_scope_ast\n"; }
 
-reference_ptr<base_build >
+std::unique_ptr<build_scope>
 unqualified_scope_ast::build(base_build  &build) const {
   return build_unqualified_scope(build, *this);
 }
-reference_ptr<base_build >
+std::unique_ptr<build_scope>
 relative_scope_ast::build(base_build  &build) const {
   return build_relative_scope(build, *this);
 }
-reference_ptr<base_build >
+std::unique_ptr<build_scope>
 root_scope_ast::build(base_build  &build) const {
   return build_root_scope(build, *this);
 }
