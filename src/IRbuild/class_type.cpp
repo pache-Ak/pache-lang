@@ -1,7 +1,9 @@
 #include "class_type.h"
+#include "ast/class.h"
 #include "ast/type.h"
 #include "build.h"
 #include "type.h"
+#include "llvm/IR/Type.h"
 #include <algorithm>
 #include <cstddef>
 #include <memory>
@@ -25,7 +27,10 @@ class_type::class_type(base_build &build, class_ast const &ast) {
     }
   }
 
-  m_type = llvm::StructType::create(vars_type, ast.get_name());
+  if (vars_type.empty()) {
+    vars_type.emplace_back(pache::Builder->getInt8Ty());
+  }
+  m_type = llvm::StructType::create(*TheContext, vars_type, ast.get_name());
 }
 
 void class_type::set_mutable() {   if (!is_const()) {
