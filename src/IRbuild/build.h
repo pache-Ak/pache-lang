@@ -36,11 +36,10 @@ public:
   explicit base_build(base_build *const father) : m_father(father) {}
   virtual ~base_build() = 0;
 
-  virtual reference_ptr<build_variable>
-  find_var(std::string_view name) const = 0;
-  virtual reference_ptr<build_type const> find_type(std::string_view name) const = 0;
+  reference_ptr<build_variable> find_var(std::string_view name);
+  reference_ptr<build_type const> find_type(std::string_view name) const;
+  reference_ptr<base_build> find_scope(std::string_view name);
 
-  
   virtual std::set<reference_ptr<function_build>> find_function(std::string_view name) const = 0;
   virtual reference_ptr<build_variable>
   qualified_var_lookup(std::string_view name) = 0;

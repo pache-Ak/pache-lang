@@ -34,19 +34,6 @@ class_build::class_build(base_build *const father,
   }
 }
 
-reference_ptr<build_variable >
-class_build::find_var(std::string_view name) const {
-  assert(false);
-  return nullptr;
-}
-
-reference_ptr<build_type const> class_build::find_type(std::string_view name) const {
-  if (auto it{builded_classes.find(name)}; it != builded_classes.end()) {
-    return &it->second->get_type();
-  } else {
-    return m_father->find_type(name);
-  }
-}
 // class_build::class_build(
 //     base_build *const father,
 //     /* std::string_view  &name,  */ llvm::StructType *llvm_type)

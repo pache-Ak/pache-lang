@@ -26,14 +26,11 @@ public:
   explicit block_scope(base_build *const father, loop_label const *const loop)
       : base_build(father), loop_label(loop) {}
       
-  virtual reference_ptr<build_variable>
-  find_var(std::string_view name) const override;
    virtual std::set<reference_ptr<function_build>> find_function(std::string_view name) const override {
     // should not be call
     return {};
    }
 
-  virtual reference_ptr<build_type const> find_type(std::string_view name) const override;
   virtual void insert(std::string_view name,
                       std::unique_ptr<build_variable> &&value) ;
   void deallco_all();

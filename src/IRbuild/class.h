@@ -22,9 +22,7 @@ public:
 
   class_type const &get_type() const {return m_type;}
   //llvm::StructType *get_IRtype() const { return m_type.get_llvm_type(); }
-  virtual reference_ptr<build_variable >
-  find_var(std::string_view name) const override;
-  virtual reference_ptr<build_type const> find_type(std::string_view name) const override;
+
 virtual std::set<reference_ptr<function_build>> find_function(std::string_view name) const override {
   if (m_father != nullptr) {
   std::set<reference_ptr<function_build>> s{m_father->find_function(name)};

@@ -57,37 +57,7 @@ void return_exp_stmt_build(block_scope &father, return_ast const &ast) {
 
   Builder->CreateRet(val);
 }
-reference_ptr<build_variable>
-block_scope::find_var(std::string_view name) const {
-  // 首先会查找包含这次名字使用的块中这次使用之前的部分
-  for (auto &it: named_values) {
-    if (it.first == name) {
-      return it.second;
-    }
-  }
 
-  if (base_build::m_father != nullptr) {
-    // 然后查找外围块在该块开头之前的部分
-    return base_build::m_father->find_var(name);
-  } else {
-    // TODO
-    // block should be in function 
-    // base_build::m_father shouldn't be null
-    std::cerr << "file_name: line: "
-              << "name " << name << "not found!\n";
-    return nullptr;
-  }
-}
-
-reference_ptr<build_type const>
-block_scope::find_type(std::string_view name) const {
-  if (base_build::m_father != nullptr) {
-    return base_build::m_father->find_type(name);
-  } else {
-    // TODO log error
-    return nullptr;
-  }
-}
 
 void block_scope::insert(std::string_view name,
                          std::unique_ptr<build_variable> &&value) {

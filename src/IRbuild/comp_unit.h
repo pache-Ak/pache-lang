@@ -15,9 +15,6 @@ namespace pache {
 class file_build : public base_build {
 public:
   explicit file_build(compunit_ast const & comp);
-  virtual reference_ptr<build_variable >
-  find_var(std::string_view name) const override;
-  virtual reference_ptr<build_type const> find_type(std::string_view name) const override;
   void make_statement_file();
   virtual std::set<reference_ptr<function_build>> find_function(std::string_view name) const override {
     // m_father should be null

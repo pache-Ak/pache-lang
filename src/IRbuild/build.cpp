@@ -39,7 +39,7 @@ base_build::prprimary_type{
     val.emplace("void"sv, std::make_unique<void_type_t>());
     val.emplace("bool"sv, std::make_unique<bool_type_t>());
     val.emplace("s"sv,    std::make_unique<size_type_t>());
-
+    
     return val;
   }()
 };
@@ -56,4 +56,32 @@ base_build::prprimary_type{
 //   }
 // }
 
+reference_ptr<base_build> base_build::find_scope(std::string_view name) {
+  if (auto p = qualified_scope_lookup(name); p != nullptr) {
+    return p;
+  } else if (m_father != nullptr) {
+    return m_father->find_scope(name);
+  }
+}
+reference_ptr<build_variable> base_build::find_var(std::string_view name) {
+  if (auto p = qualified_var_lookup(name); p != nullptr) {
+    return p;
+  } else if (m_father != nullptr) {
+    return m_father->find_var(name);
+  } else {
+    return nullptr;
+  }
+}
+reference_ptr<build_type const>
+base_build::find_type(std::string_view name) const {
+  if (auto p = prprimary_type.find(name); p != nullptr) {
+    return p->second;
+  } else if (auto p = qualified_type_lookup(name); p != nullptr) {
+    return p;
+  } else if (m_father != nullptr) {
+    return m_father->find_type(name);
+  } else {
+    return nullptr;
+  }
+}
 } // namespace pache

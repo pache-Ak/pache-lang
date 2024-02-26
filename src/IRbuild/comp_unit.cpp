@@ -68,40 +68,8 @@ file_build::file_build(compunit_ast const & comp) : base_build(nullptr) {
     }
   }
 }
-reference_ptr<build_type const> file_build::find_type(std::string_view name) const {
-  if (auto it = builded_classes.find(name); it != builded_classes.end()) {
-    return &it->second.get_type();
-  } else if (m_father != nullptr) {
-    return m_father->find_type(name);
-  } else {
-    return nullptr;
-  }
-}
-void file_build::make_statement_file() {}
-reference_ptr<build_variable >
-file_build::find_var(std::string_view name) const {
-  std::unordered_set<reference_ptr<build_variable>> s;
-  if (auto it = global_variables.find(name); it != global_variables.end()) {
-    s.emplace(it->second);
-  } 
-  for (auto file : import_packges) {
-    if (file.second.get().find_var(name) != nullptr) {
-      s.emplace(file.second.get().find_var(name));
-    }
-  }
-  // using import space
 
-  if (s.empty()) {
-    // TODO log error
-    // not find
-  } else if (s.size() == 1) {
-    return *s.begin();
-  } else {
-    // TODO  log error
-    // is amibious
-  }
-    return nullptr;
-}
+void file_build::make_statement_file() {}
 
 std::unique_ptr<file_build> build_file(compunit_ast const & ast) {
   return std::make_unique<file_build>(ast);
