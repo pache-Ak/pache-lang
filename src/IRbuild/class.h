@@ -24,7 +24,7 @@ public:
   //llvm::StructType *get_IRtype() const { return m_type.get_llvm_type(); }
   virtual reference_ptr<build_variable >
   find_var(std::string_view name) const override;
-  virtual std::unique_ptr<build_type> find_type(std::string_view name) const override;
+  virtual reference_ptr<build_type const> find_type(std::string_view name) const override;
 virtual std::set<reference_ptr<function_build>> find_function(std::string_view name) const override {
   if (m_father != nullptr) {
   std::set<reference_ptr<function_build>> s{m_father->find_function(name)};
@@ -39,14 +39,20 @@ virtual std::set<reference_ptr<function_build>> find_function(std::string_view n
     
   } 
 }
-  
+
+virtual reference_ptr<build_variable>
+qualified_var_lookup(std::string_view name) override;
+virtual reference_ptr<build_type const>
+qualified_type_lookup(std::string_view name) const override;
+virtual reference_ptr<base_build>
+qualified_scope_lookup(std::string_view name) override;
+
 private:
   std::unordered_multimap<std::string_view, std::unique_ptr<function_build>> m_functions;
   
   // std::string_view  m_name; // used by log error
   class_type m_type;
-  std::unordered_map<std::string_view, std::unique_ptr<class_build>>
-      builded_classes;
+  std::unordered_map<std::string_view, std::unique_ptr<class_build>> builded_classes;
 };
 } // namespace pache
 

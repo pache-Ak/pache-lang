@@ -1,6 +1,7 @@
 #include "expression.h"
 #include "../IRbuild/expression.h"
 #include <memory>
+#include <iostream>
 
 namespace pache {
 exp_ast::~exp_ast(){}

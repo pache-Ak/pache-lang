@@ -1,15 +1,31 @@
 #include "build.h"
 #include "type.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include <iostream>
+#include <memory>
 
 namespace pache {
 inline namespace IR {
- void InitializeModule() {
-  // Open a new context and module.
-  TheContext = std::make_unique<llvm::LLVMContext>();
-  TheModule =  std::make_unique<llvm::Module>("first modlue", *TheContext);
 
+
+std::unique_ptr<llvm::LLVMContext> TheContext;
+    
+std::unique_ptr<llvm::Module> TheModule;
+// Create a new builder for the module.
+std::unique_ptr<llvm::IRBuilder<>> Builder;
+std::unique_ptr<llvm::legacy::FunctionPassManager> TheFPM = std::make_unique<llvm::legacy::FunctionPassManager>(TheModule.get());
+void InitializeModule()  {
+  // Open a new context and module.
+  TheContext = std::unique_ptr<llvm::LLVMContext>{ new llvm::LLVMContext()};
+  TheModule =std::unique_ptr<llvm::Module> {new llvm::Module("first modlue", *TheContext)};
   // Create a new builder for the module.
-  Builder  = std::make_unique<llvm::IRBuilder<>>(*TheContext);
+  Builder  = std::unique_ptr<llvm::IRBuilder<>>{new llvm::IRBuilder<>(*TheContext)} ;
+  std::cout << pache::TheContext.get() <<"\n";
+  std::cout << pache::TheModule.get() <<"\n";
+  std::cout << pache::Builder.get() <<"\n";
+  
+  std::cout << "ini finsh.\n";
 }
 }
 base_build::~base_build(){}

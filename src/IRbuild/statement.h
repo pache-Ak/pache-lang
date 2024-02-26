@@ -8,7 +8,6 @@
 #include "llvm/IR/Instructions.h"
 
 #include <memory>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -34,9 +33,7 @@ public:
     return {};
    }
 
-  virtual std::unique_ptr<build_type> find_type(std::string_view name) const override;
-  virtual void insert(std::string &&name,
-                      std::unique_ptr<build_variable> &&value) ;
+  virtual reference_ptr<build_type const> find_type(std::string_view name) const override;
   virtual void insert(std::string_view name,
                       std::unique_ptr<build_variable> &&value) ;
   void deallco_all();
@@ -45,12 +42,19 @@ public:
   llvm::BasicBlock *get_loop_end() const override;
   loop_label const *const get_loop_father() const;
 
+  virtual reference_ptr<build_variable>
+  qualified_var_lookup(std::string_view name) override;
+  virtual reference_ptr<build_type const>
+  qualified_type_lookup(std::string_view name) const override;
+  virtual reference_ptr<base_build>
+  qualified_scope_lookup(std::string_view name) override;
+
 private:
   // here need a symbol table
   // search by string
   // Need to maintain the order of insertion
   // Because it needs to be destroyed in reverse order of insertion
-  std::vector<std::pair<std::string, std::unique_ptr<build_variable>>>
+  std::vector<std::pair<std::string_view, std::unique_ptr<build_variable>>>
       named_values;
 };
 void statement_build(block_scope &father, stmt_ast const &ast);

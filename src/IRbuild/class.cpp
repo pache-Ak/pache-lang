@@ -39,8 +39,37 @@ class_build::find_var(std::string_view name) const {
   assert(false);
   return nullptr;
 }
+
+reference_ptr<build_type const> class_build::find_type(std::string_view name) const {
+  if (auto it{builded_classes.find(name)}; it != builded_classes.end()) {
+    return &it->second->get_type();
+  } else {
+    return m_father->find_type(name);
+  }
+}
 // class_build::class_build(
 //     base_build *const father,
 //     /* std::string_view  &name,  */ llvm::StructType *llvm_type)
 //     : base_build(father), /* m_name(name),  */ m_type(llvm_type) {}
+reference_ptr<build_variable>
+class_build::qualified_var_lookup(std::string_view name)  {
+  return nullptr;
+  // TODO add static vaiables;
+}
+reference_ptr<build_type const>
+class_build::qualified_type_lookup(std::string_view name) const {
+  if (auto it = builded_classes.find(name); it != builded_classes.end()) {
+    return &it->second->get_type();
+  } else {
+    return nullptr;
+  }
+}
+reference_ptr<base_build>
+class_build::qualified_scope_lookup(std::string_view name)  {
+  if (auto it = builded_classes.find(name); it != builded_classes.end()) {
+    return reference_ptr<base_build>(it->second);
+  } else {
+    return nullptr;
+  }
+}
 } // namespace pache

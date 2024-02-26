@@ -79,25 +79,13 @@ block_scope::find_var(std::string_view name) const {
   }
 }
 
-std::unique_ptr<build_type>
+reference_ptr<build_type const>
 block_scope::find_type(std::string_view name) const {
   if (base_build::m_father != nullptr) {
     return base_build::m_father->find_type(name);
   } else {
     // TODO log error
     return nullptr;
-  }
-}
-
-void block_scope::insert(std::string &&name,
-                         std::unique_ptr<build_variable> &&value) {
-  if (find_var(name) == nullptr) {
-    named_values.emplace_back(
-        std::make_pair(std::move(name), std::move(value)));
-  } else {
-    // TODO log error as this:
-    std::cerr << "file_name: line: "
-              << "redifintion " << name << "\n";
   }
 }
 
@@ -287,5 +275,26 @@ llvm::BasicBlock *block_scope::get_loop_end() const {
 }
 loop_label const *const block_scope::get_loop_father() const {
   return loop_label::m_father;
+}
+reference_ptr<build_variable>
+block_scope::qualified_var_lookup(std::string_view name) {
+  if (auto it = std::find_if(
+          named_values.begin(), named_values.end(),
+          [name](
+              std::pair<std::string_view, std::unique_ptr<build_variable>> const
+                  &arg) { return arg.first == name; });
+      it != named_values.end()) {
+    return it->second;
+  } else {
+    return nullptr;
+  }
+}
+reference_ptr<build_type const>
+block_scope::qualified_type_lookup(std::string_view name) const {
+  return nullptr;
+}
+reference_ptr<base_build>
+block_scope::qualified_scope_lookup(std::string_view name) {
+  return nullptr;
 }
 } // namespace pache

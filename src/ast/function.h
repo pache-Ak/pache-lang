@@ -4,7 +4,6 @@
 #include "ast.h"
 #include "statement.h"
 #include "type.h"
-#include <iostream>
 #include <memory>
 #include <string>
 #include <string_view>

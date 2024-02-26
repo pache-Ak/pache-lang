@@ -15,12 +15,12 @@
 namespace pache {
 
 inline namespace IR {
-static std::unique_ptr<llvm::LLVMContext> TheContext;
+extern std::unique_ptr<llvm::LLVMContext> TheContext;
     
-static std::unique_ptr<llvm::Module> TheModule;
+extern std::unique_ptr<llvm::Module> TheModule;
 // Create a new builder for the module.
-static std::unique_ptr<llvm::IRBuilder<>> Builder;
-static std::unique_ptr<llvm::legacy::FunctionPassManager> TheFPM = std::make_unique<llvm::legacy::FunctionPassManager>(TheModule.get());
+extern std::unique_ptr<llvm::IRBuilder<>> Builder;
+extern std::unique_ptr<llvm::legacy::FunctionPassManager> TheFPM;
 void InitializeModule();
 } // namespace IR
 
@@ -38,10 +38,15 @@ public:
 
   virtual reference_ptr<build_variable>
   find_var(std::string_view name) const = 0;
-  virtual std::unique_ptr<build_type> find_type(std::string_view name) const = 0;
+  virtual reference_ptr<build_type const> find_type(std::string_view name) const = 0;
 
   
   virtual std::set<reference_ptr<function_build>> find_function(std::string_view name) const = 0;
+  virtual reference_ptr<build_variable>
+  qualified_var_lookup(std::string_view name) = 0;
+  virtual reference_ptr<build_type const> qualified_type_lookup(std::string_view name) const = 0;
+  virtual reference_ptr<base_build> qualified_scope_lookup(std::string_view name)  = 0;
+  base_build *const m_father;
 protected:
   base_build(base_build &&) = default;
   base_build(base_build const &other) = default;
@@ -50,7 +55,6 @@ protected:
   
 
   // point to father scope maybe is nullptr
-  base_build *const m_father;
 
   static std::unordered_map<
     std::string_view, std::unique_ptr<build_type>

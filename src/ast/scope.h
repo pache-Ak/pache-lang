@@ -1,13 +1,13 @@
 #ifndef AST_SCOPE_H
 #define AST_SCOPE_H
 
+#include "IRbuild/build.h"
 #include "ast.h"
-#include <algorithm>
+#include "reference_ptr.h"
 #include <memory>
 #include <string>
 #include <string_view>
 #include <utility>
-#include <vector>
 
 namespace pache {
 class scope_ast;
@@ -19,6 +19,9 @@ public:
       : m_scope(std::move(scope)), m_iden(std::move(identifier)) {}
 
   std::string_view get_name() const;
+  scope_ast const &get_father_scope() const {
+    return *m_scope;
+  }
 
 private:
   std::unique_ptr<scope_ast> m_scope;
@@ -28,12 +31,15 @@ private:
 class scope_ast : public base_ast {
 public:
   virtual ~scope_ast() = default;
+  virtual reference_ptr<base_build >
+  build(base_build  &build) const = 0;
 };
 
 class unqualified_scope_ast final : public scope_ast {
 public:
   virtual ~unqualified_scope_ast();
-
+  virtual reference_ptr<base_build >
+  build(base_build  &build) const override;
   virtual void print() const override;
 }; 
 
@@ -51,6 +57,14 @@ explicit relative_scope_ast(std::unique_ptr<scope_ast> &&father, std::string &&n
 
 virtual void print() const override;
   virtual ~relative_scope_ast() = default;
+  virtual reference_ptr<base_build >
+  build(base_build  &build) const override;
+  scope_ast const &get_father_scope() const {
+    return m_iden.get_father_scope();
+  }
+  std::string_view get_name() const {
+    return m_iden.get_name();
+  }
 private:
   named_ast m_iden;
 };
@@ -59,7 +73,8 @@ class root_scope_ast final : public qualified_scope_ast{
 public:
   virtual ~root_scope_ast() = default;
   virtual void print() const override;
-
+  virtual reference_ptr<base_build >
+  build(base_build  &build) const override;
 private:
 };
 }

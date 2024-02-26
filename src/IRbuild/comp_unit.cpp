@@ -12,27 +12,27 @@
 #include "../reference_ptr.h"
 
 namespace pache {
-file_build::file_build(compunit_ast const *const comp) : base_build(nullptr) {
+file_build::file_build(compunit_ast const & comp) : base_build(nullptr) {
   // packages
   std::ifstream pcm_in;
-  for (auto &package : comp->get_packages()) {
-    // find file by name
+  // for (auto &package : comp.get_packages()) {
+  //   // find file by name
     
-    for (auto const &dir : comp->get_include_dir()) {
-      pcm_in.open(dir / package->get_file_name());
-      if (pcm_in.is_open()) {
+  //   for (auto const &dir : comp.get_include_dir()) {
+  //     pcm_in.open(dir / package->get_file_name());
+  //     if (pcm_in.is_open()) {
         
 
 
-        break;
-      } else {
-        continue;
-      }
-    }
+  //       break;
+  //     } else {
+  //       continue;
+  //     }
+  //   }
 
-  }
+  // }
 
-  for (auto &class_ast : comp->get_class()) {
+  for (auto &class_ast : comp.get_class()) {
     auto [it, b] = builded_classes.try_emplace(class_ast->get_name(),
                                                class_build(this, *class_ast));
     // b is false meaning insert error
@@ -41,7 +41,7 @@ file_build::file_build(compunit_ast const *const comp) : base_build(nullptr) {
     }
   }
 
-  for (auto &func_ast : comp->get_funcs_ast()) {
+  for (auto &func_ast : comp.get_funcs_ast()) {
 
     auto it= builded_functions.emplace(
         func_ast->get_name(), std::make_unique<function_build>(this, *func_ast));
@@ -51,8 +51,13 @@ file_build::file_build(compunit_ast const *const comp) : base_build(nullptr) {
     }
   }
 
-  for (auto &var : comp->get_var()) {
+  for (auto &var : comp.get_var()) {
     auto type = type_build(*this, var->get_var_type());
+
+    if (type == nullptr) {
+      return;
+    }
+
     TheModule->getOrInsertGlobal(var->get_var_name(), type->get_llvm_type());
     llvm::GlobalVariable *gVar = TheModule->getNamedGlobal(var->get_var_name());
     auto [it, b] = global_variables.try_emplace(
@@ -63,9 +68,9 @@ file_build::file_build(compunit_ast const *const comp) : base_build(nullptr) {
     }
   }
 }
-std::unique_ptr<build_type> file_build::find_type(std::string_view name) const {
+reference_ptr<build_type const> file_build::find_type(std::string_view name) const {
   if (auto it = builded_classes.find(name); it != builded_classes.end()) {
-    return it->second.get_type().clone();
+    return &it->second.get_type();
   } else if (m_father != nullptr) {
     return m_father->find_type(name);
   } else {
@@ -98,7 +103,31 @@ file_build::find_var(std::string_view name) const {
     return nullptr;
 }
 
-std::unique_ptr<file_build> build_file(compunit_ast const *const ast) {
+std::unique_ptr<file_build> build_file(compunit_ast const & ast) {
   return std::make_unique<file_build>(ast);
+}
+reference_ptr<build_variable>
+file_build::qualified_var_lookup(std::string_view name)  {
+  if (auto it = global_variables.find(name); it != global_variables.end()) {
+    return it->second;
+  } else {
+    return nullptr;
+  }
+}
+reference_ptr<build_type const>
+file_build::qualified_type_lookup(std::string_view name) const {
+  if (auto it = builded_classes.find(name); it != builded_classes.end()) {
+    return &it->second.get_type();
+  } else {
+    return nullptr;
+  }
+}
+reference_ptr<base_build>
+file_build::qualified_scope_lookup(std::string_view name) {
+  if (auto it = builded_classes.find(name); it != builded_classes.end()) {
+    return &it->second;
+  } else {
+    return nullptr;
+  }
 }
 } // namespace pache

@@ -1,4 +1,6 @@
 #include "function.h"
+
+#include <iostream>
 void pache::variable_ast::print() const {
   std::cout << "variable_ast:\n"
             << "m_type:\n";

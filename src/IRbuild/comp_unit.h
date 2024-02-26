@@ -14,10 +14,10 @@
 namespace pache {
 class file_build : public base_build {
 public:
-  explicit file_build(compunit_ast const *const comp);
+  explicit file_build(compunit_ast const & comp);
   virtual reference_ptr<build_variable >
   find_var(std::string_view name) const override;
-  virtual std::unique_ptr<build_type> find_type(std::string_view name) const override;
+  virtual reference_ptr<build_type const> find_type(std::string_view name) const override;
   void make_statement_file();
   virtual std::set<reference_ptr<function_build>> find_function(std::string_view name) const override {
     // m_father should be null
@@ -29,6 +29,14 @@ public:
     }
     return s;
   }
+
+  virtual reference_ptr<build_variable>
+  qualified_var_lookup(std::string_view name) override;
+  virtual reference_ptr<build_type const>
+  qualified_type_lookup(std::string_view name) const override;
+  virtual reference_ptr<base_build>
+  qualified_scope_lookup(std::string_view name) override;
+
 private:
   std::unordered_map<std::string_view, class_build> builded_classes;
   std::unordered_multimap<std::string_view, std::unique_ptr<function_build>> builded_functions;
@@ -39,7 +47,7 @@ private:
  // std::unordered_set<std::unique_ptr<scope_ast>> using_scope;
 };
 
-std::unique_ptr<file_build> build_file(compunit_ast const *const ast);
+std::unique_ptr<file_build> build_file(compunit_ast const & ast);
 
 } // namespace pache
 

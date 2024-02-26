@@ -10,4 +10,6 @@ add_library(IRbuild
             operator.cpp
             statement.cpp
             type.cpp
-            variable.cpp)
+            variable.cpp
+            scope.cpp
+            )
