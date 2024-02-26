@@ -304,7 +304,7 @@ inline namespace character {
 class character_type : public primary_type {
 public:
   virtual bool is_character() const override;
-
+  character_type() =default;
 protected:
   character_type(character_type const &other) = default;
   character_type &operator=(character_type const &other) = default;

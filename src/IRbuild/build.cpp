@@ -38,7 +38,28 @@ base_build::prprimary_type{
 
     val.emplace("void"sv, std::make_unique<void_type_t>());
     val.emplace("bool"sv, std::make_unique<bool_type_t>());
-    val.emplace("s"sv,    std::make_unique<size_type_t>());
+    val.emplace("size"sv, std::make_unique<size_type_t>());
+    val.emplace("byte"sv, std::make_unique<byte_t>());
+    val.emplace("i8"sv,   std::make_unique<i8_type_t>());
+    val.emplace("i16"sv,  std::make_unique<i16_type_t>());
+    val.emplace("i32"sv,  std::make_unique<i32_type_t>());
+    val.emplace("i64"sv,  std::make_unique<i64_type_t>());
+  //  val.emplace("i128"sv, std::make_unique<i128_type_t>());
+    val.emplace("u8"sv,   std::make_unique<u8_type_t>());
+    val.emplace("u16"sv,  std::make_unique<u16_type_t>());
+    val.emplace("u32"sv,  std::make_unique<u32_type_t>());
+    val.emplace("u64"sv,  std::make_unique<u64_type_t>());
+  //  val.emplace("u128"sv, std::make_unique<u128_type_t>());
+    val.emplace("f16"sv,  std::make_unique<f16_type_t>());
+    val.emplace("f32"sv,  std::make_unique<f32_type_t>());
+    val.emplace("f64"sv,  std::make_unique<f64_type_t>());
+    val.emplace("f128"sv, std::make_unique<f128_type_t>());
+  //  val.emplace("d32"sv,  std::make_unique<d32_type_t>());
+  //  val.emplace("d64"sv,  std::make_unique<d64_type_t>());
+  //  val.emplace("d128"sv, std::make_unique<d128_type_t>());
+    val.emplace("c8"sv,   std::make_unique<c8_type_t>());
+    val.emplace("c16"sv,  std::make_unique<c16_type_t>());
+    val.emplace("c32"sv,  std::make_unique<c32_type_t>());
     
     return val;
   }()
