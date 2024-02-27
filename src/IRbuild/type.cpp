@@ -1,5 +1,6 @@
 #include "type.h"
 #include "../ast/type.h"
+#include "ast/multi_array_type.h"
 #include "build.h"
 #include "scope.h"
 #include "llvm/IR/Type.h"

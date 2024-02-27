@@ -90,23 +90,6 @@ private:
 //   std::vector<std::size_t> const m_size;
 // };
 
-class multi_array_ast final: public type_ast {
-public:
-  explicit multi_array_ast(std::unique_ptr<type_ast> &&element_type,
-                           std::vector<std::size_t> &&size)
-      : m_element_type(std::move(element_type)), m_size(std::move(size)) {}
-  virtual std::unique_ptr<build_type> build(base_build &father) const override;
-  std::unique_ptr<type_ast> const & get_element_type() const { return m_element_type; }
-  std::vector<std::size_t> const& get_size() const {
-    return m_size;
-  }
-  virtual void print() const override;
-
-private:
-  std::unique_ptr<type_ast> m_element_type;
-  std::vector<std::size_t> const m_size;
-};
-
 class func_type_ast final : public type_ast {
 public:
   explicit func_type_ast(std::vector<std::unique_ptr<type_ast>> &&args,
@@ -128,6 +111,9 @@ public:
       :m_iden(std::move(scope), std::move(identifier)) {}
   virtual std::unique_ptr<build_type> build(base_build &father) const override;
   std::string_view get_name() const;
+    scope_ast const &get_father_scope() const {
+    return m_iden.get_father_scope();
+  }
   virtual void print() const override;
 
 private:

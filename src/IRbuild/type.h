@@ -332,11 +332,15 @@ public:
 } // namespace character
 } // namespace primary
 
+class exp_ast;
+
 class arr_type final : public build_type {
 public:
   explicit arr_type(std::unique_ptr<build_type> &&element_type,
-                            std::vector<std::size_t> &&size)
-      : m_element_type(std::move(element_type)), m_size(std::move(size)) {}
+                            std::vector<std::unique_ptr<exp_ast>>const &size)
+      : m_element_type(std::move(element_type)) {
+
+      }
   explicit arr_type(std::unique_ptr<build_type> &&element_type,
                             std::vector<std::size_t> const&size)
       : m_element_type(std::move(element_type)), m_size(size) {}    
@@ -430,12 +434,6 @@ build_pointer_type(base_build &father, pointer_ast const &ast);
 
 std::unique_ptr<reference_type>
 build_reference_type(base_build &father, reference_ast const &ast);
-
-// std::unique_ptr<arr_type>
-// build_arr_type(base_build &father, arr_ast const &ast);
-
- std::unique_ptr<arr_type>
-build_multi_array_type(base_build &father, multi_array_ast const &ast);
 
 std::unique_ptr<build_type>
 build_named_type(base_build &father, named_type_ast const &ast);

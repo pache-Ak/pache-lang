@@ -1,7 +1,6 @@
 #ifndef AST_LITERAL_H
 #define AST_LITERAL_H
 
-#include "../IRbuild/variable.h"
 #include "expression.h"
 #include <memory>
 #include <string>
@@ -9,6 +8,7 @@
 #include <utility>
 
 namespace pache {
+class build_variable;
 class literal_ast : public exp_ast {
 public:
   explicit literal_ast(std::string &&l, std::string &&s);

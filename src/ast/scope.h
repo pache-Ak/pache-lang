@@ -1,7 +1,6 @@
 #ifndef AST_SCOPE_H
 #define AST_SCOPE_H
 
-#include "IRbuild/scope.h"
 #include "ast.h"
 #include "reference_ptr.h"
 #include <memory>
@@ -11,6 +10,8 @@
 
 namespace pache {
 class scope_ast;
+class build_scope;
+class base_build;
 
 class named_ast  final{
 public:

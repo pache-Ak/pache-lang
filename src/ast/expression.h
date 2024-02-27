@@ -1,7 +1,6 @@
 #ifndef EXPRESSION_H
 #define EXPRESSION_H
 
-#include "../IRbuild/variable.h"
 #include "ast.h"
 #include "scope.h"
 #include "type.h"
@@ -11,6 +10,8 @@
 #include <utility>
 
 namespace pache {
+class build_variable;
+
 class exp_ast : public base_ast {
 public:
   explicit exp_ast() = default;

@@ -26,14 +26,6 @@ std::unique_ptr<build_type> pointer_ast::build(base_build &father) const {
   return build_pointer_type(father, *this);
 }
 
-// std::unique_ptr<build_type> arr_ast::build(base_build &father) const {
-//   return build_arr_type(father, *this);
-// }
-
- std::unique_ptr<build_type> multi_array_ast::build(base_build &father) const {
-   return build_multi_array_type(father, *this);
- }
-
 std::unique_ptr<build_type> func_type_ast::build(base_build &father) const {
   return build_func_type(father, *this);
 }
@@ -204,16 +196,6 @@ void pointer_ast::print() const {
   std::cout << "pointer_ast:\n"
             << "m_type:\n";
   m_type->print();
-}
-void multi_array_ast::print() const {
-  std::cout << "multi_array_ast:\n"
-            << "m_element_type:\n";
-  m_element_type->print();
-  std::cout << "m_size:{\n";
-  for (auto const s : m_size) {
-    std::cout << s << ", ";
-  }
-  std::cout << "}\n";
 }
 } // namespace pache
 

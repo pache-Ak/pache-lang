@@ -48,6 +48,7 @@
   #include "ast/compunit.h"
 
 #include "ast/type.h"
+#include "ast/multi_array_type.h"
 #include "driver.h"
 #include "ast/literal.h"
 }
@@ -103,14 +104,10 @@
   SINGLE_QUOTE          // '
   ALLOCATION            // new
   DEALLOCATION          // delete
-  UNARY_STAR "unary *"
-  PREFIX_STAR "prefix *"
-  POSTFIX_STAR "postfix *"
-  BINARY_STAR "binary *"
-  LOWERCASE_BINARY_PREFIX      // 0b
-  UPPERCASE_BINARY_PREFIX      // 0B
-  LOWERCASE_HEXADECIMAL_PREFIX // 0x
-  UPPERCASE_HEXADECIMAL_PREFIX // 0X
+  UNARY_STAR            // *
+  BINARY_STAR           //  *
+  BINARY_PREFIX         // 0b 0B
+  HEXADECIMAL_PREFIX    // 0x 0X
   ZERO                          // 0
 %token RETURN FUNC CLASS
 %token <std::string> IDENTIFIER 
@@ -138,7 +135,7 @@
 %type <std::unique_ptr<pache::exp_ast>> bitwise_xor_expression
 %type <std::unique_ptr<pache::exp_ast>> bitwise_or_expression
 %type <std::unique_ptr<pache::func_ast>> FuncDef  // main_func
-%type <std::vector<std::size_t>> size_list
+%type <std::vector<std::unique_ptr<pache::exp_ast>>> size_list
 %type <std::unique_ptr<pache::scope_ast>> scope_resolution
 %type <std::unique_ptr<pache::exp_ast>> LITERAL INTEGER_LITERAL
 %type <std::string> binary_digit_sequence octal_digit_sequence decimal_digit_sequence hexadecimal_digit_sequence
@@ -302,17 +299,17 @@ $$ = std::move($1);
 
 
 size_list:
-  INTEGER COMMA {
-    $$ = std::vector<std::size_t>{};
-    $$.push_back($1);
+  expression COMMA {
+    $$ = std::vector<std::unique_ptr<pache::exp_ast>>{};
+    $$.emplace_back(std::move($1));
   } |
-  size_list  INTEGER  COMMA {
+  size_list  expression  COMMA {
     $$ = std::move($1);
-    $$.push_back($2);
+    $$.emplace_back(std::move($2));
   }|
-  size_list  INTEGER{
+  size_list  expression{
     $$ = std::move($1);
-    $$.push_back($2);
+    $$.emplace_back(std::move($2));
   }
   ;
 
@@ -516,14 +513,9 @@ INTEGER_LITERAL
 }
 
 binary_literal
-: binary_preix binary_digit_sequence {
+: BINARY_PREFIX binary_digit_sequence {
   $$ = std::move($2);
 }
-
-binary_preix
-: LOWERCASE_BINARY_PREFIX
-| UPPERCASE_BINARY_PREFIX
-;
 
 binary_digit_sequence
 : BINARY_DIGIT {
@@ -578,13 +570,9 @@ decimal_digit_sequence
 ;
 
 hexadecimal_literal
-: hexadecimal_prefix hexadecimal_digit_sequence {
+: HEXADECIMAL_PREFIX hexadecimal_digit_sequence {
   $$ = std::move($2);
 }
-;
-hexadecimal_prefix
-: LOWERCASE_HEXADECIMAL_PREFIX
-| UPPERCASE_HEXADECIMAL_PREFIX
 ;
 
 hexadecimal_digit_sequence

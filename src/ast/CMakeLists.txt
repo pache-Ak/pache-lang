@@ -7,4 +7,6 @@ add_library(ast
             literal.cpp
             scope.cpp
             statement.cpp
-            type.cpp)
+            type.cpp
+            multi_array_type.cpp
+            )

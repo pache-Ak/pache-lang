@@ -5,7 +5,7 @@ void pache::compunit_ast::print() const {
   std::cout << "compunit_ast:\n"
             << "m_packages:{\n";
   for (auto const &ast : m_packages) {
-    ast->print();
+  //  ast->print();
   }
   std::cout << "}\n"
             << "m_var_table:{\n";
