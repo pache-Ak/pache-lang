@@ -10,6 +10,10 @@
 #include <fstream>
 #include <unordered_set>
 #include "../reference_ptr.h"
+#include "variable.h"
+#include "llvm/IR/Constant.h"
+#include "llvm/IR/Value.h"
+#include "llvm/Support/Casting.h"
 
 namespace pache {
 file_build::file_build(compunit_ast const & comp) : base_build(nullptr) {
@@ -58,6 +62,8 @@ file_build::file_build(compunit_ast const & comp) : base_build(nullptr) {
       return;
     }
 
+    auto val = var->get_init_exp()->build(*this);
+    
     TheModule->getOrInsertGlobal(var->get_var_name(), type->get_llvm_type());
     llvm::GlobalVariable *gVar = TheModule->getNamedGlobal(var->get_var_name());
     auto [it, b] = global_variables.try_emplace(
@@ -65,7 +71,10 @@ file_build::file_build(compunit_ast const & comp) : base_build(nullptr) {
     // b is false meaning insert error
     if (!b) {
       std::cerr << "redefine variable.\n";
+      return;
     }
+
+    gVar->setInitializer(llvm::dyn_cast<llvm::Constant>(val->get_value()));
   }
 }
 

@@ -15,7 +15,7 @@ namespace pache {
 inline namespace integer {
     
 template <class Integral>
-std::unique_ptr<build_constant_variable>
+std::unique_ptr<build_prvalue_variable>
     build_integral(std::intmax_t i);
 
     std::unordered_map<
