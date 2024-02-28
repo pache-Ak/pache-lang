@@ -59,10 +59,10 @@ file_build::file_build(compunit_ast const & comp) : base_build(nullptr) {
     auto type = type_build(*this, var->get_var_type());
 
     if (type == nullptr) {
+      std::cout << "type error\n";
       return;
     }
 
-    auto val = var->get_init_exp()->build(*this);
     
     TheModule->getOrInsertGlobal(var->get_var_name(), type->get_llvm_type());
     llvm::GlobalVariable *gVar = TheModule->getNamedGlobal(var->get_var_name());
@@ -74,7 +74,9 @@ file_build::file_build(compunit_ast const & comp) : base_build(nullptr) {
       return;
     }
 
-    gVar->setInitializer(llvm::dyn_cast<llvm::Constant>(val->get_value()));
+    if (var->get_init_exp() != nullptr) {
+      gVar->setInitializer(llvm::dyn_cast<llvm::Constant>(var->get_init_exp()->build(*this)->get_value()));
+     } 
   }
 }
 
