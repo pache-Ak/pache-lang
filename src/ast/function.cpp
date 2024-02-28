@@ -24,6 +24,10 @@ void pache::func_ast::print() const {
   }
   std::cout << "}\nm_type:\n";
   m_type.print();
-  std::cout << "}m_block:\n";
-  m_block->print();
+  std::cout << "}m_block:{\n";
+  for (auto const &stmt : m_block) {
+    stmt->print();
+  }
+  std::cout << "}\n";
+  
 }

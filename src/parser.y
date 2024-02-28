@@ -185,8 +185,8 @@ CompUnit
 };
 
 FuncFParam:
-  type IDENTIFIER {
-    $$ = std::make_pair<std::unique_ptr<pache::type_ast>,std::string>(std::move($1), std::move($2));
+  type WHITESPACE IDENTIFIER {
+    $$ = std::make_pair<std::unique_ptr<pache::type_ast>,std::string>(std::move($1), std::move($3));
   };
 
 FuncFParams:
@@ -198,10 +198,10 @@ FuncFParams:
     $$.first.push_back(std::move($1.first));
     $$.second.push_back($1.second);
   }
-| FuncFParams COMMA FuncFParam {
+| FuncFParams COMMA WHITESPACE FuncFParam {
       $$ = std::move($1);
-      $$.first.push_back(std::move($3.first));
-    $$.second.push_back($3.second);
+      $$.first.push_back(std::move($4.first));
+    $$.second.push_back($4.second);
 
 };
 //main_func:
@@ -230,9 +230,9 @@ FuncRParams:
 
 
 FuncDef
-  : FUNC WHITESPACE IDENTIFIER LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS WHITESPACE type WHITESPACE block {
+  : FUNC WHITESPACE IDENTIFIER LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS WHITESPACE type WHITESPACE LEFT_CURLY_BRACE WHITESPACE statement_list WHITESPACE RIGHT_CURLY_BRACE {
 
-    $$ = std::make_unique<func_ast>(std::move($3), std::move($5), std::move($8), std::move($10));
+    $$ = std::make_unique<func_ast>(std::move($3), std::move($5), std::move($8), std::move($12));
   }
 //| main_func {
 //  $$ = std::move($1);

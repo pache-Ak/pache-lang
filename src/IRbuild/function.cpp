@@ -1,9 +1,10 @@
 #include "function.h"
 #include "build.h"
 #include "function_type.h"
+#include "variable.h"
 #include <algorithm>
+#include <cstddef>
 #include <memory>
-#include <string>
 #include <string_view>
 #include <utility>
 
@@ -40,20 +41,19 @@ function_build::function_build(base_build *const father, func_ast const &ast)
   : build_variable(std::make_unique<function_type const>(*father, ast.get_type())),
     decorated_name(name_mangling(ast)) {
       function_type const&type{static_cast<function_type const&>(*m_type)};
+
+    if (type.get_llvm_type() == nullptr) {
+      m_llvm_function = nullptr;
+      return;
+    }
+
   llvm::Function *F = llvm::Function::Create(
       type.get_llvm_type(), llvm::Function::ExternalLinkage, decorated_name, TheModule.get());
 
-   std::vector<
-   std::pair<std::string_view,
-   std::unique_ptr<build_variable>
-    >> var;
+
   unsigned Idx = 0;
   for (auto &Arg : F->args()) {
-    llvm::AllocaInst *alloca = Builder->CreateAlloca(
-      type.get_args_type()[Idx]->get_llvm_type(), nullptr, ast.get_args()[Idx].second);
-    Builder->CreateStore(&Arg, alloca);
-    var.emplace_back(ast.get_args()[Idx].second,
-      std::make_unique<build_local_variable>(type.get_args_type()[Idx]->clone(), alloca));
+    Arg.setName(ast.get_args_name()[Idx]);
     ++Idx; 
   }
 
@@ -61,20 +61,15 @@ function_build::function_build(base_build *const father, func_ast const &ast)
   Builder->SetInsertPoint(BB);
 
   block_scope func_block{father, nullptr};
-  std::vector<build_variable> vars;
 
-  for (auto const &args : ast.get_args()) {
-    auto type = type_build(*father, *args.first.get());
-
-    llvm::AllocaInst *all =
-        IR::Builder->CreateAlloca(type->get_llvm_type(), nullptr, args.second);
-
-    func_block.insert(
-        std::move(args.second),
-        std::make_unique<build_local_variable>(std::move(type), all));
+  auto it_arg = F->args().begin();
+  auto it_type = type.get_args_type().begin();
+  while (it_arg != F->args().end()) {
+    func_block.insert(it_arg->getName(), std::make_unique<build_argument_variable>((*it_type)->clone(), it_arg));
+    ++it_arg;
   }
 
-  for (auto &stmt : ast.get_block()->get_stmt_list()) {
+  for (auto &stmt : ast.get_block()) {
     statement_build(func_block, *stmt);
   }
   verifyFunction(*F);

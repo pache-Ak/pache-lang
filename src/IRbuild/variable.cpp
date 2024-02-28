@@ -33,6 +33,12 @@ std::unique_ptr<build_variable> build_prvalue_variable::clone() const {
  //     new build_prvalue_variable(get_type(), m_value));
       return std::make_unique<build_prvalue_variable>(get_type().clone(), m_value);
 }
+
+std::unique_ptr<build_variable> build_argument_variable::clone() const {
+ // return std::unique_ptr<build_argument_variable>(
+ //     new build_argument_variable(get_type(), m_value));
+      return std::make_unique<build_argument_variable>(get_type().clone(), m_value);
+}
 llvm::Value *get_value(std::unique_ptr<build_variable> const &var) {
   return var->get_value();
 }

@@ -46,7 +46,7 @@ public:
   explicit func_ast(std::string && name,
                     std::pair<std::vector<std::unique_ptr<pache::type_ast>>, std::vector<std::string>> &&args,
                     std::unique_ptr<pache::type_ast> &&return_type,
-                    std::unique_ptr<block_ast> &&block)
+                    std::vector<std::unique_ptr<pache::stmt_ast>> &&block)
       : m_name(std::move(name)),
         m_args_name(std::move(args.second)), 
         m_type(std::move(args.first), std::move(return_type)),
@@ -80,7 +80,7 @@ protected:
   std::vector<std::string> m_args_name;
   // TODO arguments' type and name have two, only need one.
   func_type_ast  m_type;
-  std::unique_ptr<block_ast> m_block;
+  std::vector<std::unique_ptr<pache::stmt_ast>> m_block;
 };
 
 // main func

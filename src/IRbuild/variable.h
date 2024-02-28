@@ -2,6 +2,7 @@
 #define VARIABLE_H
 
 #include "type.h"
+#include "llvm/IR/Argument.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Value.h"
 #include "llvm/IR/GlobalVariable.h"
@@ -103,6 +104,19 @@ public:
 
 private:
   llvm::Value *m_value;
+};
+
+class build_argument_variable final : public build_variable {
+public:
+  explicit build_argument_variable(std::unique_ptr<build_type const> &&type,
+                                   llvm::Argument *value)
+    : build_variable(std::move(type)), m_value(value) {}
+
+  llvm::Value *get_value() const override { return m_value; }
+  virtual std::unique_ptr<build_variable> clone() const override;
+
+private:
+  llvm::Argument *m_value;
 };
 
 } // namespace pache
