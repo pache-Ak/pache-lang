@@ -230,9 +230,9 @@ FuncRParams:
 
 
 FuncDef
-  : FUNC WHITESPACE IDENTIFIER LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS WHITESPACE type WHITESPACE LEFT_CURLY_BRACE WHITESPACE statement_list WHITESPACE RIGHT_CURLY_BRACE {
+  : FUNC WHITESPACE IDENTIFIER LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS WHITESPACE type WHITESPACE LEFT_CURLY_BRACE  statement_list  RIGHT_CURLY_BRACE {
 
-    $$ = std::make_unique<func_ast>(std::move($3), std::move($5), std::move($8), std::move($12));
+    $$ = std::make_unique<func_ast>(std::move($3), std::move($5), std::move($8), std::move($11));
   }
 //| main_func {
 //  $$ = std::move($1);
@@ -316,10 +316,14 @@ size_list:
 statement_list:
   %empty
     { $$ = std::vector<std::unique_ptr<pache::stmt_ast>>{}; }
-| statement_list stmt
+| statement_list WHITESPACE 
     {
       $$ = std::move($1);
-      $$.emplace_back(std::move($2));
+    }
+| statement_list WHITESPACE stmt
+    {
+      $$ = std::move($1);
+      $$.emplace_back(std::move($3));
     }
 ;
 block
