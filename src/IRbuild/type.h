@@ -337,13 +337,11 @@ class exp_ast;
 class arr_type final : public build_type {
 public:
   explicit arr_type(std::unique_ptr<build_type> &&element_type,
-                            std::vector<std::unique_ptr<exp_ast>>const &size)
-      : m_element_type(std::move(element_type)) {
-
-      }
+                            std::vector<std::size_t> &&size)
+      : m_element_type(std::move(element_type)), m_size(std::move(size)) {}  
   explicit arr_type(std::unique_ptr<build_type> &&element_type,
-                            std::vector<std::size_t> const&size)
-      : m_element_type(std::move(element_type)), m_size(size) {}    
+                            std::vector<std::size_t> const &size)
+      : m_element_type(std::move(element_type)), m_size(size) {}   
   virtual llvm::Type *get_llvm_type() const override;
   virtual std::string_view decorated_name() const override;
   virtual void set_mutable() override;
@@ -391,10 +389,6 @@ public:
   virtual std::string_view decorated_name() const override;
   virtual void set_mutable() override;
   virtual void set_volatile() override;
-  virtual bool is_const() const override { return m_element_type->is_const(); }
-  virtual bool is_volatile() const override {
-    return m_element_type->is_volatile();
-  }
   virtual std::unique_ptr<build_type> clone() const override;
   build_type &get_element_type() const{
     return *m_element_type;

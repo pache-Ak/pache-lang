@@ -299,13 +299,13 @@ $$ = std::move($1);
 
 
 size_list:
-  expression COMMA {
+  expression COMMA WHITESPACE{
     $$ = std::vector<std::unique_ptr<pache::exp_ast>>{};
     $$.emplace_back(std::move($1));
   } |
-  size_list WHITESPACE  expression  COMMA {
+  size_list  expression  COMMA WHITESPACE{
     $$ = std::move($1);
-    $$.emplace_back(std::move($3));
+    $$.emplace_back(std::move($2));
   }
   ;
 

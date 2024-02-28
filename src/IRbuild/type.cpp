@@ -1,13 +1,16 @@
 #include "type.h"
 #include "../ast/type.h"
 #include "ast/multi_array_type.h"
+#include "expression.h"
 #include "build.h"
 #include "scope.h"
 #include "llvm/IR/Type.h"
+#include <cstddef>
 #include <iostream>
 #include <memory>
 #include <numeric>
 #include <string_view>
+#include <vector>
 
 using namespace std::literals;
 
@@ -330,7 +333,20 @@ build_pointer_type(base_build &father, pointer_ast const &ast) {
 
  std::unique_ptr<arr_type>
  build_multi_array_type(base_build &father, multi_array_ast const &ast) {
-   return std::make_unique<arr_type>(type_build(father, *ast.get_element_type()), ast.get_size());
+  std::vector<std::size_t> size;
+  for (auto const &exp : ast.get_size()) {
+    auto val = build_expression(father, *exp);
+    if (llvm::ConstantInt *constantInt =
+            llvm::dyn_cast<llvm::ConstantInt>(val->get_value());
+        constantInt != nullptr) {
+      llvm::APInt intValue = constantInt->getValue();
+      size.emplace_back(static_cast<std::size_t>(intValue.getZExtValue()));
+    } else {
+      std::cout << "Value is not an integer constant\n";
+      exp->print();
+    }
+  }
+   return std::make_unique<arr_type>(type_build(father, *ast.get_element_type()), std::move(size));
  }
 
 std::unique_ptr<build_type>
