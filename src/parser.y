@@ -59,6 +59,7 @@
 
   SCOPE                 // ::
   BITWISE_NOT          "~"
+  UNARY_AND
   B_AND                "&"
   B_XOR                "^"
   B_OR                 "|"
@@ -117,7 +118,7 @@
 // 非终结符的类型定义
 %type <pache::named_ast>namespace_name
 %type <std::unique_ptr<pache::compunit_ast>>   CompUnit
-%type <std::unique_ptr<pache::type_ast>> type mut_ast volatile_ast multi_array_ast primary_type
+%type <std::unique_ptr<pache::type_ast>> type mut_ast volatile_ast multi_array_ast primary_type point_ast reference_ast
 %type <std::unique_ptr<pache::exp_ast>>    primary_expression unary_expression call_expression
 %type <std::unique_ptr<pache::block_ast>> block /*optional_else*/  loop_stmt
 %type <std::unique_ptr<pache::let_stmt>> let_stmt
@@ -266,13 +267,25 @@ class_def:
 // 同上, 不再解释
 mut_ast:
   type WHITESPACE MUTABLE {
-    $$ = std::move($1);
+    $$ = std::make_unique<pache::mut_ast>(std::move($1));
   }
 ;
 
 volatile_ast:
   type WHITESPACE VOLATILE {
-    $$ = std::move($1);
+    $$ = std::make_unique<pache::volatile_ast>(std::move($1));
+  }
+;
+
+point_ast:
+  type UNARY_STAR {
+    $$ = std::make_unique<pache::pointer_ast>(std::move($1));
+  }
+;
+
+reference_ast:
+  type UNARY_AND {
+    $$ = std::make_unique<pache::reference_ast>(std::move($1));
   }
 ;
 
@@ -285,16 +298,23 @@ volatile_ast {
 }|
 primary_type {
   $$ = std::move($1);
-};
+}
+|
+multi_array_ast {
+$$ = std::move($1);
+}
+| point_ast {
+  $$ = std::move($1);
+}
+| reference_ast {
+  $$ = std::move($1);
+}
+;
 
 primary_type:
   namespace_name {
     $$ = std::make_unique<pache::named_type_ast>(std::move($1));
   }
- |
-multi_array_ast {
-$$ = std::move($1);
-}
   ;
 
 
@@ -320,10 +340,10 @@ statement_list:
     {
       $$ = std::move($1);
     }
-| statement_list WHITESPACE stmt
+| statement_list  stmt 
     {
       $$ = std::move($1);
-      $$.emplace_back(std::move($3));
+      $$.emplace_back(std::move($2));
     }
 ;
 block
@@ -379,11 +399,11 @@ return_stmt:
   ;
 
 let_stmt:
-LET WHITESPACE type WHITESPACE IDENTIFIER LEFT_CURLY_BRACE expression RIGHT_CURLY_BRACE SEMICOLON  {
-    $$ = std::make_unique<pache::let_stmt>(std::move($3), std::move($5), std::move($7));
+LET  type  IDENTIFIER LEFT_CURLY_BRACE expression RIGHT_CURLY_BRACE SEMICOLON  {
+    $$ = std::make_unique<pache::let_stmt>(std::move($2), std::move($3), std::move($5));
 }
-| LET WHITESPACE type WHITESPACE IDENTIFIER SEMICOLON  {
-    $$ = std::make_unique<pache::let_stmt>(std::move($3), std::move($5), nullptr);
+| LET  type  IDENTIFIER SEMICOLON  {
+    $$ = std::make_unique<pache::let_stmt>(std::move($2), std::move($3), nullptr);
   }
 ;
 
@@ -437,8 +457,8 @@ if_else_stmt:
 
 
 loop_stmt:
-  LOOP block {
-    $$ = std::make_unique<pache::loop_stmt>(std::move(*($2.release())));
+  LOOP WHITESPACE block {
+    $$ = std::make_unique<pache::loop_stmt>(std::move(*($3.release())));
 
   }
 ;
@@ -632,7 +652,7 @@ unary_expression
 | UNARY_STAR unary_expression {
   $$ = std::make_unique<pache::indirection_exp>(std::move($2));
 }
-| B_AND unary_expression {
+| UNARY_AND unary_expression {
   $$ = std::make_unique<pache::address_of_exp>(std::move($2));
 }
 | ALLOCATION WHITESPACE type WHITESPACE unary_expression {

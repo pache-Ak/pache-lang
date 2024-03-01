@@ -53,7 +53,7 @@ private:
   std::unique_ptr<type_ast> m_type;
 };
 
-class reference_ast final: type_ast {
+class reference_ast final: public type_ast {
 public:
   reference_ast(std::unique_ptr<type_ast> &&type) : m_type(std::move(type)) {}
   virtual std::unique_ptr<build_type> build(base_build &father) const override;
