@@ -7,7 +7,9 @@ find_package(FLEX)
 BISON_TARGET(MyParser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.tab.cc
             DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser.tab.hh)
 
-FLEX_TARGET(MyScanner  lexer.lpp ${PROJECT_BINARY_DIR}/lexer.cpp)
+set(FLEX_FLAGS "-L -d")
+FLEX_TARGET(MyScanner lexer.lpp ${PROJECT_BINARY_DIR}/lexer.cpp
+            COMPILE_FLAGS ${FLEX_FLAGS})
 
 ADD_FLEX_BISON_DEPENDENCY(MyScanner  MyParser)
 
@@ -37,6 +39,21 @@ add_executable(${PROJECT_NAME}
                 main.cpp driver.cpp
                 ${BISON_MyParser_OUTPUTS}
                 ${FLEX_MyScanner_OUTPUTS}
+                ast
+                IRbuild
+)
+
+
+# 添加编译参数
+target_compile_options(${PROJECT_NAME} PUBLIC
+    -Wall                  # 启用所有警告
+#    -Wextra                # 启用额外的警告
+    -Wpedantic             # 启用严格的警告
+#    -O2                    # 优化级别 2
+#    -std=c++17             # 使用 C++17 标准
+#    -pthread               # 启用线程支持
+    -g
+    
 )
 
 add_subdirectory(ast)
@@ -59,7 +76,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 # Find the libraries that correspond to the LLVM components
 # that we wish to use
-llvm_map_components_to_libnames(llvm_libs support core irreader)
+llvm_map_components_to_libnames(llvm_libs support core irreader orcjit native)
 
 # Link against LLVM libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC ${llvm_libs})
