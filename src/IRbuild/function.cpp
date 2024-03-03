@@ -1,12 +1,17 @@
 #include "function.h"
+#include "IRbuild/type.h"
+#include "ast/function.h"
 #include "build.h"
 #include "function_type.h"
 #include "variable.h"
 #include <algorithm>
 #include <cstddef>
 #include <memory>
+#include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
+#include <sstream>
 
 namespace pache {
 
@@ -21,6 +26,24 @@ std::string_view name_mangling(func_ast const &func) {
   //   //  decorated_name += type->decorated_name();
   // }
   return func.get_name();
+}
+
+std::string name_mangling(base_build const &scope, std::string_view name, function_type const &type) {
+  using namespace std::literals::string_literals;
+
+  std::string s;
+  std::ostringstream oss;
+  oss << std::hex << name.size();
+  s += scope.decorated_name();
+  s += "_F"s;
+  s += oss.str();
+  s += name;
+
+  for (auto const &t : type.get_args_type()) {
+    s += t->decorated_name();
+  }
+
+  return s;
 }
 
 // std::unique_ptr<build_variable> function_build::find_var(std::string_view name) const {
@@ -39,7 +62,12 @@ std::string_view name_mangling(func_ast const &func) {
 
 function_build::function_build(base_build *const father, func_ast const &ast) 
   : build_variable(std::make_unique<function_type const>(*father, ast.get_type())),
-    decorated_name(name_mangling(ast)) {
+    decorated_name(name_mangling(*father, ast.get_name(), get_type())) {
+
+    if (m_type == nullptr) {
+      return;
+    }
+
       function_type const&type{static_cast<function_type const&>(*m_type)};
 
     if (type.get_llvm_type() == nullptr) {
@@ -60,12 +88,19 @@ function_build::function_build(base_build *const father, func_ast const &ast)
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "entry", F);
   Builder->SetInsertPoint(BB);
 
-  block_scope func_block{father, nullptr};
+  block_scope func_block{father};
 
   auto it_arg = F->args().begin();
   auto it_type = type.get_args_type().begin();
   while (it_arg != F->args().end()) {
-    func_block.insert(it_arg->getName(), std::make_unique<build_argument_variable>((*it_type)->clone(), it_arg));
+    llvm::IRBuilder<> TmpB(&F->getEntryBlock(),
+                 F->getEntryBlock().begin());
+    llvm::AllocaInst *Alloca = TmpB.CreateAlloca((*it_type)->get_llvm_type(), nullptr,
+                           it_arg->getName());
+
+    Builder->CreateStore(it_arg, Alloca);
+    
+    func_block.insert(it_arg->getName(), std::make_unique<build_local_variable>((*it_type)->clone(), Alloca));
     ++it_arg;
   }
 
@@ -73,7 +108,7 @@ function_build::function_build(base_build *const father, func_ast const &ast)
     statement_build(func_block, *stmt);
   }
   verifyFunction(*F);
-  TheFPM->run(*F);
+  TheFPM->run(*F, *TheFAM);
   m_llvm_function = F;
 
     }

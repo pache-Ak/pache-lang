@@ -12,19 +12,11 @@
 #include <vector>
 
 namespace pache {
-class loop_label {
-public:
-  explicit loop_label(loop_label const *const father) : m_father(father) {}
-  virtual llvm::BasicBlock *get_loop_begin() const;
-  virtual llvm::BasicBlock *get_loop_end() const;
 
-protected:
-  loop_label const *const m_father;
-};
-class block_scope : public base_build, public loop_label {
+class block_scope : public base_build {
 public:
-  explicit block_scope(base_build *const father, loop_label const *const loop)
-      : base_build(father), loop_label(loop) {}
+  explicit block_scope(base_build *const father)
+      : base_build(father, "") {}
       
    virtual std::set<reference_ptr<function_build>> find_function(std::string_view name) const override {
     // should not be call
@@ -35,9 +27,8 @@ public:
                       std::unique_ptr<build_variable> &&value) ;
   void deallco_all();
   ~block_scope() { deallco_all(); }
-  virtual llvm::BasicBlock *get_loop_begin() const override;
-  llvm::BasicBlock *get_loop_end() const override;
-  loop_label const *const get_loop_father() const;
+  virtual llvm::BasicBlock *get_loop_begin() const;
+  virtual llvm::BasicBlock *get_loop_end() const ;
 
   virtual reference_ptr<build_variable>
   qualified_var_lookup(std::string_view name) override;
@@ -45,6 +36,10 @@ public:
   qualified_type_lookup(std::string_view name) const override;
   virtual reference_ptr<base_build>
   qualified_scope_lookup(std::string_view name) override;
+
+  virtual bool is_block() const {
+    return true;
+  }
 
 private:
   // here need a symbol table

@@ -76,6 +76,10 @@ public:
   std::string decorated_name() const {
     return m_decorated_name;
   }
+
+  virtual bool is_block() const {
+    return false;
+  }
 protected:
   base_build(base_build &&) = default;
   base_build(base_build const &other) = default;
