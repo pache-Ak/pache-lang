@@ -7,7 +7,7 @@
 #include <limits>
 
 namespace pache {
-    inline namespace integer {
+inline namespace integer {
     int chartoi(char c) {
         switch (c) {
         case '0':
@@ -127,4 +127,14 @@ build_integer_literal(base_build &build, hexadecimal_integer_literal const&ast) 
 }
 
     }
+inline namespace boolean {
+ 
+    std::unique_ptr<build_prvalue_variable>
+    build_boolean_literal(base_build &build, boolean_literal const &ast) {
+      return std::make_unique<build_prvalue_variable>(
+          std::make_unique<bool_type_t>(),
+          llvm::ConstantInt::get(bool_type_t().get_llvm_type(),
+                                 ast.get_literal()));
+    }
+}
 } // namespace pache

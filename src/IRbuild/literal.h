@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <string_view>
 #include "build.h"
+#include "type.h"
 #include "variable.h"
 #include "ast/literal.h"
 namespace pache {
@@ -60,7 +61,11 @@ build_integer_literal(base_build &build, hexadecimal_integer_literal const &ast)
 
 }
 
+inline namespace boolean {
+std::unique_ptr<build_prvalue_variable>
+build_boolean_literal(base_build &build, boolean_literal const &ast);
 
+}
 
 }
 
