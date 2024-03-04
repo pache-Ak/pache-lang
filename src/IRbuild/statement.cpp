@@ -104,10 +104,11 @@ private:
 };
 
 void build_loop(block_scope &father, block_ast const &ast) {
+  llvm::Function * the_function =  Builder->GetInsertBlock()->getParent();
   llvm::BasicBlock *entryBB = llvm::BasicBlock::Create(
-      *IR::TheContext, "loop", IR::Builder->GetInsertBlock()->getParent());
+      *IR::TheContext, "loop", the_function);
   llvm::BasicBlock *endBB = llvm::BasicBlock::Create(
-      *IR::TheContext, "endEntry", IR::Builder->GetInsertBlock()->getParent());
+      *IR::TheContext, "endEntry");
 
   IR::Builder->SetInsertPoint(entryBB);
   std::unique_ptr<loop_scope> scope{std::make_unique<loop_scope>(
@@ -117,6 +118,8 @@ void build_loop(block_scope &father, block_ast const &ast) {
   }
   scope->deallco_all();
   IR::Builder->CreateBr(entryBB);
+  the_function->insert(the_function->end(), endBB);
+  Builder->SetInsertPoint(endBB);
 }
 
 void build_break(block_scope & father, break_stmt const &ast) {
@@ -136,29 +139,36 @@ void build_continue(block_scope &father, continue_stmt const &ast) {
 }
 
 void build_if(block_scope &father, if_stmt const &ast) {
-  llvm::BasicBlock *then_BB = llvm::BasicBlock::Create(
-      *IR::TheContext, "then", IR::Builder->GetInsertBlock()->getParent());
-  llvm::BasicBlock *merge_BB = llvm::BasicBlock::Create(
-      *IR::TheContext, "merge", IR::Builder->GetInsertBlock()->getParent());
-
   auto condition = build_expression(father, ast.get_condition())->get_value();
+  llvm::Function * the_function =  Builder->GetInsertBlock()->getParent();
+  llvm::BasicBlock *then_BB = llvm::BasicBlock::Create(
+      *IR::TheContext, "then", the_function);
+  llvm::BasicBlock *merge_BB = llvm::BasicBlock::Create(
+      *IR::TheContext, "merge");
+
   // need implicit cast to boolean
   Builder->CreateCondBr(condition, then_BB, merge_BB);
 
   Builder->SetInsertPoint(then_BB);
   block_build(father, ast.get_then_block());
   Builder->CreateBr(merge_BB);
+
+  then_BB = Builder->GetInsertBlock();
+  the_function->insert(the_function->end(), merge_BB);
+  Builder->SetInsertPoint(merge_BB);
 }
 
 void build_if_else(block_scope &father, if_else_stmt const &ast) {
-  llvm::BasicBlock *then_BB = llvm::BasicBlock::Create(
-      *IR::TheContext, "then", IR::Builder->GetInsertBlock()->getParent());
-  llvm::BasicBlock *else_BB = llvm::BasicBlock::Create(
-      *IR::TheContext, "else", IR::Builder->GetInsertBlock()->getParent());
-  llvm::BasicBlock *merge_BB = llvm::BasicBlock::Create(
-      *IR::TheContext, "merge", IR::Builder->GetInsertBlock()->getParent());
-
   auto condition = build_expression(father, ast.get_condition());
+  llvm::Function * the_function =  Builder->GetInsertBlock()->getParent();
+
+  llvm::BasicBlock *then_BB = llvm::BasicBlock::Create(
+      *IR::TheContext, "then", the_function);
+  llvm::BasicBlock *else_BB = llvm::BasicBlock::Create(
+      *IR::TheContext, "else");
+  llvm::BasicBlock *merge_BB = llvm::BasicBlock::Create(
+      *IR::TheContext, "merge");
+
   // need implicit cast to boolean
   Builder->CreateCondBr(condition->get_value(), then_BB, merge_BB);
 
@@ -166,9 +176,15 @@ void build_if_else(block_scope &father, if_else_stmt const &ast) {
   block_build(father, ast.get_then_block());
   Builder->CreateBr(merge_BB);
 
+  then_BB = Builder->GetInsertBlock();
+  the_function->insert(the_function->end(), else_BB);
   Builder->SetInsertPoint(else_BB);
   statement_build(father, ast.get_else_block());
   Builder->CreateBr(merge_BB);
+
+  else_BB = Builder->GetInsertBlock();
+  the_function->insert(the_function->end(), merge_BB);
+  Builder->SetInsertPoint(merge_BB);
 }
 
 void build_let(block_scope &father, let_stmt const &ast) {
