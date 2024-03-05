@@ -16,7 +16,7 @@ namespace pache {
 class block_scope : public base_build {
 public:
   explicit block_scope(base_build *const father)
-      : base_build(father, "") {}
+      : base_build(father, ""), has_terminator(father) {}
       
    virtual std::set<reference_ptr<function_build>> find_function(std::string_view name) const override {
     // should not be call
@@ -41,6 +41,8 @@ public:
     return true;
   }
 
+  
+  bool has_terminator;
 private:
   // here need a symbol table
   // search by string

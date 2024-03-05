@@ -107,7 +107,7 @@ function_build::function_build(base_build *const father, func_ast const &ast)
   for (auto &stmt : ast.get_block()) {
     statement_build(func_block, *stmt);
   }
-  verifyFunction(*F);
+  verifyFunction(*F, &llvm::errs());
   TheFPM->run(*F, *TheFAM);
   m_llvm_function = F;
 

@@ -4,6 +4,7 @@
 #include "reference_ptr.h"
 #include "type.h"
 #include "variable.h"
+#include <cstddef>
 #include <iostream>
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/IRBuilder.h>
@@ -34,7 +35,7 @@ void assign_stmt_build(block_scope &father, assign_stmt const &ast) {
       return;
     }
 
-    Builder->CreateStore(val, var->get_value());
+    Builder->CreateStore(val, var->get_address());
 
   
   }
@@ -44,6 +45,7 @@ void assign_stmt_build(block_scope &father, assign_stmt const &ast) {
 
 void return_void_stmt_build(block_scope &father, return_void_stmt const &ast) {
   Builder->CreateRetVoid();
+  father.has_terminator = true;
 }
 
 void return_exp_stmt_build(block_scope &father, return_ast const &ast) {
@@ -56,6 +58,7 @@ void return_exp_stmt_build(block_scope &father, return_ast const &ast) {
   }
 
   Builder->CreateRet(val);
+  father.has_terminator = true;
 }
 
 
@@ -110,14 +113,21 @@ void build_loop(block_scope &father, block_ast const &ast) {
   llvm::BasicBlock *endBB = llvm::BasicBlock::Create(
       *IR::TheContext, "endEntry");
 
+  IR::Builder->CreateBr(entryBB);
   IR::Builder->SetInsertPoint(entryBB);
   std::unique_ptr<loop_scope> scope{std::make_unique<loop_scope>(
       &father, entryBB, endBB)};
   for (auto &stmt : ast.get_stmt_list()) {
     statement_build(*scope, *stmt);
+    if (scope->has_terminator) {
+      break;
+    }
   }
   scope->deallco_all();
-  IR::Builder->CreateBr(entryBB);
+
+  if (!scope->has_terminator) {
+    IR::Builder->CreateBr(entryBB);
+  }
   the_function->insert(the_function->end(), endBB);
   Builder->SetInsertPoint(endBB);
 }
@@ -126,6 +136,7 @@ void build_break(block_scope & father, break_stmt const &ast) {
 
   if (father.get_loop_end() != nullptr) {
     IR::Builder->CreateBr(father.get_loop_end());
+    father.has_terminator = true;
   } else {
     std::cerr << "break not in loop.\n";
   }
@@ -133,6 +144,7 @@ void build_break(block_scope & father, break_stmt const &ast) {
 void build_continue(block_scope &father, continue_stmt const &ast) {
   if (father.get_loop_begin() != nullptr) {
     IR::Builder->CreateBr(father.get_loop_begin());
+    father.has_terminator = true;
   } else {
     std::cerr << "break not in loop.\n";
   }
@@ -212,7 +224,7 @@ void build_let(block_scope &father, let_stmt const &ast) {
       ast.get_init_exp() != nullptr &&
       (exp = build_expression(father,*ast.get_init_exp().get())) != nullptr) {
     IR::Builder->CreateStore(
-        exp->get_value(), father.find_var(ast.get_var_name())->get_value());
+        exp->get_value(), father.find_var(ast.get_var_name())->get_address());
   } else {
     std::cerr << "define variable without initializer.\n";
   }
@@ -228,7 +240,7 @@ void build_assign(base_build &father, assign_stmt const &ast) {
     if (exp == nullptr) {
       std::cerr << "expression is not valid.\n";
     } else {
-      IR::Builder->CreateStore(exp->get_value(), var->get_value());
+      IR::Builder->CreateStore(exp->get_value(), var->get_address());
     }
   }
 }
@@ -241,6 +253,8 @@ llvm::BasicBlock *block_scope::get_loop_begin() const {
     return nullptr;
   } else if (m_father->is_block()){
     return static_cast<block_scope*>(m_father)->get_loop_begin();
+  } else {
+    return nullptr;
   }
 }
 llvm::BasicBlock *block_scope::get_loop_end() const {
@@ -248,6 +262,8 @@ llvm::BasicBlock *block_scope::get_loop_end() const {
     return nullptr;
   } else if (m_father->is_block()){
     return static_cast<block_scope*>(m_father)->get_loop_end();
+  } else {
+    return nullptr;
   }
 }
 reference_ptr<build_variable>

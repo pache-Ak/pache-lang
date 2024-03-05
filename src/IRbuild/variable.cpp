@@ -6,7 +6,7 @@ namespace pache {
 build_variable::~build_variable(){}
     
 llvm::LoadInst *build_local_reference::get_value() const {
-  return Builder->CreateLoad(get_type().get_llvm_type(), m_value);
+  return Builder->CreateLoad(m_value->getAllocatedType(), m_value);
 }
 std::unique_ptr<build_variable> build_local_variable::clone() const {
  // return std::unique_ptr<build_local_variable>(

@@ -24,6 +24,7 @@ public:
 
   build_type const & get_type() const { return *m_type; }
   virtual llvm::Value *get_value() const = 0;
+  virtual llvm::AllocaInst* get_address() const { return nullptr; }
   virtual ~build_variable() = 0;
   virtual std::unique_ptr<build_variable> clone() const = 0;
 
@@ -45,9 +46,10 @@ public:
                                 llvm::AllocaInst *value)
       : build_variable(std::move(type)), m_value(value) {}
 
-  llvm::AllocaInst *get_value() const override { return m_value; }
+  llvm::Value *get_value() const override {
+    return Builder->CreateLoad(m_value->getAllocatedType(), m_value); }
   virtual std::unique_ptr<build_variable> clone() const override;
-
+  virtual llvm::AllocaInst *get_address() const override { return m_value; }
 private:
   llvm::AllocaInst *m_value;
 };
@@ -55,14 +57,14 @@ private:
 class build_local_reference final : public build_variable {
 public:
   explicit build_local_reference(std::unique_ptr<build_type const> &&type,
-                                 llvm::Value *value)
+                                 llvm::AllocaInst *value)
       : build_variable(std::move(type)), m_value(value) {}
 
   virtual llvm::LoadInst *get_value() const override;
   virtual std::unique_ptr<build_variable> clone() const override;
 
 private:
-  llvm::Value *m_value;
+  llvm::AllocaInst *m_value;
 };
 
 class build_global_variable final : public build_variable {
