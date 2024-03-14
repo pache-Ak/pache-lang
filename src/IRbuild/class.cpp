@@ -8,36 +8,26 @@
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Verifier.h"
 #include <iostream>
+#include <llvm-17/llvm/IR/DerivedTypes.h>
 #include <memory>
 #include <string_view>
 #include <utility>
 #include <vector>
+#include <sstream>
 
 namespace pache {
-class_build::class_build(base_build *const father,
-                         class_ast const &ast)
-    : base_build(father) {
-  for (auto &inner_class : ast.get_inner_class_def()) {
-    auto [it, b] = builded_classes.try_emplace(
-        inner_class->get_name(),
-        std::make_unique<class_build>(this, *inner_class));
-    if (!b) {
-      // b is false meaing insert fail.
-      std::cerr << "redefinition class\n";
-    }
-  }
+std::string name_mangling(base_build const &scope, std::string_view class_name) {
+  using namespace std::literals::string_literals;
 
-  //m_type = class_type{llvm::StructType::create(vars_type, ast.get_name())}; 
-  m_type = class_type{*this, ast};
-  for (auto &func : ast.get_func_def()) {
-   // TODO m_functions.emplace(std::make_pair(  func->get_name(), function_build{this, *func}));
-  }
+  std::ostringstream oss;
+  oss << std::hex << class_name.size();
+
+  return scope.decorated_name() + "_S" + oss.str()  + std::string(class_name);
 }
 
-// class_build::class_build(
-//     base_build *const father,
-//     /* std::string_view  &name,  */ llvm::StructType *llvm_type)
-//     : base_build(father), /* m_name(name),  */ m_type(llvm_type) {}
+
+
+
 reference_ptr<build_variable>
 class_build::qualified_var_lookup(std::string_view name)  {
   return nullptr;
@@ -58,5 +48,67 @@ class_build::qualified_scope_lookup(std::string_view name)  {
   } else {
     return nullptr;
   }
+}
+
+class_build forward_statement(base_build &build, class_ast const &ast) {
+  auto name = name_mangling(build, ast.get_name());
+  auto type = llvm::StructType::create(*TheContext, name);
+  return class_build(
+    &build, std::move(name),
+    type
+  );
+}
+
+void define(class_build &cla, class_ast const &ast) {
+
+}
+void class_build::forward_statement_class(class_ast const &inner) {
+  auto [it, b] = builded_classes.try_emplace(
+      inner.get_name(), std::make_unique<class_build>(pache::forward_statement(*this, inner)));
+
+  // b is false meaning insert error
+  if (!b) {
+    std::cerr << "redefine class.\n";
+  }
+}
+void class_build::forward_statement_inner_classes(class_ast const &ast) {
+  for (auto &class_ast : ast.get_inner_class_def()) {
+    forward_statement_class(*class_ast);
+  }
+}
+void class_build::define_class_body(class_ast const &ast) {
+  for (auto const &inner_ast : ast.get_inner_class_def()) {
+    if (auto inner = qualified_class_lookup(inner_ast->get_name());
+        inner != nullptr) {
+      inner->define_class_body(*inner_ast);
+    }
+  }
+
+  m_type.define_body(*this, ast);
+}
+reference_ptr<class_build>
+class_build::qualified_class_lookup(std::string_view name) {
+  if (auto it = builded_classes.find(name); it != builded_classes.end()) {
+    return it->second;
+  } else {
+    return nullptr;
+  }
+}
+auto class_build::forward_statement_class_function(func_ast const &ast)
+    -> reference_ptr<function_build> {
+  auto func = pache::forward_statement(*this, ast);
+
+  if (!func.has_value()) {
+    std::cerr << "statement function error.\n";
+    return nullptr;
+  }
+
+  auto [it, b] = builded_functions1[ast.get_name()].try_emplace(
+      &func.value().get_type(), std::move(func.value()));
+  if (!b) {
+    std::cerr << "redefine function.\n";
+    return nullptr;
+  }
+  return &it->second;
 }
 } // namespace pache

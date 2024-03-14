@@ -39,7 +39,7 @@ private:
   llvm::FunctionType *m_llvm_type;
 };
 
-std::unique_ptr<build_type>
+std::unique_ptr<function_type>
 build_func_type(base_build &father, func_type_ast const &ast);
 } // namespace pache
 

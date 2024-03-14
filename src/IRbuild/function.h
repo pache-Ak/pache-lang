@@ -9,11 +9,13 @@
 #include "type.h"
 #include "variable.h"
 #include "llvm/IR/Verifier.h"
+#include <llvm-17/llvm/IR/Function.h>
 #include <memory>
 #include <stack>
 #include <string_view>
 #include <utility>
 #include <vector>
+#include <optional>
 
 namespace pache {
 std::string_view name_mangling(func_ast const &func);
@@ -27,33 +29,38 @@ public:
   function_build &operator=(function_build &&) = delete;
   explicit function_build(base_build *const father, func_ast const &func);
    explicit function_build(std::unique_ptr<build_type const> &&type,
-                            std::string_view name,
+                            std::string && name,
                            llvm::Function *llvm_function)
-     : build_variable(std::move(type)), decorated_name(name), 
+     : build_variable(std::move(type)), decorated_name(std::move(name)), 
       m_llvm_function(llvm_function){}
-
-  // function_build(function_build &&other) = default;
   virtual llvm::Value *get_value() const override{ return m_llvm_function; }
   virtual ~function_build() = default;
   virtual std::unique_ptr<build_variable> clone() const override;
   function_type const & get_type() const { return static_cast<function_type const &>(*m_type); }
-  //virtual llvm::Function *get_llvm_function() const { return m_llvm_function; }
- //// function_type const &get_function_type() const {
- //   return m_type;
- // }
+
+  friend bool operator==(function_build const &lhs, function_build const &rhs) {
+    return lhs.decorated_name == rhs.decorated_name;
+  }
+
+  friend std::hash<function_build>;
+  void define(base_build *const father, func_ast const &ast);
 
 private:
- // std::unique_ptr<build_type> find_type(std::string_view name) const ;
- // std::unique_ptr<build_variable>
-//find_var(std::string_view name) const ;
-  std::string_view decorated_name;
- // function_type m_type;
+  std::string decorated_name;
   llvm::Function *m_llvm_function;
- // std::vector<
- //   std::pair<std::string_view,
- //   std::unique_ptr<build_variable>
- // >> var;
 };
+
+std::optional<function_build> forward_statement(base_build &build, func_ast const &ast);
 } // namespace pache
+
+namespace std {
+    template <>
+    struct hash<pache::function_build> {
+        std::size_t operator()(const pache::function_build& funcDef) const {
+            std::hash<std::string> stringHasher;
+            return stringHasher(funcDef.decorated_name);
+        }
+    };
+}
 
 #endif

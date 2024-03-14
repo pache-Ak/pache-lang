@@ -9,6 +9,7 @@
 #include <string_view>
 
 namespace pache {
+class let_stmt;
 class class_type final : public build_type {
 public:
   class data_member {
@@ -25,14 +26,13 @@ public:
     std::unique_ptr<build_type> m_type;
     std::size_t const m_num;
   };
-  explicit class_type(base_build &build, class_ast const&ast);
-  //explicit class_type(class_build const &ref);
+  explicit class_type(llvm::StructType *const type)
+    :m_type(type) {}
   explicit class_type() = default;
   class_type(const class_type &) = default;
   class_type(class_type &&) = default;
   class_type &operator=(const class_type &) = default;
   class_type &operator=(class_type &&) = default;
-  // explicit class_type(llvm::StructType *type) :m_type(type){}
   virtual llvm::StructType *get_llvm_type() const override;
   virtual void set_mutable() override;
   virtual void set_volatile() override;
@@ -46,10 +46,15 @@ public:
     }
   }
   llvm::Value *get_member_var(llvm::Value *ptr, std::string_view name);
+
+  void define_body(base_build &build, class_ast const &ast);
+
 private:
-  //class_build const &m_ref;
   std::unordered_map<std::string_view, data_member> m_member_var;
   llvm::StructType *m_type;
+
+  std::pair<std::unordered_map<std::string_view, data_member>::iterator, bool>
+  define_data_members(base_build &build, let_stmt const &ast, std::size_t i);
 };
 } // namespace pache
 

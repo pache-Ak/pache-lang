@@ -10,18 +10,16 @@
 #include <memory>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
+#include "llvm/IR/DerivedTypes.h"
 
 namespace pache {
-class class_build : public base_build {
+class class_build final: public base_build {
 public:
- // explicit class_build(
- //     base_build *const father,
-  //    /* std::string_view  &name,  */ llvm::StructType *llvm_type);
-  explicit class_build(base_build *const father,
-                       class_ast const &ast);
+  explicit class_build(base_build *const father, std::string &&name, llvm::StructType *type)
+    : base_build(father, std::move(name)), m_type(type) {}
 
   class_type const &get_type() const {return m_type;}
-  //llvm::StructType *get_IRtype() const { return m_type.get_llvm_type(); }
 
 virtual std::set<reference_ptr<function_build>> find_function(std::string_view name) const override {
   if (m_father != nullptr) {
@@ -45,13 +43,27 @@ qualified_type_lookup(std::string_view name) const override;
 virtual reference_ptr<base_build>
 qualified_scope_lookup(std::string_view name) override;
 
+void forward_statement_inner_classes(class_ast const &ast);
+
+void forward_statement_class(class_ast const &inner);
+
+void define_class_body(class_ast const &ast);
+
+auto forward_statement_class_function(func_ast const &ast)
+    -> reference_ptr<function_build>;
+
 private:
-  std::unordered_multimap<std::string_view, std::unique_ptr<function_build>> m_functions;
-  
-  // std::string_view  m_name; // used by log error
+  std::string m_decorated_name;
   class_type m_type;
   std::unordered_map<std::string_view, std::unique_ptr<class_build>> builded_classes;
+  std::unordered_map<
+    std::string_view,
+    std::unordered_map<reference_ptr<function_type const>, function_build>
+  > builded_functions1;
+  reference_ptr<class_build> qualified_class_lookup(std::string_view name);
 };
+
+class_build forward_statement(base_build &build, class_ast const &ast);
 } // namespace pache
 
 #endif
