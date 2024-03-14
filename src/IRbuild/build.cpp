@@ -135,13 +135,10 @@ reference_ptr<base_build> base_build::find_scope(std::string_view name) {
 }
 reference_ptr<build_variable> base_build::find_var(std::string_view name) {
   if (auto p = qualified_var_lookup(name); p != nullptr) {
-    std::cout << "find:" << name << "!\n";
     return p;
   } else if (m_father != nullptr) {
-    std::cout << name << "\terr find in my scope.\n";
     return m_father->find_var(name);
   } else {
-    std::cout << name << "\terr not father scope.\n";
     return nullptr;
   }
 }
