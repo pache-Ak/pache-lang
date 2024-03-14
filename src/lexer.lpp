@@ -10,45 +10,18 @@
 
 %option noyywrap nounput noinput batch debug
 /* 空白符和注释 */
-WHITESPACE            [ \t\r\n]+
+WHITESPACE            [ \f\n\r\t\v]+
+OPTION_WHITE          {WHITESPACE}|?
+BLANK                 [ \t]
 NEW_LINE              [\n]
-HORIZONTAL_WHITESPACE [ \t\r]*
-one_line_comment      \/\/[^\n]*\n
-
-
-MUTABLE                "mut"
-VOLATILE             "volatile"
-
-MAIN                 "main"
-LET                  "let"
-CLASS                "class"
-IF                   "if"
-ELSE                 "else"
-
-LOOP                 "loop"
-BREAK                "break"
-CONTINUE             "continue"
-ASSIGN               ":="
-
-/* 标识符 */
-IDENTIFIER    [a-zA-Z_][a-zA-Z0-9_]*
-operand_start         [(A-Za-z0-9_\"]
+HORIZONTAL_WHITESPACE [ \f\r\t\v]*
 
 %x BINARY
 %x OCTAL
 %x DECIMAL
 %x HEXADECIMAL
-%s LINE_END
+%x LINE_END
 
-
-/* 整数字面量 */
-
-LOWERCASE_BINARY_PREFIX 0b
-UPPERCASE_BINARY_PREFIX 0B
-LOWERCASE_HEXADECIMAL_PREFIX 0x
-UPPERCASE_HEXADECIMAL_PREFIX 0X
-
-ZERO              0
 %{
   // Code run each time a pattern is matched.
   # define YY_USER_ACTION  loc.columns (yyleng);
@@ -61,27 +34,22 @@ ZERO              0
   loc.step ();
 %}
 <INITIAL>{WHITESPACE} { return pache::parser::make_WHITESPACE(loc); }
-<LINE_END>{NEW_LINE} { 
-  BEGIN(INITIAL);
-  return pache::parser::make_NEW_LINE(loc);
-}
-<LINE_END>{HORIZONTAL_WHITESPACE} { 
-//  BEGIN(INITIAL);  
-  return pache::parser::make_HORIZONTAL_WHITESPACE(loc);
-}
-{MAIN}          { return pache::parser::make_MAIN(loc); }
-{LET}           { return pache::parser::make_LET(loc); }
-{IF}            { return pache::parser::make_IF(loc); }
-{ELSE}          { return pache::parser::make_ELSE(loc); }
 
-{ASSIGN}        { return pache::parser::make_ASSIGN(loc); }
-{one_line_comment}+   { /* 忽略, 不做任何操作 */ }
+"main"          { return pache::parser::make_MAIN(loc); }
+"let"{WHITESPACE}           { return pache::parser::make_LET(loc); }
+"if"            { return pache::parser::make_IF(loc); }
+"else"          { return pache::parser::make_ELSE(loc); }
 
-{MUTABLE}         { return pache::parser::make_MUTABLE(loc);}
-{VOLATILE}         { return pache::parser::make_VOLATILE(loc);}
-"return"        { return pache::parser::make_RETURN(loc); }
-"func"          { return pache::parser::make_FUNC(loc); }
-{CLASS}                 { return pache::parser::make_CLASS(loc); }
+{WHITESPACE}":="{WHITESPACE}        { return pache::parser::make_ASSIGN(loc); }
+\/\/[^\n]*\n   { /* 忽略, 不做任何操作 */ }
+
+"::"    { return pache::parser::make_SCOPE(loc); }
+
+"mut"         { return pache::parser::make_MUTABLE(loc);}
+"volatile"         { return pache::parser::make_VOLATILE(loc);}
+"return"       { return pache::parser::make_RETURN(loc); }
+"func"         { return pache::parser::make_FUNC(loc); }
+"class"                 { return pache::parser::make_CLASS(loc); }
 
 "{"    { return pache::parser::make_LEFT_CURLY_BRACE(loc); }
 "("     { return pache::parser::make_LEFT_PARENTHESIS(loc); }
@@ -90,11 +58,19 @@ ZERO              0
 ")"      { return pache::parser::make_RIGHT_PARENTHESIS(loc); }
 "]"  { return pache::parser::make_RIGHT_SQUARE_BRACKET(loc); }
 
-{LOOP}                  { return pache::parser::make_LOOP(loc); }
-{BREAK}                 { return pache::parser::make_BREAK(loc); }
-{CONTINUE}              { return pache::parser::make_CONTINUE(loc); }
+"loop"{WHITESPACE}                  { return pache::parser::make_LOOP(loc); }
+"break"                { return pache::parser::make_BREAK(loc); }
+"continue"              { return pache::parser::make_CONTINUE(loc); }
+
+"new"    { return pache::parser::make_ALLOCATION(loc); }
+"delete" {return pache::parser::make_DEALLOCATION(loc); }
+
+"true"  { return pache::parser::make_TRUE(loc); }
+"false" { return pache::parser::make_FALSE(loc); }
 
 "~"   { return pache::parser::make_BITWISE_NOT(loc); }
+
+"&"                           { return pache::parser::make_UNARY_AND(loc); }
 {WHITESPACE}"&"{WHITESPACE}         { return pache::parser::make_B_AND(loc); }
 {WHITESPACE}"|"{WHITESPACE}        { return pache::parser::make_B_XOR(loc); }
 {WHITESPACE}"^"{WHITESPACE}        { return pache::parser::make_B_OR(loc); }
@@ -128,23 +104,34 @@ ZERO              0
 {WHITESPACE}"&&"{WHITESPACE}                   { return pache::parser::make_AND(loc); }
 {WHITESPACE}"||"{WHITESPACE}                  { return pache::parser::make_OR(loc); }
 
-","                 { return pache::parser::make_COMMA(loc); }
+","{WHITESPACE}                { return pache::parser::make_COMMA(loc); }
 
-";"          { 
-  //BEGIN(LINE_END);
+<LINE_END>{WHITESPACE} { 
+  BEGIN(INITIAL);
+  std::cout << yytext << "space.\n";
+  //yyless(0);
+  //return pache::parser::make_OPTIONAL_BLANK(loc);
+}
+
+<LINE_END>. {
+  BEGIN(INITIAL);
+  std::cout << yytext << "\tinitial.\n";
+  yyless(0);
+}
+
+";\n"       { 
+  BEGIN(LINE_END);
+  std::cout << "make_SEMICOLON.\n";
   return pache::parser::make_SEMICOLON(loc);
 }
-{IDENTIFIER}   { return pache::parser::make_IDENTIFIER(yytext, loc);}
+[a-zA-Z_][a-zA-Z0-9_]*   { return pache::parser::make_IDENTIFIER(yytext, loc);}
 
 <BINARY,OCTAL,DECIMAL,HEXADECIMAL>"'" { return pache::parser::make_SINGLE_QUOTE(loc); }
 
-{LOWERCASE_BINARY_PREFIX} {
+
+0[bB] {
   BEGIN(BINARY);
-  return pache::parser::make_LOWERCASE_BINARY_PREFIX(loc);
-}
-{UPPERCASE_BINARY_PREFIX} {
-  BEGIN(BINARY);
-  return pache::parser::make_UPPERCASE_BINARY_PREFIX(loc);
+  return pache::parser::make_BINARY_PREFIX(loc);
 }
 <BINARY>[01]+ {
   return pache::parser::make_BINARY_DIGIT(yytext, loc);
@@ -154,7 +141,7 @@ ZERO              0
   yyless(0);
 }
 
-<INITIAL>{ZERO} {
+<INITIAL>0 {
   BEGIN(OCTAL);
   return pache::parser::make_ZERO(loc);
 }
@@ -173,13 +160,9 @@ ZERO              0
   yyless(0);
 }
 
-{LOWERCASE_HEXADECIMAL_PREFIX} {
+0[xX] {
   BEGIN(HEXADECIMAL);
-  return pache::parser::make_LOWERCASE_HEXADECIMAL_PREFIX(loc);
-}
-{UPPERCASE_HEXADECIMAL_PREFIX} {
-  BEGIN(HEXADECIMAL);
-  return pache::parser::make_UPPERCASE_HEXADECIMAL_PREFIX(loc);
+  return pache::parser::make_HEXADECIMAL_PREFIX(loc);
 }
 <HEXADECIMAL>[0-9a-fA-F]+ {return pache::parser::make_HEXADECIMAL_DIGIT(yytext, loc); }
 <HEXADECIMAL>. {

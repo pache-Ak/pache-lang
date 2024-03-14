@@ -56,6 +56,7 @@
 %token
   HORIZONTAL_WHITESPACE
   WHITESPACE 
+  OPTION_WHITE
 
   SCOPE                 // ::
   BITWISE_NOT          "~"
@@ -110,6 +111,8 @@
   BINARY_PREFIX         // 0b 0B
   HEXADECIMAL_PREFIX    // 0x 0X
   ZERO                          // 0
+  TRUE
+  FALSE
 %token RETURN FUNC CLASS
 %token <std::string> IDENTIFIER 
 %token <int> INTEGER
@@ -138,7 +141,7 @@
 %type <std::unique_ptr<pache::func_ast>> FuncDef  // main_func
 %type <std::vector<std::unique_ptr<pache::exp_ast>>> size_list
 %type <std::unique_ptr<pache::scope_ast>> scope_resolution
-%type <std::unique_ptr<pache::exp_ast>> LITERAL INTEGER_LITERAL
+%type <std::unique_ptr<pache::exp_ast>> LITERAL INTEGER_LITERAL BOOLEAN_LITERAL
 %type <std::string> binary_digit_sequence octal_digit_sequence decimal_digit_sequence hexadecimal_digit_sequence
 %type <std::string> binary_literal octal_literal decimal_literal hexadecimal_literal
 %%
@@ -154,23 +157,8 @@ unit : CompUnit {
 // 此时我们应该把 FuncDef 返回的结果收集起来, 作为 AST 传给调用 parser 的函数
 // $1 指代规则里第一个符号的返回值, 也就是 FuncDef 的返回值
 CompUnit
-  : FuncDef {
-    $$ = std::make_unique<pache::compunit_ast>();
-    $$->insert_func_def(std::move($1));
-  }
-| let_stmt {
-    $$ = std::make_unique<pache::compunit_ast>();
-    $$->insert_dec(std::move($1));
-}
-| class_def {
-    $$ = std::make_unique<pache::compunit_ast>();
-    $$->insert_class_def(std::move($1));
-}
-| WHITESPACE {
+: %empty {
   $$ = std::make_unique<pache::compunit_ast>();
-}
-| CompUnit WHITESPACE {
-  $$ = std::move($1);
 }
 | CompUnit FuncDef {
   $$ = std::move($1);
@@ -186,8 +174,8 @@ CompUnit
 };
 
 FuncFParam:
-  type WHITESPACE IDENTIFIER {
-    $$ = std::make_pair<std::unique_ptr<pache::type_ast>,std::string>(std::move($1), std::move($3));
+  type  IDENTIFIER {
+    $$ = std::make_pair<std::unique_ptr<pache::type_ast>,std::string>(std::move($1), std::move($2));
   };
 
 FuncFParams:
@@ -199,10 +187,10 @@ FuncFParams:
     $$.first.push_back(std::move($1.first));
     $$.second.push_back($1.second);
   }
-| FuncFParams COMMA WHITESPACE FuncFParam {
+| FuncFParams COMMA  FuncFParam {
       $$ = std::move($1);
-      $$.first.push_back(std::move($4.first));
-    $$.second.push_back($4.second);
+      $$.first.push_back(std::move($3.first));
+    $$.second.push_back($3.second);
 
 };
 //main_func:
@@ -231,7 +219,7 @@ FuncRParams:
 
 
 FuncDef
-  : FUNC WHITESPACE IDENTIFIER LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS WHITESPACE type WHITESPACE LEFT_CURLY_BRACE  statement_list  RIGHT_CURLY_BRACE {
+  : FUNC WHITESPACE IDENTIFIER LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS WHITESPACE  type  LEFT_CURLY_BRACE WHITESPACE  statement_list  RIGHT_CURLY_BRACE WHITESPACE{
 
     $$ = std::make_unique<func_ast>(std::move($3), std::move($5), std::move($8), std::move($11));
   }
@@ -241,7 +229,7 @@ FuncDef
 ;
 
 class_body:
-%empty  { $$; }
+WHITESPACE  { $$; }
 | class_body let_stmt {
   $$ = std::move($1);
   $$.var_def.emplace_back(std::move($2));
@@ -253,26 +241,23 @@ class_body:
 | class_body class_def {
   $$ = std::move($1);
   $$.inner_class_def.emplace_back(std::move($2));
-
 }
-| class_body WHITESPACE {
-  $$ = std::move($1);
-};
+;
 
 class_def:
-  CLASS WHITESPACE IDENTIFIER  WHITESPACE LEFT_CURLY_BRACE class_body RIGHT_CURLY_BRACE
+  CLASS WHITESPACE IDENTIFIER WHITESPACE LEFT_CURLY_BRACE class_body RIGHT_CURLY_BRACE WHITESPACE
   {
     $$ = std::make_unique<pache::class_ast>(std::move($3), std::move($6));
   };
 // 同上, 不再解释
 mut_ast:
-  type WHITESPACE MUTABLE {
+  type  MUTABLE WHITESPACE{
     $$ = std::make_unique<pache::mut_ast>(std::move($1));
   }
 ;
 
 volatile_ast:
-  type WHITESPACE VOLATILE {
+  type  VOLATILE WHITESPACE{
     $$ = std::make_unique<pache::volatile_ast>(std::move($1));
   }
 ;
@@ -312,18 +297,18 @@ $$ = std::move($1);
 ;
 
 primary_type:
-  namespace_name {
+  namespace_name WHITESPACE{
     $$ = std::make_unique<pache::named_type_ast>(std::move($1));
   }
   ;
 
 
 size_list:
-  expression COMMA WHITESPACE{
+  expression COMMA {
     $$ = std::vector<std::unique_ptr<pache::exp_ast>>{};
     $$.emplace_back(std::move($1));
   } |
-  size_list  expression  COMMA WHITESPACE{
+  size_list  expression  COMMA {
     $$ = std::move($1);
     $$.emplace_back(std::move($2));
   }
@@ -336,10 +321,6 @@ size_list:
 statement_list:
   %empty
     { $$ = std::vector<std::unique_ptr<pache::stmt_ast>>{}; }
-| statement_list WHITESPACE 
-    {
-      $$ = std::move($1);
-    }
 | statement_list  stmt 
     {
       $$ = std::move($1);
@@ -347,7 +328,7 @@ statement_list:
     }
 ;
 block
-  : LEFT_CURLY_BRACE WHITESPACE statement_list WHITESPACE RIGHT_CURLY_BRACE {
+  : LEFT_CURLY_BRACE WHITESPACE statement_list  RIGHT_CURLY_BRACE WHITESPACE {
     $$ = std::make_unique<pache::block_ast>(std::move($3));
   //  for (auto & ast : $2) {
    //   ast->set_father($$->get_father());
@@ -399,17 +380,17 @@ return_stmt:
   ;
 
 let_stmt:
-LET  type  IDENTIFIER LEFT_CURLY_BRACE expression RIGHT_CURLY_BRACE SEMICOLON  {
+LET type  IDENTIFIER LEFT_CURLY_BRACE expression RIGHT_CURLY_BRACE SEMICOLON  {
     $$ = std::make_unique<pache::let_stmt>(std::move($2), std::move($3), std::move($5));
 }
-| LET  type  IDENTIFIER SEMICOLON  {
+| LET type  IDENTIFIER SEMICOLON  {
     $$ = std::make_unique<pache::let_stmt>(std::move($2), std::move($3), nullptr);
   }
 ;
 
 assign_stmt:
-  primary_expression WHITESPACE ASSIGN WHITESPACE expression SEMICOLON {
-    $$ = std::make_unique<pache::assign_stmt>(std::move($1), std::move($5));
+  primary_expression  ASSIGN  expression SEMICOLON {
+    $$ = std::make_unique<pache::assign_stmt>(std::move($1), std::move($3));
   }
 ;
 
@@ -457,8 +438,8 @@ if_else_stmt:
 
 
 loop_stmt:
-  LOOP WHITESPACE block {
-    $$ = std::make_unique<pache::loop_stmt>(std::move(*($3.release())));
+  LOOP  block {
+    $$ = std::make_unique<pache::loop_stmt>(std::move(*($2.release())));
 
   }
 ;
@@ -472,6 +453,7 @@ namespace_name: IDENTIFIER {
  $$ =  pache::named_ast(std::make_unique<unqualified_scope_ast>(), std::move($1));
 }
 | scope_resolution IDENTIFIER {
+  std::cout << "qualiti name:\t" << $2 << "\n";
   $$ = pache::named_ast(std::move($1), std::move($2));
 };
 
@@ -501,6 +483,9 @@ primary_expression:
 
 LITERAL
 : INTEGER_LITERAL {
+  $$ = std::move($1);
+}
+| BOOLEAN_LITERAL {
   $$ = std::move($1);
 }
 // | charactr | floating-point | string | boolean | user_defined
@@ -610,6 +595,14 @@ hexadecimal_digit_sequence
 }
 ;
 
+BOOLEAN_LITERAL
+: TRUE {
+  $$ = std::make_unique<boolean_literal>(true);
+}
+| FALSE {
+  $$ = std::make_unique<boolean_literal>(false);
+}
+;
 identification_expression
 : namespace_name {
   $$ = std::make_unique<pache::var_exp>(std::move($1));
@@ -655,11 +648,11 @@ unary_expression
 | UNARY_AND unary_expression {
   $$ = std::make_unique<pache::address_of_exp>(std::move($2));
 }
-| ALLOCATION WHITESPACE type WHITESPACE unary_expression {
-  $$ = std::make_unique<pache::allocation_exp>(std::move($3), std::move($5));
+| ALLOCATION type WHITESPACE unary_expression {
+  $$ = std::make_unique<pache::allocation_exp>(std::move($2), std::move($4));
 }
-| DEALLOCATION WHITESPACE unary_expression {
-  $$ = std::make_unique<pache::deallocation_exp>(std::move($3));
+| DEALLOCATION unary_expression {
+  $$ = std::make_unique<pache::deallocation_exp>(std::move($2));
 } 
 ;
 
