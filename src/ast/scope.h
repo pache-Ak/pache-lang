@@ -24,6 +24,8 @@ public:
     return *m_scope;
   }
 
+  void print() const;
+
 private:
   std::unique_ptr<scope_ast> m_scope;
   std::string m_iden;

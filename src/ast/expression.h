@@ -103,6 +103,9 @@ public:
     :m_iden(std::move(scope), std::move(name)) {}
 
   std::string_view get_name() const;
+  scope_ast const &get_father_scope() const {
+    return m_iden.get_father_scope();
+  }
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   virtual void print() const override;

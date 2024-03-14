@@ -9,8 +9,9 @@ void unqualified_scope_ast::print() const {
   std::cout << "unqualified_scope_ast\n";
 }
 void relative_scope_ast::print() const {
-  std::cout << "relative_scope_ast\n"
-            << "m_iden:\t" << m_iden.get_name() << "\n";
+  
+  std::cout << "relative_scope_ast\n";
+  m_iden.print();
 }
 void root_scope_ast::print() const { std::cout << "root_scope_ast\n"; }
 
@@ -25,5 +26,9 @@ relative_scope_ast::build(base_build  &build) const {
 std::unique_ptr<build_scope>
 root_scope_ast::build(base_build  &build) const {
   return build_root_scope(build, *this);
+}
+void named_ast::print() const {
+  m_scope->print();
+  std::cout << "m_iden:\t" << m_iden << "\n";
 }
 } // namespace pache

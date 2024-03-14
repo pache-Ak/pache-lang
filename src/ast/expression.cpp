@@ -188,7 +188,8 @@ void func_call_exp::print() const {
   std::cout << "}\n";
 }
 void var_exp::print() const {
-  std::cout << "var_exp:\n" << m_iden.get_name() << "\n";
+  std::cout << "var_exp:\n";
+  m_iden.print();
 }
 std::string_view var_exp::get_name() const { return m_iden.get_name(); }
 void binary_mul_exp::print() const {
