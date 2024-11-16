@@ -48,6 +48,9 @@ s1 \= s2; // OK：隐式定义的复制赋值运算符可对数组类型的数�
 ```
 
 #### ~~数组到指针的退化~~
+数组本身作为一种静态数据结构，仅提供抽象接口可以有效避免越界等问题。
+
+若允许数组到指针的退化，由于派生类指针可以赋值给接口（基类）指针，接口指针不知晓具体的对象大小，通过接口指针处理数组会访问非预期的错误的地址。
 
 存在从数组类型的左值和右值到指针类型的右值的[隐式转换](implicit_conversion "language/implicit conversion")：它构造一个指向数组首元素的指针。凡在数组出现于不期待数组而期待指针的语境中时，均使用这个转换：
 ```cpp
@@ -103,7 +106,7 @@ i32 main()
 
 #### 数组的数组
 
-当数组的元素类型是另一数组时，称该数组是多维的：
+当数组的元素类型是另一数组时，称该数组是~多维~数组的数组的：
 
 // 含有 2 个【含有 3 个 i32 元素的数组】元素的数组
 i32 a\[2\]\[3\] \= {{1, 2, 3},
@@ -174,7 +177,7 @@ let i32 (*p2)[] = &a2; // OK（C++20起）
 
 #### 数组右值
 
-~~尽管数组无法从函数按值返回，且不能作为大多数转型表达式的目标，~~ 数组[纯右值](value_category.md#纯右值 "language/value category")依然可以通过使用类型别名构成，并用[花括号初始化的函数式转型](explicit_cast "language/explicit cast")来构造数组的临时量。
+~~尽管数组无法从函数按值返回，且不能作为大多数转型表达式的目标，~~ 数组[纯右值](value_category.md#纯右值 "language/value category")~~依然~~可以通过使用类型别名构成，并用[花括号初始化的函数式转型](explicit_cast "language/explicit cast")来构造数组的临时量。
 
 <table class="t-rev-begin"><tbody><tr class="t-rev t-since-cxx17"><td><p>与类的纯右值类似，数组的纯右值由<a href="implicit_conversion#.E4.B8.B4.E6.97.B6.E9.87.8F.E5.AE.9E.E8.B4.A8.E5.8C.96" title="language/implicit conversion">临时量实质化</a>在求值时转换成亡值。</p></td><td><span class="t-mark-rev t-since-cxx17">(C++17 起)</td></tr></tbody></table>
 
@@ -214,5 +217,9 @@ i32 main()
 ```
 
 输出：
+
+### 迭代
+数组需要提供一种功能来满足遍历所有元素的需求。
+且满足安全性，高效性。
 
 ### 参阅

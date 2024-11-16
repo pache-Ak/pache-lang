@@ -31,6 +31,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <vector>
 #include "../reference_ptr.h"
 #include "IRbuild/scope_ref.h"
 
@@ -65,12 +66,17 @@ public:
   reference_ptr<build_variable> find_var(std::string_view name);
   reference_ptr<build_type const> find_type(std::string_view name) const;
   reference_ptr<base_build> find_scope(std::string_view name);
+  reference_ptr<function_build const>
+  find_func(std::string_view name,
+            std::vector<reference_ptr<build_type>> const &args_type) const;
 
   virtual std::set<reference_ptr<function_build>> find_function(std::string_view name) const = 0;
   virtual reference_ptr<build_variable>
   qualified_var_lookup(std::string_view name) = 0;
   virtual reference_ptr<build_type const> qualified_type_lookup(std::string_view name) const = 0;
   virtual reference_ptr<base_build> qualified_scope_lookup(std::string_view name)  = 0;
+  virtual reference_ptr<function_build const>
+  qualified_func_lookup(std::string_view name, std::vector<reference_ptr<build_type>> const &args_type) const = 0;
   base_build *const m_father;
 
   std::string decorated_name() const {

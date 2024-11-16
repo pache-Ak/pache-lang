@@ -1,4 +1,4 @@
-#ifndef MULTI_ARRAY_TYPR_H
+#ifndef MULTI_ARRAY_TYPE_H
 #define MULTI_ARRAY_TYPE_H
 
 #include "type.h"

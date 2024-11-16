@@ -15,6 +15,9 @@ class reference_ptr{
   constexpr reference_ptr( std::nullptr_t ) noexcept : m_ptr(nullptr){};
 
   template<class U>
+  reference_ptr(reference_ptr<U> &&p) : m_ptr(p.m_ptr){}
+
+  template<class U>
   reference_ptr(U*p) noexcept :m_ptr(p){}
   reference_ptr( T *p)noexcept :m_ptr(p){}
   reference_ptr( std::unique_ptr<T>const& p ) noexcept :m_ptr(p.get()){};
@@ -41,7 +44,7 @@ friend bool operator!=(reference_ptr lhs, reference_ptr rhs) noexcept {
 
 typename std::add_lvalue_reference<T>::type operator*() const
    noexcept(noexcept(*std::declval<pointer>())) {
-     *m_ptr;
+    return  *m_ptr;
    }
     pointer operator->() const noexcept {
       return m_ptr;
@@ -49,7 +52,7 @@ typename std::add_lvalue_reference<T>::type operator*() const
     template <typename U>
     friend struct std::hash;
 private:
-  T *  m_ptr;
+  T * m_ptr;
 };
 // 
 template<class T>
@@ -60,7 +63,7 @@ class reference_ptr<T []>{
  constexpr reference_ptr( std::nullptr_t ) noexcept : m_ptr(nullptr){};
    reference_ptr( std::unique_ptr<T>const& p ) noexcept :m_ptr(p.get()){};
    reference_ptr( std::shared_ptr<T>const & p ) noexcept :m_ptr(p.get()){}; 
-  ~reference_ptr() {}
+   
 T& operator[]( std::size_t i ) const {
   return m_ptr[i];
 }

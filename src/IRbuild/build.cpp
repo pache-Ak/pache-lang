@@ -43,7 +43,7 @@ void InitializeModuleAndManagers()  {
   // Open a new context and module.
   TheContext = std::make_unique<llvm::LLVMContext>();
   TheModule = std::make_unique<llvm::Module>("KaleidoscopeJIT", *TheContext);
-
+ 
   // Create a new builder for the module.
   Builder  = std::make_unique<llvm::IRBuilder<>>(*TheContext);
 
@@ -60,19 +60,19 @@ void InitializeModuleAndManagers()  {
 
   // Add transform passes.
   // Do simple "peephole" optimizations and bit-twiddling optzns.
-  TheFPM->addPass(llvm::InstCombinePass());
+  //TheFPM->addPass(llvm::InstCombinePass());
   // Reassociate expressions.
-  TheFPM->addPass(llvm::ReassociatePass());
+  //TheFPM->addPass(llvm::ReassociatePass());
   // Eliminate Common SubExpressions.
-  TheFPM->addPass(llvm::GVNPass());
+  ////TheFPM->addPass(llvm::GVNPass());
   // Simplify the control flow graph (deleting unreachable blocks, etc).
-  TheFPM->addPass(llvm::SimplifyCFGPass());
+  //TheFPM->addPass(llvm::SimplifyCFGPass());
 
   // Register analysis passes used in these transform passes.
-  llvm::PassBuilder PB;
-  PB.registerModuleAnalyses(*TheMAM);
-  PB.registerFunctionAnalyses(*TheFAM);
-  PB.crossRegisterProxies(*TheLAM, *TheFAM, *TheCGAM, *TheMAM);
+//   llvm::PassBuilder PB;
+//   PB.registerModuleAnalyses(*TheMAM);
+//   PB.registerFunctionAnalyses(*TheFAM);
+//   PB.crossRegisterProxies(*TheLAM, *TheFAM, *TheCGAM, *TheMAM);
 }
 }
 base_build::~base_build(){}
@@ -134,7 +134,7 @@ reference_ptr<base_build> base_build::find_scope(std::string_view name) {
   }
 }
 reference_ptr<build_variable> base_build::find_var(std::string_view name) {
-  if (auto p = qualified_var_lookup(name); p != nullptr) {
+  if (auto p = this->qualified_var_lookup(name); p != nullptr) {
     return p;
   } else if (m_father != nullptr) {
     return m_father->find_var(name);
@@ -150,6 +150,17 @@ base_build::find_type(std::string_view name) const {
     return p;
   } else if (m_father != nullptr) {
     return m_father->find_type(name);
+  } else {
+    return nullptr;
+  }
+}
+reference_ptr<function_build const> base_build::find_func(
+    std::string_view name,
+    std::vector<reference_ptr<build_type>> const &args_type) const {
+  if (auto it = qualified_func_lookup(name, args_type); it != nullptr) {
+    return it;
+  } else if (m_father != nullptr) {
+    return m_father->find_func(name, args_type);
   } else {
     return nullptr;
   }

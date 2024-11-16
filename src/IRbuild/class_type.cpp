@@ -1,4 +1,5 @@
 #include "class_type.h"
+#include "IRbuild/variable.h"
 #include "ast/class.h"
 #include "ast/type.h"
 #include "build.h"
@@ -10,16 +11,6 @@
 #include <iostream>
 
 namespace pache {
-void class_type::set_mutable() {   if (!is_const()) {
-    std::cerr << "redef mutable.\n";
-  } else {
-    m_is_const = false;
-  } }
-void class_type::set_volatile() {   if (is_volatile()) {
-    std::cerr << "redef volatile.\n";
-  } else {
-    m_is_volatile = true;
-  } }
 std::unique_ptr<build_type> class_type::clone() const {
   return std::make_unique<class_type>(*this);
 }
@@ -27,20 +18,6 @@ llvm::StructType *class_type::get_llvm_type() const {
   return m_type;
 }
 
-llvm::Value *class_type::get_member_var(llvm::Value *ptr,
-                                         std::string_view name) {
-  auto it = m_member_var.find(name);
-  if (it != m_member_var.end()) {
-    return IR::Builder->CreateGEP(
-        get_llvm_type(), ptr,
-        {IR::Builder->getInt32(0), IR::Builder->getInt32(it->second.get_num())},
-        name);
-  } else {
-    // TODO log error
-    return nullptr;
-    //return find_var(name)->get_value();
-  }
-}
 class_type::data_member::data_member(std::unique_ptr<build_type>  &&type,
                                       std::size_t i)
     : m_type(std::move(type)), m_num(i) {}
@@ -87,5 +64,24 @@ class_type::define_data_members(base_build &build, let_stmt const &ast, std::siz
   auto pair = m_member_var.try_emplace(ast.get_var_name(), std::move(type), i);
 
   return pair;
+}
+std::unique_ptr<build_variable>
+class_type::get_member_var(llvm::Value *obj,
+                                       std::string_view name) const {
+  if (obj->getType() != m_type) {
+    std::cerr << "object's type is not same as this class type.\n";
+  }
+
+  if (auto it = m_member_var.find(name); it != m_member_var.end()) {
+
+    llvm::Value *offset =
+        Builder->CreateStructGEP(obj->getType(), obj, it->second.get_num());
+    llvm::Value *var =
+        Builder->CreateLoad(it->second.get_type().get_llvm_type(), offset);
+    return std::make_unique<build_prvalue_variable>(it->second.get_type().clone(),
+                                                  var);
+  } else {
+    return nullptr;
+  }
 }
 } // namespace pache

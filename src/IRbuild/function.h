@@ -24,9 +24,9 @@ std::string_view name_mangling(function_type const & func_type);
 class function_build final : public build_variable {
 public:
   function_build(const function_build &) = delete;
-  function_build(function_build &&) = delete;
+  function_build(function_build &&) = default;
   function_build &operator=(const function_build &) = delete;
-  function_build &operator=(function_build &&) = delete;
+  function_build &operator=(function_build &&) = default;
   explicit function_build(base_build *const father, func_ast const &func);
    explicit function_build(std::unique_ptr<build_type const> &&type,
                             std::string && name,

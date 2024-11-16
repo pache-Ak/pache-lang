@@ -5,6 +5,7 @@
 #include "class_type.h"
 #include "expression.h"
 #include "function.h"
+#include <cstddef>
 #include <fstream>
 #include <iostream>
 #include <llvm-17/llvm/IR/GlobalVariable.h>
@@ -115,10 +116,6 @@ file_build::qualified_var_lookup(std::string_view name)  {
   if (auto it = global_variables.find(name); it != global_variables.end()) {
     return it->second;
   } else {
-    std::cout << name << "\terr find var in qualified  in root.\n";
-    for (auto const &[f, s] : global_variables) {
-      std::cout << f << "\n";
-    }
     return nullptr;
   }
 }
@@ -149,7 +146,7 @@ file_build::qualified_class_lookup(std::string_view name) {
 void file_build::define_variable(let_stmt const &ast) {
   auto type = type_build(*this, ast.get_var_type());
   if (type == nullptr) {
-    std::cout << "type error\n";
+    std::cerr << "type error\n";
     return;
   }
 
@@ -196,5 +193,20 @@ auto file_build::forward_statement_function(func_ast const &ast)
   return &it->second;
 }
 
-
+reference_ptr<function_build const> file_build::qualified_func_lookup(
+    std::string_view name,
+    std::vector<reference_ptr<build_type>> const &args_type) const {
+  if (auto it = builded_functions1.find(name); it != builded_functions1.end()) {
+    for (auto &[type, func] : it->second) {
+      if (std::equal(args_type.begin(), args_type.end(),
+                     type->get_args_type().begin(), type->get_args_type().end(),
+                     cmp_pointers)) {
+        return &func;
+      }
+    }
+    return nullptr;
+  } else {
+    return nullptr;
+  }
+}
 } // namespace pache

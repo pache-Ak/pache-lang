@@ -448,7 +448,8 @@ public:
   virtual std::unique_ptr<build_variable>
   build(base_build &build) const override;
   virtual void print() const override;
-
+  exp_ast const &get_exp() const { return *m_expr; }
+  std::string_view get_id() const { return m_id_expr; }
 private:
   std::unique_ptr<exp_ast> m_expr;
   std::string m_id_expr;
@@ -488,7 +489,7 @@ public:
   build(base_build &build) const override;
   exp_ast const &get_arg() const { return *m_argument; }
   virtual void print() const override;
-
+  virtual ~indirection_exp() = default;
 private:
   std::unique_ptr<exp_ast> m_argument;
 };

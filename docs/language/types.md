@@ -4,11 +4,13 @@
 
 ###  空类型
 
-- void 
+- `void` 
     
-    值为空集的类型。它是无法变为完整类型的[不完整类型](type.md#不完整类型 "/language/type")（从而不允许存在 void 类型的对象）。不存在含有 void 的[数组](array "/language/array")和[多维数组]()以及到 void 的[引用](reference "language/reference")。然而 [指向 void 的指针](pointer#void_.E7.9A.84.E6.8C.87.E9.92.88 "language/pointer")和返回 void 类型的[函数](function.md "language/function")是允许存在的（其他语言中的*过程*）。
+    值为空集的类型。它是无法变为完整类型的[不完整类型](type.md#不完整类型 "/language/type")（从而不允许存在 void 类型的对象）。不存在含有 void 的[数组](array "/language/array")和[多维数组]()以及到 void 的[引用](reference "language/reference")。然而 [指向 void 的指针](pointer#void_.E7.9A.84.E6.8C.87.E9.92.88 "language/pointer")（在目前的设计计划删除）和返回 void 类型的[函数](function.md "language/function")是允许存在的（其他语言中的*过程*）。
 
 ###  [std::nullptr\_t](https://zh.cppreference.com/w/types/nullptr_t "types/nullptr t")
+
+*作为原始资料暂存*
 
 [std::nullptr\_t](https://zh.cppreference.com/w/types/nullptr_t "types/nullptr t") 是空指针字面量 [`nullptr`](nullptr "language/nullptr") 的类型。它是独立类型，既不是指针类型，也不是成员指针类型。
 
@@ -17,13 +19,25 @@
 ####  标准整数类型
 
 标准整数类型均由补码实现。
+整数类型的除法`/`运算均是带余数除法（也称为整除或模运算）。
 
+自然数和整数均满足全序关系，均提供了比较运算。
 ##### 有符号整数类型
 有符号整数类型：
 `i8` `i16` `i32` `i64` `i128` `isize`
 
 类型`i32`是有符号整数类型的默认类型。
 也是整数字面量的默认类型，
+整数集合 
+Z 形成一个整环（Integral Domain）
+因为它具有加法和乘法的封闭性，同时满足结合律、交换律、分配律，并且存在加法的单位元（0）和乘法的单位元（1）。
+带余数除法（也称为整除或模运算）封闭
+加法存在逆元，减法运算封闭
+
+x86(I32)、ARM、RISC-V提供了算数移位，risc-v没有算数左移，只有逻辑左移，arm的算数左移和逻辑左移是一致的。
+一个有效的（不发生溢出）左移最高位和数据最高位必然一致。故算术左移和逻辑左移一样。
+TODO 进一步考虑支持算数移位
+llvm可以支持
 
 ###### 允许的内建操作
 - [隐式转换](implicit_conversion.md "language/implicit_conversion")
@@ -34,6 +48,9 @@
 
 - 赋值和初始化
     仅可用相同类型或经过转型后相同的类型对自身赋值和初始化。
+
+- 后继
+类似于C/CPP的前置++运算，由于可以以 += 1 运算等效实现，目前设计中不提供。
 
 - 算数运算
 
@@ -103,7 +120,9 @@
     |`a / b` | 整除运算符|
     | `a % b` | 取余运算符|
 
-    注： `a`和`b`均是无符号整数类型的变量，内建运算符不支持与其他类型混合使用， 无符号数内建不支持取负，减法运算。
+    注： `a`和`b`均是无符号整数类型的变量，内建运算符不支持与其他类型混合使用， 
+    自然数对于减法运算不封闭所以
+    无符号数内建不支持取负，减法运算。
 
 - 位运算
 
@@ -150,6 +169,41 @@
 
 bool - 足以存放两个值 [`true`](bool_literal "language/bool literal") 或 [`false`](bool_literal "language/bool literal") 之一的类型。~~`sizeof(bool)` 的值由实现定义，而且不一定是 1。~~
 
+一元逻辑运算有`4` (2(2^1)) 种，
+以布尔变量`b`为例分别是
+| operator | 说明 |
+| --- | ---|
+| `true` | 恒真（Tautology） |
+| `false` | 恒假（Contradiction）|
+| `!b` | 非运算（NOT）|
+| `b` | 身份运算（Identity） |
+
+二元逻辑运算有`16` (2^(2^2)) 种。
+以布尔变量`a` 和 `b` 距离分别是
+| operator | 说明 |
+| --- | ---|
+| `true` | 恒真（Tautology） |
+| `false` | 恒假（Contradiction）|
+| `a && b` | 与（AND）|
+| `a \|\| b` | 或（OR）|
+| `a != b` | 异或（XOR） |
+| `a == b` | 同或（XNOR）|
+| `!a` | A 的非 |
+| `!b` | B 的非|
+| `!(a && b)` | A 与 B 的非（NAND）|
+| `!(a \|\| b)` | A 或 B 的非（NOR）|
+| `a && !b` | A 与非 B|
+| `!a && b` | 非 A 与 B |
+| `!a \|\| b` | 非 A 或 B |
+| `a \|\| !b` | A 或非 B|
+| `a` | A |
+| `b` | B |
+
+
+考虑到一元运算我们必须有非运算，
+在考虑非运算的基础上，最少的完整表达运算需要与 非、或 非 两种
+故通常以与或非来表达所有逻辑运算,
+除此以外，由于异或同或由与或非实现相对比较复杂，且异或相对常用，所以本语言效仿常规设计支持异或运算。
 #### 允许的内建操作
 
 | operator | 说明|
@@ -157,6 +211,7 @@ bool - 足以存放两个值 [`true`](bool_literal "language/bool literal") 或 
 |`!a`  | 非|
 | `a && b` | 与|
 |`a \|\| b` | 或|
+| `a ^ b` | 异或 |
 
 ###  字符类型
 - `c8`
@@ -177,6 +232,42 @@ bool - 足以存放两个值 [`true`](bool_literal "language/bool literal") 或 
 |`c16`| 16  | **0** 到 **65535**(**0xffff**) |
 |`c32`| 32   | **0** 到 **1114111**(**0x10ffff**) |
 ###  浮点类型
+
+实数可以被视为一个具有以下代数结构的集合：
+
+1. 域（Field）
+实数集 R 是一个域，具备以下特性：
+
+加法：对于任意两个实数 
+`a` 和 
+`b`，其和 
+`+`
+`a+b` 仍然是实数。
+加法的逆：每个实数 
+`a` 存在一个唯一的实数 
+`−a` 使得 
+`a+(-a)=0`
+乘法：对于任意两个实数 
+`a` 和 
+`b`，其积 
+`a⋅b` 仍然是实数。
+乘法的逆：每个非零实数 
+`a` 存在一个唯一的实数 
+`a^−1`
+  使得 
+`a⋅a^-1 = 1 `
+分配律：加法和乘法满足分配律：
+`a⋅(b+c)=a⋅b+a⋅c`。
+2. 顺序结构
+实数还具有顺序结构，可以定义大小关系：
+
+全序：对于任意两个实数 
+`a` 和 
+`b`，可以比较它们的大小：
+`a<b`、
+`a=b` 或 
+`a>b`。
+
 #### 允许的内建操作
 - [隐式转换](implicit_conversion.md "language/implicit_conversion")
 
@@ -202,7 +293,7 @@ bool - 足以存放两个值 [`true`](bool_literal "language/bool literal") 或 
     注： `a`和`b`均是浮点数类型的变量，内建运算符不支持与其他类型混合使用。
 
 - 比较运算
-
+满足全序关系，均提供了比较运算。
     | operator | 说明|
     | --- | --- |
     | `a == b` | 相等|

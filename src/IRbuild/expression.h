@@ -5,10 +5,16 @@
 #include "../reference_ptr.h"
 #include "build.h"
 #include "function.h"
+#include "function_type.h"
+#include "type.h"
 #include "variable.h"
 #include <memory>
+#include <unordered_map>
+#include <vector>
 
 namespace pache {
+std::unique_ptr<build_constant_variable> build_literal(base_build &build,
+                                                       exp_ast const &ast);
 std::unique_ptr<build_variable> build_expression(base_build &build,
                                                 exp_ast const &ast);
 std::unique_ptr<build_variable> build_unary_plus(base_build &build,
@@ -53,9 +59,27 @@ std::unique_ptr<build_variable>
 build_logical_and_exp(base_build &build, logical_and_exp const &ast);
 std::unique_ptr<build_variable>
 build_logical_or_exp(base_build &build, logical_or_exp const &ast);
-
+std::unique_ptr<build_variable>
+build_logical_not_exp(base_build &build, logical_not_exp const &ast);
+std::unique_ptr<build_variable>
+build_bitwise_not_exp(base_build &build, bitwise_not_exp const &ast);
 std::unique_ptr<build_variable>
 build_subscript_exp(base_build &build, subscript_exp const &ast);
+
+std::unique_ptr<build_variable> build_arrow_exp(base_build &build,
+                                                arrow_exp const &ast);
+
+std::unique_ptr<build_variable>
+build_address_of_exp(base_build &build, address_of_exp const &ast);
+
+// std::unique_ptr<build_variable>
+// build_allocation_exp(base_build &build, allocation_exp const &ast);
+
+std::unique_ptr<build_variable>
+build_left_shift_exp(base_build &build, left_shift_exp const &ast);
+
+std::unique_ptr<build_variable>
+build_right_shift_exp(base_build &build, right_shift_exp const &ast) ;
 
 // find function 
 template <class Iterator>
@@ -71,14 +95,7 @@ ADL(base_build const &build, std::string_view function_name, Iterator begin,
 template <class Iterator>
 reference_ptr<function_build>
 function_lookup(base_build const &build, std::string_view name, Iterator begin,
-                Iterator end) {
-  //std::vector<reference_ptr<function_build>>;
-   //   set = ADL(build, "operator+"sv, begin, end);
-
-  ///  TODO
-
-  return nullptr;
-}
+                Iterator end);
 std::unique_ptr<build_variable>
 build_dot_exp(base_build &build, dot_exp const &ast);
 } // namespace pache

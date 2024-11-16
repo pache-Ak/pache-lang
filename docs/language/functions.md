@@ -43,3 +43,30 @@ func main() {
 除了函数左值，函数调用表达式还支持函数指针以及重载了函数调用运算符及可转换为函数指针的任何类类型的值（包括 [lambda 表达式](/language/lambda "language/lambda")）。这些类型被统称为[函数对象 (FunctionObject)](/named_req/FunctionObject "named req/FunctionObject") ，而且在 name 标准库中的各处都有使用，示例可见[二元谓词 (BinaryPredicate)](/named_req/BinaryPredicate "named req/BinaryPredicate") 和[比较 (Compare)](/named_req/Compare "named req/Compare") 的用法。
 
 标准库也提供数个预定义的[函数对象模板](/utility/functional "utility/functional")，以及一些组成新函数对象的方法（包括 [`std::less`](/utility/functional/less "utility/functional/less")、[`std::mem_fn`](/utility/functional/mem_fn "utility/functional/mem fn")、[`std::bind`](/utility/functional/bind "utility/functional/bind")、[`std::function`](/utility/functional/function "utility/functional/function")和[`std::bind_front`](/utility/functional/bind_front "utility/functional/bind front")）。
+
+### 参数的传递形式
+
+1. 引用
+在需要修改外部变量时的选择。指针提供了等价的功能。
+
+2. 不可修改的引用
+保持外部变量可用性，不会变为亡值，
+不需要修改外部变量。
+
+3. 值
+移动可修改且需要变量，
+或接受新的需要修改的纯右值
+来自显示移动，或克隆，或临时量
+
+3. 不可修改的值
+移动可修改或不可修改的变量，之后不可修改，
+或接受新的不需要修改的纯右值
+来自显示移动，或克隆，或临时量
+
+对于类似`sin()`等数学运算函数，很可能产生大量的中间变量，临时量的实质化是有代价的，
+所以常量引用考虑abi一致性，并不能在所有场合优于按值传递，
+以cpp为例纯右值通常会选择右值引用或者非引用版本的函数，当且仅当只存在常量引用时才选择常量引用。
+在当前设计中，并不倾向于隐式的自动的实现临时量实质化，常量引用并不接受右值参数。
+需要考虑提供值版本或者自行手动临时量实质化。
+
+拷贝开销低推荐按值传递，拷贝开销高且不必要拷贝传递引用。

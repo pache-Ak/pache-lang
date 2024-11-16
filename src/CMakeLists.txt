@@ -33,6 +33,8 @@ include_directories(${LLVM_INCLUDE_DIRS})
 separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 add_definitions(${LLVM_DEFINITIONS_LIST})
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 # Now build our tools
 add_executable(${PROJECT_NAME}
@@ -53,7 +55,17 @@ target_compile_options(${PROJECT_NAME} PUBLIC
 #    -std=c++17             # 使用 C++17 标准
 #    -pthread               # 启用线程支持
     -g
-    
+)
+
+set(CPPCHECK_EXECUTABLE "/usr/bin/cppcheck")
+
+add_custom_command(
+    TARGET ${PROJECT_NAME}
+    POST_BUILD
+    COMMAND ${CPPCHECK_EXECUTABLE}
+    --enable=all
+    --quiet --suppress=missingIncludeSystem --project=../compile_commands.json
+    COMMENT "running cppcheck.\n"
 )
 
 add_subdirectory(ast)

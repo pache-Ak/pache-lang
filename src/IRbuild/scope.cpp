@@ -1,6 +1,7 @@
 #include "scope.h"
 #include "ast/scope.h"
 #include <memory>
+#include <iostream>
 
 namespace pache {
 build_scope::~build_scope(){}

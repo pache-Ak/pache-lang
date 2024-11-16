@@ -114,7 +114,7 @@
   TRUE
   FALSE
 %token RETURN FUNC CLASS
-%token <std::string> IDENTIFIER 
+%token <std::string> IDENTIFIER COMMENT
 %token <int> INTEGER
 %token <char const *> BINARY_DIGIT OCTAL_DIGIT NONZERO_DIGIT DECIMAL_DIGIT HEXADECIMAL_DIGIT DIGIT
 %token EOF 0;
@@ -219,9 +219,9 @@ FuncRParams:
 
 
 FuncDef
-  : FUNC WHITESPACE IDENTIFIER LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS WHITESPACE  type  LEFT_CURLY_BRACE WHITESPACE  statement_list  RIGHT_CURLY_BRACE WHITESPACE{
+  : FUNC IDENTIFIER LEFT_PARENTHESIS FuncFParams RIGHT_PARENTHESIS WHITESPACE type LEFT_CURLY_BRACE statement_list RIGHT_CURLY_BRACE {
 
-    $$ = std::make_unique<func_ast>(std::move($3), std::move($5), std::move($8), std::move($11));
+    $$ = std::make_unique<func_ast>(std::move($2), std::move($4), std::move($7), std::move($9));
   }
 //| main_func {
 //  $$ = std::move($1);
@@ -229,7 +229,7 @@ FuncDef
 ;
 
 class_body:
-WHITESPACE  { $$; }
+%empty  { $$; }
 | class_body let_stmt {
   $$ = std::move($1);
   $$.var_def.emplace_back(std::move($2));
@@ -245,19 +245,19 @@ WHITESPACE  { $$; }
 ;
 
 class_def:
-  CLASS WHITESPACE IDENTIFIER WHITESPACE LEFT_CURLY_BRACE class_body RIGHT_CURLY_BRACE WHITESPACE
+  CLASS IDENTIFIER WHITESPACE LEFT_CURLY_BRACE class_body RIGHT_CURLY_BRACE
   {
-    $$ = std::make_unique<pache::class_ast>(std::move($3), std::move($6));
+    $$ = std::make_unique<pache::class_ast>(std::move($2), std::move($5));
   };
 // 同上, 不再解释
 mut_ast:
-  type  MUTABLE WHITESPACE{
+  type  MUTABLE {
     $$ = std::make_unique<pache::mut_ast>(std::move($1));
   }
 ;
 
 volatile_ast:
-  type  VOLATILE WHITESPACE{
+  type  VOLATILE{
     $$ = std::make_unique<pache::volatile_ast>(std::move($1));
   }
 ;
@@ -269,12 +269,12 @@ point_ast:
 ;
 
 reference_ast:
-  type UNARY_AND {
+  type B_AND {
     $$ = std::make_unique<pache::reference_ast>(std::move($1));
   }
 ;
 
-type :
+type:
 mut_ast {
   $$ = std::move($1);
 } |
@@ -328,8 +328,8 @@ statement_list:
     }
 ;
 block
-  : LEFT_CURLY_BRACE WHITESPACE statement_list  RIGHT_CURLY_BRACE WHITESPACE {
-    $$ = std::make_unique<pache::block_ast>(std::move($3));
+  : LEFT_CURLY_BRACE  statement_list  RIGHT_CURLY_BRACE {
+    $$ = std::make_unique<pache::block_ast>(std::move($2));
   //  for (auto & ast : $2) {
    //   ast->set_father($$->get_father());
    // }
@@ -423,16 +423,16 @@ else_stmt:
   };
 
 if_stmt:
-  IF WHITESPACE expression WHITESPACE block  {
-    $$ = std::make_unique<pache::if_stmt>(std::move($3), std::move($5));
+  IF  expression WHITESPACE block  {
+    $$ = std::make_unique<pache::if_stmt>(std::move($2), std::move($4));
   }
   | if_else_stmt {
     $$=std::move($1);
   }
   ;
 if_else_stmt:
-  IF expression block ELSE else_stmt {
-    $$ = std::make_unique<pache::if_else_stmt>(std::move($2), std::move($3), std::move($5));
+  IF expression WHITESPACE block ELSE else_stmt {
+    $$ = std::make_unique<pache::if_else_stmt>(std::move($2), std::move($4), std::move($6));
   }
 
 
@@ -648,7 +648,7 @@ unary_expression
 | UNARY_AND unary_expression {
   $$ = std::make_unique<pache::address_of_exp>(std::move($2));
 }
-| ALLOCATION type WHITESPACE unary_expression {
+| ALLOCATION type LEFT_CURLY_BRACE unary_expression RIGHT_CURLY_BRACE {
   $$ = std::make_unique<pache::allocation_exp>(std::move($2), std::move($4));
 }
 | DEALLOCATION unary_expression {

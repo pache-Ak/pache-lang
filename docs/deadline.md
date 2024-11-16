@@ -42,6 +42,8 @@
 
 ~~隐式转换~~ 类型转换运算符？？
 
+无整型提升
+
 [自立实现](/freestanding "freestanding")
 
 **[语言](/language/language.md "language")**

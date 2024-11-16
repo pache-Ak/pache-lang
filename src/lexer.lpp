@@ -11,16 +11,17 @@
 %option noyywrap nounput noinput batch debug
 /* 空白符和注释 */
 WHITESPACE            [ \f\n\r\t\v]+
-OPTION_WHITE          {WHITESPACE}|?
 BLANK                 [ \t]
 NEW_LINE              [\n]
 HORIZONTAL_WHITESPACE [ \f\r\t\v]*
+
 
 %x BINARY
 %x OCTAL
 %x DECIMAL
 %x HEXADECIMAL
-%x LINE_END
+%X EXPLICIT_WHITESPCE
+%x COMMENT
 
 %{
   // Code run each time a pattern is matched.
@@ -33,103 +34,114 @@ HORIZONTAL_WHITESPACE [ \f\r\t\v]*
   // Code run each time yylex is called.
   loc.step ();
 %}
-<INITIAL>{WHITESPACE} { return pache::parser::make_WHITESPACE(loc); }
-
-"main"          { return pache::parser::make_MAIN(loc); }
-"let"{WHITESPACE}           { return pache::parser::make_LET(loc); }
-"if"            { return pache::parser::make_IF(loc); }
-"else"          { return pache::parser::make_ELSE(loc); }
-
-{WHITESPACE}":="{WHITESPACE}        { return pache::parser::make_ASSIGN(loc); }
-\/\/[^\n]*\n   { /* 忽略, 不做任何操作 */ }
-
-"::"    { return pache::parser::make_SCOPE(loc); }
-
-"mut"         { return pache::parser::make_MUTABLE(loc);}
-"volatile"         { return pache::parser::make_VOLATILE(loc);}
-"return"       { return pache::parser::make_RETURN(loc); }
-"func"         { return pache::parser::make_FUNC(loc); }
-"class"                 { return pache::parser::make_CLASS(loc); }
-
-"{"    { return pache::parser::make_LEFT_CURLY_BRACE(loc); }
-"("     { return pache::parser::make_LEFT_PARENTHESIS(loc); }
-"["   { return pache::parser::make_LEFT_SQUARE_BRACKET(loc); }
-"}"     { return pache::parser::make_RIGHT_CURLY_BRACE(loc); }
-")"      { return pache::parser::make_RIGHT_PARENTHESIS(loc); }
-"]"  { return pache::parser::make_RIGHT_SQUARE_BRACKET(loc); }
-
-"loop"{WHITESPACE}                  { return pache::parser::make_LOOP(loc); }
-"break"                { return pache::parser::make_BREAK(loc); }
-"continue"              { return pache::parser::make_CONTINUE(loc); }
-
-"new"    { return pache::parser::make_ALLOCATION(loc); }
-"delete" {return pache::parser::make_DEALLOCATION(loc); }
-
-"true"  { return pache::parser::make_TRUE(loc); }
-"false" { return pache::parser::make_FALSE(loc); }
-
-"~"   { return pache::parser::make_BITWISE_NOT(loc); }
-
-"&"                           { return pache::parser::make_UNARY_AND(loc); }
-{WHITESPACE}"&"{WHITESPACE}         { return pache::parser::make_B_AND(loc); }
-{WHITESPACE}"|"{WHITESPACE}        { return pache::parser::make_B_XOR(loc); }
-{WHITESPACE}"^"{WHITESPACE}        { return pache::parser::make_B_OR(loc); }
-
-"+"                  { return pache::parser::make_PLUS(loc); }
-{WHITESPACE}"+"{WHITESPACE}            { return pache::parser::make_BINARY_PLUS(loc); }
-
-"-"              { return pache::parser::make_MINUS(loc); }
-{WHITESPACE}"-"{WHITESPACE}            { return pache::parser::make_BINARY_MINUS(loc); }
-
-<INITIAL>"*" { return pache::parser::make_UNARY_STAR(loc); }
-{WHITESPACE}"*"{WHITESPACE} {
-  return pache::parser::make_BINARY_STAR(loc);
+<EXPLICIT_WHITESPCE>{WHITESPACE} { return pache::parser::make_WHITESPACE(loc); }
+<INITIAL>{WHITESPACE} {
+  //BEGIN(EXPLICIT_WHITESPCE);
 }
-{WHITESPACE}"%"{WHITESPACE}               { return pache::parser::make_PERCENT(loc); }
-{WHITESPACE}"/"{WHITESPACE}                { return pache::parser::make_SLASH(loc); }
-"."                { return pache::parser::make_DOT(loc); }
-
-{WHITESPACE}"<<"{WHITESPACE}            { return pache::parser::make_LEFT_SHITF(loc); }
-{WHITESPACE}">>"{WHITESPACE}            { return pache::parser::make_RIGHT_SHIFT(loc); }
-
-{WHITESPACE}"<=>"{WHITESPACE}  { return pache::parser::make_THREE_WAY_COMPARISON(loc); }
-{WHITESPACE}"<"{WHITESPACE}           { return pache::parser::make_LESS(loc); }
-{WHITESPACE}"<="{WHITESPACE}            { return pache::parser::make_LESS_EQUAL(loc); }
-{WHITESPACE}">"{WHITESPACE}             { return pache::parser::make_GREATER(loc); }
-{WHITESPACE}">="{WHITESPACE}        { return pache::parser::make_GREATER_EQUAL(loc); }
-{WHITESPACE}"="{WHITESPACE}                { return pache::parser::make_EQUAL(loc); }
-{WHITESPACE}"!="{WHITESPACE}           { return pache::parser::make_NOT_EQUAL(loc); }
-
-"!"           { return pache::parser::make_LOGICAL_NOT(loc); }
-{WHITESPACE}"&&"{WHITESPACE}                   { return pache::parser::make_AND(loc); }
-{WHITESPACE}"||"{WHITESPACE}                  { return pache::parser::make_OR(loc); }
-
-","{WHITESPACE}                { return pache::parser::make_COMMA(loc); }
-
-<LINE_END>{WHITESPACE} { 
-  BEGIN(INITIAL);
-  std::cout << yytext << "space.\n";
-  //yyless(0);
-  //return pache::parser::make_OPTIONAL_BLANK(loc);
-}
-
-<LINE_END>. {
-  BEGIN(INITIAL);
-  std::cout << yytext << "\tinitial.\n";
+<INITIAL>"//"  { std::cout <<"begin commnet.\n"; BEGIN(COMMENT);  }
+<INITIAL>. {
+  std::cout << "EXPLICIT_WHITESPCE\t" << yytext << "\n";
+  BEGIN(EXPLICIT_WHITESPCE);
   yyless(0);
 }
+<COMMENT>^{NEW_LINE}* { return pache::parser::make_COMMENT(yytext, loc); } 
+<COMMENT>{NEW_LINE} { BEGIN(INITIAL);}
+<EXPLICIT_WHITESPCE>"main"          { return pache::parser::make_MAIN(loc); }
+<EXPLICIT_WHITESPCE>"let"{WHITESPACE}           {
+   return pache::parser::make_LET(loc); }
+<EXPLICIT_WHITESPCE>"if"{WHITESPACE}            { return pache::parser::make_IF(loc); }
+<EXPLICIT_WHITESPCE>"else"{WHITESPACE}          { return pache::parser::make_ELSE(loc); }
 
-";\n"       { 
-  BEGIN(LINE_END);
-  std::cout << "make_SEMICOLON.\n";
+<EXPLICIT_WHITESPCE>{WHITESPACE}":="{WHITESPACE}        { return pache::parser::make_ASSIGN(loc); }
+
+<EXPLICIT_WHITESPCE>"::"    { return pache::parser::make_SCOPE(loc); }
+
+<EXPLICIT_WHITESPCE>"mut"{WHITESPACE}          { return pache::parser::make_MUTABLE(loc);}
+<EXPLICIT_WHITESPCE>"volatile"{WHITESPACE}          { return pache::parser::make_VOLATILE(loc);}
+<EXPLICIT_WHITESPCE>"return"       { return pache::parser::make_RETURN(loc); }
+<EXPLICIT_WHITESPCE>"func"{WHITESPACE}         { return pache::parser::make_FUNC(loc); }
+<EXPLICIT_WHITESPCE>"class"{WHITESPACE} { return pache::parser::make_CLASS(loc); }
+
+<EXPLICIT_WHITESPCE>"{"    { 
+  BEGIN(INITIAL);
+  return pache::parser::make_LEFT_CURLY_BRACE(loc); 
+  }
+<EXPLICIT_WHITESPCE>"("     { return pache::parser::make_LEFT_PARENTHESIS(loc); }
+<EXPLICIT_WHITESPCE>"["   { return pache::parser::make_LEFT_SQUARE_BRACKET(loc); }
+<EXPLICIT_WHITESPCE>"}"     { 
+  BEGIN(INITIAL);
+  return pache::parser::make_RIGHT_CURLY_BRACE(loc);
+}
+<EXPLICIT_WHITESPCE>")"      { 
+  //BEGIN(INITIAL);
+  return pache::parser::make_RIGHT_PARENTHESIS(loc); 
+}
+<EXPLICIT_WHITESPCE>"]"  { return pache::parser::make_RIGHT_SQUARE_BRACKET(loc); }
+
+<EXPLICIT_WHITESPCE>"loop"{WHITESPACE}                  { return pache::parser::make_LOOP(loc); }
+<EXPLICIT_WHITESPCE>"break"                { return pache::parser::make_BREAK(loc); }
+<EXPLICIT_WHITESPCE>"continue"              { return pache::parser::make_CONTINUE(loc); }
+
+<EXPLICIT_WHITESPCE>"new"{WHITESPACE}     { return pache::parser::make_ALLOCATION(loc); }
+<EXPLICIT_WHITESPCE>"delete"{WHITESPACE} {return pache::parser::make_DEALLOCATION(loc); }
+
+<EXPLICIT_WHITESPCE>"true"  { return pache::parser::make_TRUE(loc); }
+<EXPLICIT_WHITESPCE>"false" { return pache::parser::make_FALSE(loc); }
+
+<EXPLICIT_WHITESPCE>"~"   { return pache::parser::make_BITWISE_NOT(loc); }
+
+
+<EXPLICIT_WHITESPCE>"!"           { return pache::parser::make_LOGICAL_NOT(loc); }
+<EXPLICIT_WHITESPCE>{WHITESPACE}"&&"{WHITESPACE}                   { return pache::parser::make_AND(loc); }
+<EXPLICIT_WHITESPCE>{WHITESPACE}"||"{WHITESPACE}                  { return pache::parser::make_OR(loc); }
+
+
+<EXPLICIT_WHITESPCE>{WHITESPACE}"&"{WHITESPACE}         { return pache::parser::make_B_AND(loc); }
+<EXPLICIT_WHITESPCE>{WHITESPACE}"|"{WHITESPACE}        { return pache::parser::make_B_XOR(loc); }
+<EXPLICIT_WHITESPCE>{WHITESPACE}"^"{WHITESPACE}        { return pache::parser::make_B_OR(loc); }
+
+<EXPLICIT_WHITESPCE>"&"                           { return pache::parser::make_UNARY_AND(loc); }
+<EXPLICIT_WHITESPCE>"+"                  { return pache::parser::make_PLUS(loc); }
+<EXPLICIT_WHITESPCE>{WHITESPACE}"+"{WHITESPACE}            { return pache::parser::make_BINARY_PLUS(loc); }
+
+<EXPLICIT_WHITESPCE>"-"              { return pache::parser::make_MINUS(loc); }
+<EXPLICIT_WHITESPCE>{WHITESPACE}"-"{WHITESPACE}            { return pache::parser::make_BINARY_MINUS(loc); }
+
+<EXPLICIT_WHITESPCE>"*" { return pache::parser::make_UNARY_STAR(loc); }
+<EXPLICIT_WHITESPCE>{WHITESPACE}"*"{WHITESPACE} {
+  return pache::parser::make_BINARY_STAR(loc);
+}
+<EXPLICIT_WHITESPCE>{WHITESPACE}"%"{WHITESPACE}               { return pache::parser::make_PERCENT(loc); }
+<EXPLICIT_WHITESPCE>{WHITESPACE}"/"{WHITESPACE}                { return pache::parser::make_SLASH(loc); }
+<EXPLICIT_WHITESPCE>"."                { return pache::parser::make_DOT(loc); }
+
+<EXPLICIT_WHITESPCE>{WHITESPACE}"<<"{WHITESPACE}            { return pache::parser::make_LEFT_SHITF(loc); }
+<EXPLICIT_WHITESPCE>{WHITESPACE}">>"{WHITESPACE}            { return pache::parser::make_RIGHT_SHIFT(loc); }
+
+<EXPLICIT_WHITESPCE>{WHITESPACE}"<=>"{WHITESPACE}  { return pache::parser::make_THREE_WAY_COMPARISON(loc); }
+<EXPLICIT_WHITESPCE>{WHITESPACE}"<"{WHITESPACE}           { return pache::parser::make_LESS(loc); }
+<EXPLICIT_WHITESPCE>{WHITESPACE}"<="{WHITESPACE}            { return pache::parser::make_LESS_EQUAL(loc); }
+<EXPLICIT_WHITESPCE>{WHITESPACE}">"{WHITESPACE}             { return pache::parser::make_GREATER(loc); }
+<EXPLICIT_WHITESPCE>{WHITESPACE}">="{WHITESPACE}        { return pache::parser::make_GREATER_EQUAL(loc); }
+<EXPLICIT_WHITESPCE>{WHITESPACE}"="{WHITESPACE}                { return pache::parser::make_EQUAL(loc); }
+<EXPLICIT_WHITESPCE>{WHITESPACE}"!="{WHITESPACE}           { return pache::parser::make_NOT_EQUAL(loc); }
+
+<EXPLICIT_WHITESPCE>","{WHITESPACE}                { return pache::parser::make_COMMA(loc); }
+
+<EXPLICIT_WHITESPCE>";\n"       { 
+  BEGIN(INITIAL);
+  std::cout << "begin INITIAL.\n";
   return pache::parser::make_SEMICOLON(loc);
 }
-[a-zA-Z_][a-zA-Z0-9_]*   { return pache::parser::make_IDENTIFIER(yytext, loc);}
+<EXPLICIT_WHITESPCE>[a-zA-Z_][a-zA-Z0-9_]*   { 
+  //BEGIN(EXPLICIT_WHITESPCE);
+  return pache::parser::make_IDENTIFIER(yytext, loc);
+}
 
 <BINARY,OCTAL,DECIMAL,HEXADECIMAL>"'" { return pache::parser::make_SINGLE_QUOTE(loc); }
 
 
-0[bB] {
+<EXPLICIT_WHITESPCE>0[bB] {
   BEGIN(BINARY);
   return pache::parser::make_BINARY_PREFIX(loc);
 }
@@ -141,7 +153,7 @@ HORIZONTAL_WHITESPACE [ \f\r\t\v]*
   yyless(0);
 }
 
-<INITIAL>0 {
+<EXPLICIT_WHITESPCE>0 {
   BEGIN(OCTAL);
   return pache::parser::make_ZERO(loc);
 }
@@ -151,7 +163,7 @@ HORIZONTAL_WHITESPACE [ \f\r\t\v]*
   yyless(0);
 }
 
-<INITIAL>[1-9] {
+<EXPLICIT_WHITESPCE>[1-9] {
   BEGIN(DECIMAL);
   return pache::parser::make_NONZERO_DIGIT(yytext, loc); }
 <DECIMAL>[0-9]+ {return pache::parser::make_DIGIT(yytext, loc); }
@@ -160,7 +172,7 @@ HORIZONTAL_WHITESPACE [ \f\r\t\v]*
   yyless(0);
 }
 
-0[xX] {
+<EXPLICIT_WHITESPCE>0[xX] {
   BEGIN(HEXADECIMAL);
   return pache::parser::make_HEXADECIMAL_PREFIX(loc);
 }

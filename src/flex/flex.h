@@ -23,9 +23,15 @@
 #include "ast/statement.h"
 #include "ast/type.h"
 
-namespace pache {
 using namespace std::literals::string_view_literals;
-std::pmr::set<std::string_view> const key_words{};
+
+namespace pache {
+
+std::pmr::unordered_set<std::string_view> const key_words{
+#include "keyword.inc"
+};
+
+std::pmr::unordered_set<std::string_view> const built_in_type{};
 
 std::unique_ptr<base_ast> flex(std::istream &in) {
   std::vector<std::string> vec_str;
@@ -85,14 +91,12 @@ private:
   void line_comment() {
     if (*begin == '/') {
       ++begin;
-      if (begin != end && *begin == '/') {
+      if (begin == end || *begin == '/') {
         next_line();
-      } else {
-        std::cerr << "error expect '/'";
+        return;
       }
-    } else {
-      std::cerr << "shouldn't enter this function \"line_comment\"\n";
     }
+    std::cerr << "shouldn't enter this function \"line_comment\".\n";
   }
 
   static bool isidentifier_start_char(int c) {

@@ -53,13 +53,6 @@ function_type::function_type(base_build &build, func_type_ast const &ast)
     }
   }()){}
 
-void function_type::set_mutable() {
-  std::cerr << "can't fix function with mut.";
-}
-void function_type::set_volatile() {
-  std::cerr << "can't fix function with volatile.";
-}
-
 std::unique_ptr<function_type>
 build_func_type(base_build &father, func_type_ast const &ast) {
   std::vector<std::unique_ptr<build_type>> args_type;
@@ -97,5 +90,23 @@ std::unique_ptr<build_type> function_type::clone() const {
   args.emplace_back(arg->clone());
   }
   return std::make_unique<function_type>(m_return_type->clone(), std::move(args));
+}
+llvm::FunctionType *function_type::get_llvm_type() const { return m_llvm_type; }
+build_type const &function_type::get_return_type() const {
+  return *m_return_type;
+}
+std::vector<std::unique_ptr<build_type>> const &
+function_type::get_args_type() const {
+  return m_args_type;
+}
+bool cmp_pointers(reference_ptr<build_type> const ptr1,
+                  reference_ptr<build_type> const ptr2) {
+  if (ptr1 == nullptr && ptr2 == nullptr) {
+    return true; // 两个指针都为空指针，认为相等
+  } else if (ptr1 == nullptr || ptr2 == nullptr) {
+    return false; // 一个指针为空指针，另一个不为空指针，认为不相等
+  } else {
+    return (*ptr1 == *ptr2); // 比较两个指针所指向的内容是否相等
+  }
 }
 } // namespace pache

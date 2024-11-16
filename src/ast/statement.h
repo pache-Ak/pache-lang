@@ -73,7 +73,7 @@ class return_ast final : public stmt_ast {
 public:
   explicit return_ast(std::unique_ptr<exp_ast> &&exp) : m_exp(std::move(exp)) {}
 
-  exp_ast const *const get_exp() const { return m_exp.get(); }
+  exp_ast const * get_exp() const { return m_exp.get(); }
   virtual void build(block_scope &father) const override;
   virtual void print() const override;
 

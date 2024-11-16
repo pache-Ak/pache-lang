@@ -4,13 +4,18 @@
 #include "../ast/class.h"
 #include "../ast/function.h"
 #include "../ast/statement.h"
+#include "IRbuild/type.h"
 #include "build.h"
 #include "class_type.h"
 #include "function.h"
+#include "function_type.h"
+#include "reference_ptr.h"
+#include <algorithm>
 #include <memory>
 #include <string_view>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 #include "llvm/IR/DerivedTypes.h"
 
 namespace pache {
@@ -42,6 +47,9 @@ virtual reference_ptr<build_type const>
 qualified_type_lookup(std::string_view name) const override;
 virtual reference_ptr<base_build>
 qualified_scope_lookup(std::string_view name) override;
+virtual reference_ptr<function_build const> qualified_func_lookup(
+    std::string_view name,
+    std::vector<reference_ptr<build_type>> const &args_type) const override;
 
 void forward_statement_inner_classes(class_ast const &ast);
 

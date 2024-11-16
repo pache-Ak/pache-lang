@@ -26,13 +26,13 @@ public:
 
   virtual ~unqualified_scope() = default;
   virtual reference_ptr<build_variable>
-  find_var(std::string_view name) {
+  find_var(std::string_view name) override {
     return m_scope->find_var(name);
   }
-  virtual reference_ptr<build_type const> find_type(std::string_view name) const {
+  virtual reference_ptr<build_type const> find_type(std::string_view name) const override {
     return m_scope->find_type(name);
   }
-  virtual reference_ptr<base_build> find_scope(std::string_view name) {
+  virtual reference_ptr<base_build> find_scope(std::string_view name) override {
     return m_scope->find_scope(name);
   }
 

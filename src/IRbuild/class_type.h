@@ -1,11 +1,14 @@
 #ifndef IR_CLASS_TYPE_H
 #define IR_CLASS_TYPE_H
 
+#include "IRbuild/variable.h"
 #include "build.h"
 #include "ast/class.h"
 #include "type.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Type.h"
+#include <llvm-17/llvm/IR/Value.h>
+#include <memory>
 #include <string_view>
 
 namespace pache {
@@ -34,18 +37,10 @@ public:
   class_type &operator=(const class_type &) = default;
   class_type &operator=(class_type &&) = default;
   virtual llvm::StructType *get_llvm_type() const override;
-  virtual void set_mutable() override;
-  virtual void set_volatile() override;
   virtual std::unique_ptr<build_type> clone() const override;
-  virtual bool is_struct() const override { return true;}
-  data_member const * const get_member_var(std::string_view name) const {
-    if (auto it = m_member_var.find(name); it != m_member_var.end()) {
-      return &it->second;
-    } else {
-      return nullptr;
-    }
-  }
-  llvm::Value *get_member_var(llvm::Value *ptr, std::string_view name);
+
+  std::unique_ptr<build_variable>
+  get_member_var(llvm::Value *obj, std::string_view name) const;
 
   void define_body(base_build &build, class_ast const &ast);
 

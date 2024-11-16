@@ -1,5 +1,6 @@
 #include "expression.h"
 #include "../IRbuild/expression.h"
+#include <cstddef>
 #include <memory>
 #include <iostream>
 
@@ -120,47 +121,66 @@ dot_exp::build(base_build &build) const {
 
 std::unique_ptr<build_variable>
 arrow_exp::build(base_build &build) const {
-  // TODO return build_arrow_exp(build, *this);
+  return build_arrow_exp(build, *this);
 }
 
 std::unique_ptr<build_variable>
 logical_not_exp::build(base_build &build) const {
-  // TODO return build_logical_not_exp(build, *this);
+  return build_logical_not_exp(build, *this);
 }
 
 std::unique_ptr<build_variable>
 bitwise_not_exp::build(base_build &build) const {
-  // TODO return build_bitwise_not_exp(build, *this);
+  return build_bitwise_not_exp(build, *this);
 }
 
 std::unique_ptr<build_variable>
 indirection_exp::build(base_build &build) const {
-  // TODO return build_indirection_exp(build, *this);
+ // TODO return build_indirection_exp(build, *this);
+ return nullptr;
+}
+
+void indirection_exp::print() const {
+  std::cout << "indirect ";
+  m_argument->print();
 }
 
 std::unique_ptr<build_variable>
 address_of_exp::build(base_build &build) const {
-  // TODO return build_address_of_exp(build, *this);
+  return build_address_of_exp(build, *this);
 }
 
 std::unique_ptr<build_variable>
 allocation_exp::build(base_build &build) const {
   // TODO return build_allocation_exp(build, *this);
+  return nullptr;
+}
+
+void allocation_exp::print() const {
+  std::cout << "new ";
+  m_type->print();
+  m_init->print();
 }
 
 std::unique_ptr<build_variable>
 deallocation_exp::build(base_build &build) const {
   // TODO return build_deallocation_exp(build, *this);
+  return nullptr;
+}
+
+void deallocation_exp::print() const {
+  std::cout << "delete ";
+  m_exp->print();
 }
 
 std::unique_ptr<build_variable>
 left_shift_exp::build(base_build &build) const {
-  // TODO return build_left_shift_exp(build, *this);
+  return build_left_shift_exp(build, *this);
 }
 
 std::unique_ptr<build_variable>
 right_shift_exp::build(base_build &build) const {
-  // TODO return build_right_shift_exp(build, *this);
+  return build_right_shift_exp(build, *this);
 }
 void unary_plus::print() const {
   std::cout << "unary_plus:\n";
@@ -343,18 +363,18 @@ void address_of_exp::print() const {
             << "m_argument:\n";
   m_argument->print();
 }
-void allocation_exp::print() const {
-  std::cout << "allocation_exp:\n"
-            << "m_type:\n";
-  m_type->print();
-  std::cout << "m_init:\n";
-  m_init->print();
-}
-void deallocation_exp::print() const {
-  std::cout << "deallocation_exp:\n"
-            << "m_exp:\n";
-  m_exp->print();
-}
+// void allocation_exp::print() const {
+//   std::cout << "allocation_exp:\n"
+//             << "m_type:\n";
+//   m_type->print();
+//   std::cout << "m_init:\n";
+//   m_init->print();
+// }
+// void deallocation_exp::print() const {
+//   std::cout << "deallocation_exp:\n"
+//             << "m_exp:\n";
+//   m_exp->print();
+// }
 void left_shift_exp::print() const {
   std::cout << "left_shift_exp:\n"
             << "m_lhs:\n";
@@ -374,11 +394,11 @@ void logical_not_exp::print() const {
             << "m_argument:\n";
   m_argument->print();
 }
-void indirection_exp::print() const {
-  std::cout << "indirection_exp:\n"
-            << "m_argument:\n";
-  m_argument->print();
-}
+// void indirection_exp::print() const {
+//   std::cout << "indirection_exp:\n"
+//             << "m_argument:\n";
+//   m_argument->print();
+// }
 } // namespace pache
 
 // llvm::Value *pache::var_exp::codegen() {

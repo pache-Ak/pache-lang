@@ -4,6 +4,7 @@
 
 namespace pache {
 build_variable::~build_variable(){}
+build_lvalue::~build_lvalue(){}
     
 llvm::LoadInst *build_local_reference::get_value() const {
   return Builder->CreateLoad(m_value->getAllocatedType(), m_value);

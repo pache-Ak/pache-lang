@@ -4,13 +4,13 @@
 
 类（class）是用户定义类型，以 类说明符 定义，它在[声明](/language/declarations "language/declarations")语法的 声明说明符序列 中出现。类说明符拥有下列语法：
 
-类关键词 类头名 **`final`**(可选) 基类子句(可选) **`{`** 成员说明 **`}`**
+类关键词 类头名 ~~**`final`**(可选) 基类子句(可选)~~ **`{`** 成员说明 **`}`**
 
 ### 定义具名类
 
 类关键词 - [class](/keyword/class "keyword/class")，~~[struct](/keyword/struct "keyword/struct")~~ 和 [union](/keyword/union "keyword/union") 之一。~~除了默认~~ ~~[成员访问](/language/access "language/access")~~ ~~和默认~~ ~~[基类访问](/language/derived_class "language/derived class")~~ ~~之外，关键词struct和clas 是等同的。~~ 如果关键词是 union，那么声明引入一个[联合体类型](/language/union "language/union")。
 
-属性 -  任意数量的[属性](/language/attributes "language/attributes")，可以包含 [alignas 指定符](/language/alignas "language/alignas") 类头名 - 所定义的类的名字，可以[有限定](/language/identifiers#.E6.9C.89.E9.99.90.E5.AE.9A.E7.9A.84.E6.A0.87.E8.AF.86.E7.AC.A6 "language/identifiers") **`final`** -  出现时，该类[无法被派生](/language/final "language/final") 基类子句 - 一个或多个基类以及各自所用的继承模型的列表（见[派生类](/language/derived_class "language/derived class")） 成员说明 - 访问说明符、成员对象及成员函数的声明和定义的列表（见下文）
+属性 -  任意数量的[属性](/language/attributes "language/attributes")，可以包含 [alignas 指定符](/language/alignas "language/alignas") 类头名 - 所定义的类的名字，~~可以[有限定](/language/identifiers#.E6.9C.89.E9.99.90.E5.AE.9A.E7.9A.84.E6.A0.87.E8.AF.86.E7.AC.A6 "language/identifiers") **`final`** -  出现时，该类[无法被派生](/language/final "language/final")~~ ~~基类子句 - 一个或多个基类以及各自所用的继承模型的列表（见[派生类](/language/derived_class "language/derived class")~~） 成员说明 - 访问说明符、成员对象及成员函数的声明和定义的列表（见下文）
 
 ### 成员说明
 
@@ -111,3 +111,20 @@ class M　{
 - 函数（包括成员函数）内的局部类的外围函数能访问的名字也可以被该局部类访问
 
 ### 参阅
+
+
+## 实现接口（特性）
+一个接口（特性）（具名要求）是。。。
+
+当类提供了具名要求所要求的功能，
+例如，有某一签名的函数
+则这个类满足这个接口。
+
+一种思路是显示的标明这个类实现了某一接口，
+但是不能认为没有表明就没有实现，
+而且具名要求的数量可能会非常多。
+所以标注不太可行
+
+另一思路则是在需要的时候做检查，
+一个主要问题是什么时候做检查？如何避免重复检查？
+ 

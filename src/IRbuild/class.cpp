@@ -111,4 +111,20 @@ auto class_build::forward_statement_class_function(func_ast const &ast)
   }
   return &it->second;
 }
+reference_ptr<function_build const> class_build::qualified_func_lookup(
+    std::string_view name,
+    std::vector<reference_ptr<build_type>> const &args_type) const {
+  if (auto it = builded_functions1.find(name); it != builded_functions1.end()) {
+    for (auto &[type, func] : it->second) {
+      if (std::equal(args_type.begin(), args_type.end(),
+                     type->get_args_type().begin(), type->get_args_type().end(),
+                     cmp_pointers)) {
+        return &func;
+      }
+    }
+    return nullptr;
+  } else {
+    return nullptr;
+  }
+}
 } // namespace pache

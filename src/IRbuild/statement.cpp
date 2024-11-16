@@ -64,12 +64,9 @@ void return_exp_stmt_build(block_scope &father, return_ast const &ast) {
 
 void block_scope::insert(std::string_view name,
                          std::unique_ptr<build_variable> &&value) {
-  if (find_var(name) == nullptr) {
+  if (qualified_var_lookup(name) == nullptr) {
     named_values.emplace_back(name, std::move(value));
   } else {
-    // TODO log error as this:
-    std::cerr << "file_name: line: "
-              << "redifintion " << name << "\n";
   }
 }
 void block_scope::deallco_all() {
@@ -224,14 +221,14 @@ void build_let(block_scope &father, let_stmt const &ast) {
       ast.get_init_exp() != nullptr &&
       (exp = build_expression(father,*ast.get_init_exp().get())) != nullptr) {
     IR::Builder->CreateStore(
-        exp->get_value(), father.find_var(ast.get_var_name())->get_address());
+        exp->get_value(), all);
   } else {
     std::cerr << "define variable without initializer.\n";
   }
 }
 
 void build_assign(base_build &father, assign_stmt const &ast) {
-  std::unique_ptr<build_variable> const &var =
+  std::unique_ptr<build_variable> var =
       build_expression(father, ast.get_var());
   if (var == nullptr) {
     std::cerr << "variable hasn't defined.\n";
@@ -287,4 +284,11 @@ reference_ptr<base_build>
 block_scope::qualified_scope_lookup(std::string_view name) {
   return nullptr;
 }
+reference_ptr<function_build const> block_scope::qualified_func_lookup(
+    std::string_view name,
+    std::vector<reference_ptr<build_type>> const &args_type) const {
+  static_assert(true, "can't find function in block scope.\n");
+  return nullptr;
+}
+bool block_scope::is_block() const { return true; }
 } // namespace pache

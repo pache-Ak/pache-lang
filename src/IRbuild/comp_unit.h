@@ -37,6 +37,9 @@ public:
   qualified_type_lookup(std::string_view name) const override;
   virtual reference_ptr<base_build>
   qualified_scope_lookup(std::string_view name) override;
+  virtual reference_ptr<function_build const> qualified_func_lookup(
+      std::string_view name,
+      std::vector<reference_ptr<build_type>> const &args_type) const override;
 
 private:
   std::unordered_map<std::string_view, class_build> builded_classes;
