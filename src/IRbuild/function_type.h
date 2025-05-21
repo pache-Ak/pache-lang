@@ -6,7 +6,7 @@
 #include "type.h"
 #include <memory>
 #include <vector>
-
+#include <span>
 namespace pache {
 class func_type_ast;
 class function_type final : public build_type {

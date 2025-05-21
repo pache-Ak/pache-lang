@@ -1,3 +1,5 @@
+#include <array>
+#include <cassert>
 #include "expression.h"
 #include "ast/expression.h"
 #include "build.h"
@@ -10,6 +12,7 @@
 #include "llvm/IR/Value.h"
 #include <algorithm>
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <string_view>
 #include <utility>
@@ -17,6 +20,7 @@
 #include "scope.h"
 #include <iostream>
 #include "operator.h"
+#include <span>
 
 using namespace std::literals;
 
@@ -26,6 +30,43 @@ std::unique_ptr<build_variable> build_expression(base_build &build,
   return ast.build(build);
 }
 
+
+// val's type and type must be signed and type >= value's
+llvm::Value *may_SExt(build_variable const &val, signed_type const &type) {
+  if (val.get_type() == type) {
+    return val.get_value();
+  } else {
+    return Builder->CreateSExt(val.get_value(), type.get_llvm_type());
+  }
+}
+// val's type and type must be unsigned and type >= value's
+llvm::Value *may_ZExt(build_variable const &val, unsigned_type const &type) {
+  if (val.get_type() == type) {
+    return val.get_value();
+  } else {
+    return Builder->CreateZExt(val.get_value(), type.get_llvm_type());
+  }
+}
+
+// val's type and type must be integer and type >= value's
+llvm::Value *may_IExt(build_variable const &val, integral_type const &type) {
+  if (type.is_signed()) {
+    return may_SExt(val, static_cast<signed_type const &>(type));
+  } else if (type.is_unsigned()) {
+    return may_ZExt(val, static_cast<unsigned_type const &>(type));
+  } else {
+    assert(type.is_signed() || type.is_unsigned());
+    return nullptr;
+  }
+}
+
+llvm::Value *may_FPExt(build_variable const &val, floating_pointer_type const &type) {
+  if (val.get_type() == type) {
+    return val.get_value();
+  } else {
+    return Builder->CreateFPExt(val.get_value(), type.get_llvm_type());
+  }  
+}
 std::tuple<llvm::Value *, llvm::Value *, std::unique_ptr<build_type>>
 usual_arithmetic_conversions(build_variable const &lhs, build_variable const &rhs) {
   llvm::Value *vl = lhs.get_value();
@@ -79,9 +120,32 @@ bool is_args_type_match(InputIt1 begin, InputIt1 end, InputIt2 begin2) {
     return true;
 }
 
-template <class it>
+bool operator==(std::vector<std::unique_ptr<build_type>> const &lhs, std::span<std::reference_wrapper<build_type const>> const &rhs) {
+  if (lhs.size() == rhs.size()) {
+    auto itl = lhs.begin();
+    auto itr = rhs.begin();
+    for (; itl != lhs.end(); ++itl, ++itr) {
+      if (**itl == *itr) {
+        continue;
+      } else {
+        return false;
+      }
+    }
+    return true;
+  } else {
+    return false;
+  }
+}
+
 reference_ptr<function_build>
-function_lookup(base_build const &build, std::string_view name, it begin, it end) {
+function_lookup(base_build const &build, std::string_view name,
+     std::span<std::reference_wrapper<build_type const>> types) {
+  auto s{build.find_function(name)};
+  for (auto p : s) {
+    if (p->get_type().get_args_type() == types) {
+      return p;
+    }
+  }
   return nullptr;
 }
 
@@ -90,9 +154,8 @@ build_unary_plus(base_build &build,
                  unary_plus const &ast) {
   std::array<std::unique_ptr<build_variable>, 1> arges{
       build_expression(build, ast.get_arg())};
-std::cout << static_cast<int>(arges[0]->get_type().get_type_ID()) << "\n";
-  if (any_of(arges.begin(), arges.end(),
-             [](std::unique_ptr<build_variable> &ptr) -> bool {
+  if (std::any_of(arges.begin(), arges.end(),
+             [](std::unique_ptr<build_variable> const &ptr) -> bool {
                return ptr == nullptr;
              })) {
     // args have problem the error has logged
@@ -101,9 +164,12 @@ std::cout << static_cast<int>(arges[0]->get_type().get_type_ID()) << "\n";
 
 
   }
+  std::array<std::reference_wrapper<build_type const>, 1> types{
+    std::ref(arges[0]->get_type()),
+  };
 
   reference_ptr<function_build> func =
-      function_lookup(build, "O1+"sv, arges.begin(), arges.end());
+      function_lookup(build, "O1+"sv, types);
 
   if (func != nullptr) { 
    std::array<llvm::Value *, 1> args_Value;
@@ -136,9 +202,11 @@ build_unary_minus(base_build &build, unary_minus const &ast) {
 
     return nullptr;
   }
-
+  std::array<std::reference_wrapper<build_type const>, 1> types{
+    std::ref(arges[0]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "O1-"sv, arges.begin(), arges.end());
+      function_lookup(build, "O1-"sv, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 1> args_Value;
@@ -254,9 +322,12 @@ build_binary_mul_exp(base_build &build, binary_mul_exp const &ast) {
       build_expression(build, ast.get_lhs()),
       build_expression(build, ast.get_rhs()),
   };
-
+  std::array<std::reference_wrapper<build_type const>, 2> types{
+    std::ref(arges[0]->get_type()),
+    std::ref(arges[1]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator*"sv, arges.begin(), arges.end());
+      function_lookup(build, "operator*"sv, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 2> args_Value;
@@ -287,8 +358,12 @@ build_binary_div_exp(base_build &build, binary_div_exp const &ast) {
       build_expression(build, ast.get_rhs()),
   };
 
+  std::array<std::reference_wrapper<build_type const>, 2> types{
+    std::ref(arges[0]->get_type()),
+    std::ref(arges[1]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator/"s, arges.begin(), arges.end());
+      function_lookup(build, "operator/"s, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 2> args_Value{
@@ -324,9 +399,12 @@ build_binary_mod_exp(base_build &build, binary_mod_exp const &ast) {
       build_expression(build, ast.get_lhs()),
       build_expression(build, ast.get_rhs()),
   };
-
+  std::array<std::reference_wrapper<build_type const>, 2> types{
+    std::ref(arges[0]->get_type()),
+    std::ref(arges[1]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator%"s, arges.begin(), arges.end());
+      function_lookup(build, "operator%"s, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 2> args_Value{
@@ -362,9 +440,12 @@ build_binary_plus_exp(base_build &build, binary_plus_exp const &ast) {
       build_expression(build, ast.get_lhs()),
       build_expression(build, ast.get_rhs()),
   };
-
+  std::array<std::reference_wrapper<build_type const>, 2> types{
+    std::ref(arges[0]->get_type()),
+    std::ref(arges[1]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator+"s, arges.begin(), arges.end());
+      function_lookup(build, "operator+"s, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 2> args_Value{
@@ -397,9 +478,12 @@ build_binary_minus_exp(base_build &build, binary_minus_exp const &ast) {
       build_expression(build, ast.get_lhs()),
       build_expression(build, ast.get_rhs()),
   };
-
+  std::array<std::reference_wrapper<build_type const>, 2> types{
+    std::ref(arges[0]->get_type()),
+    std::ref(arges[1]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator-"s, arges.begin(), arges.end());
+      function_lookup(build, "operator-"s, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 2> args_Value{
@@ -432,9 +516,12 @@ build_three_way_exp(base_build &build, three_way_exp const &ast) {
       build_expression(build, ast.get_lhs()),
       build_expression(build, ast.get_rhs()),
   };
-
+  std::array<std::reference_wrapper<build_type const>, 2> types{
+    std::ref(arges[0]->get_type()),
+    std::ref(arges[1]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator<=>"s, arges.begin(), arges.end());
+      function_lookup(build, "operator<=>"s, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 2> args_Value{
@@ -457,9 +544,12 @@ std::unique_ptr<build_variable> build_less_exp(base_build &build,
       build_expression(build, ast.get_lhs()),
       build_expression(build, ast.get_rhs()),
   };
-
+  std::array<std::reference_wrapper<build_type const>, 2> types{
+    std::ref(arges[0]->get_type()),
+    std::ref(arges[1]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator<"s, arges.begin(), arges.end());
+      function_lookup(build, "operator<"s, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 2> args_Value{
@@ -495,9 +585,12 @@ build_less_eq_exp(base_build &build, less_eq_exp const &ast) {
       build_expression(build, ast.get_lhs()),
       build_expression(build, ast.get_rhs()),
   };
-
+  std::array<std::reference_wrapper<build_type const>, 2> types{
+    std::ref(arges[0]->get_type()),
+    std::ref(arges[1]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator<="s, arges.begin(), arges.end());
+      function_lookup(build, "operator<="s, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 2> args_Value{
@@ -532,9 +625,12 @@ build_greater_exp(base_build &build, greater_exp const &ast) {
       build_expression(build, ast.get_lhs()),
       build_expression(build, ast.get_rhs()),
   };
-
+  std::array<std::reference_wrapper<build_type const>, 2> types{
+    std::ref(arges[0]->get_type()),
+    std::ref(arges[1]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator>"s, arges.begin(), arges.end());
+      function_lookup(build, "operator>"s, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 2> args_Value{
@@ -570,9 +666,12 @@ build_greater_eq_exp(base_build &build, greater_eq_exp const &ast) {
       build_expression(build, ast.get_lhs()),
       build_expression(build, ast.get_rhs()),
   };
-
+  std::array<std::reference_wrapper<build_type const>, 2> types{
+    std::ref(arges[0]->get_type()),
+    std::ref(arges[1]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator>="s, arges.begin(), arges.end());
+      function_lookup(build, "operator>="s, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 2> args_Value{
@@ -608,9 +707,12 @@ std::unique_ptr<build_variable> build_eq_exp(base_build &build,
       build_expression(build, ast.get_lhs()),
       build_expression(build, ast.get_rhs()),
   };
-
+  std::array<std::reference_wrapper<build_type const>, 2> types{
+    std::ref(arges[0]->get_type()),
+    std::ref(arges[1]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator=="s, arges.begin(), arges.end());
+      function_lookup(build, "operator=="s, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 2> args_Value{
@@ -625,17 +727,40 @@ std::unique_ptr<build_variable> build_eq_exp(base_build &build,
   } else if (arges[0]->get_type().is_bool() && arges[1]->get_type().is_bool()) {
     return std::make_unique<build_prvalue_variable>(std::make_unique<bool_type_t>(), 
       Builder->CreateICmpEQ(arges[0]->get_value(), arges[1]->get_value()));
-  } else if (auto [l,r, id] = usual_arithmetic_conversions(*arges[0], *arges[1]); 
-             l != nullptr){
-    if (id->is_floating_point()) {
-      return std::make_unique<build_prvalue_variable>(std::make_unique<bool_type_t>(), 
+  } else if (arges[0]->get_type().is_floating_point() && arges[1]->get_type().is_floating_point()) {
+    std::unique_ptr<floating_pointer_type> common{
+      FP_common_type(static_cast<floating_pointer_type const &>(arges[0]->get_type()), 
+      static_cast<floating_pointer_type const &>(arges[1]->get_type()))
+    };
+
+    llvm::Value *l = may_FPExt(*arges[0], *common);  
+    llvm::Value *r = may_FPExt(*arges[1], *common);
+  
+    return std::make_unique<build_prvalue_variable>(std::make_unique<bool_type_t>(), 
       Builder->CreateFCmpOEQ(l, r));
-    } else if (id->is_integral()) {
-      return std::make_unique<build_prvalue_variable>(std::make_unique<bool_type_t>(), 
+  } else if (arges[0]->get_type().is_signed() && arges[1]->get_type().is_signed()) {
+    std::unique_ptr<signed_type> common{
+      signed_common_type(static_cast<signed_type const &>(arges[0]->get_type()), 
+      static_cast<signed_type const &>(arges[1]->get_type()))
+    };
+
+    llvm::Value *l = may_SExt(*arges[0], *common);  
+    llvm::Value *r = may_SExt(*arges[1], *common);
+  
+    return std::make_unique<build_prvalue_variable>(std::make_unique<bool_type_t>(), 
       Builder->CreateICmpEQ(l, r));
-    }       
-    
-  } else {
+  } else if (arges[0]->get_type().is_unsigned() && arges[1]->get_type().is_unsigned()) {
+    std::unique_ptr<unsigned_type> common{
+      unsigned_common_type(static_cast<unsigned_type const &>(arges[0]->get_type()), 
+      static_cast<unsigned_type const &>(arges[1]->get_type()))
+    };
+
+    llvm::Value *l = may_ZExt(*arges[0], *common);  
+    llvm::Value *r = may_ZExt(*arges[1], *common);
+  
+    return std::make_unique<build_prvalue_variable>(std::make_unique<bool_type_t>(), 
+      Builder->CreateICmpEQ(l, r));
+  }  else {
   return nullptr;
   }
 }
@@ -645,9 +770,12 @@ std::unique_ptr<build_variable> build_not_eq_exp(base_build &build,
       build_expression(build, ast.get_lhs()),
       build_expression(build, ast.get_rhs()),
   };
-
+  std::array<std::reference_wrapper<build_type const>, 2> types{
+    std::ref(arges[0]->get_type()),
+    std::ref(arges[1]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator!="s, arges.begin(), arges.end());
+      function_lookup(build, "operator!="s, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 2> args_Value{
@@ -662,16 +790,39 @@ std::unique_ptr<build_variable> build_not_eq_exp(base_build &build,
   } else if (arges[0]->get_type().is_bool() && arges[1]->get_type().is_bool()) {
     return std::make_unique<build_prvalue_variable>(std::make_unique<bool_type_t>(), 
       Builder->CreateICmpNE(arges[0]->get_value(), arges[1]->get_value()));
-  } else if (auto [l,r, id] = usual_arithmetic_conversions(*arges[0], *arges[1]); 
-             l != nullptr){
-    if (id->is_floating_point()) {
-      return std::make_unique<build_prvalue_variable>(std::make_unique<bool_type_t>(), 
+  } else if (arges[0]->get_type().is_floating_point() && arges[1]->get_type().is_floating_point()) {
+    std::unique_ptr<floating_pointer_type> common{
+      FP_common_type(static_cast<floating_pointer_type const &>(arges[0]->get_type()), 
+      static_cast<floating_pointer_type const &>(arges[1]->get_type()))
+    };
+
+    llvm::Value *l = may_FPExt(*arges[0], *common);  
+    llvm::Value *r = may_FPExt(*arges[1], *common);
+  
+    return std::make_unique<build_prvalue_variable>(std::make_unique<bool_type_t>(), 
       Builder->CreateFCmpONE(l, r));
-    } else if (id->is_integral()) {
-      return std::make_unique<build_prvalue_variable>(std::make_unique<bool_type_t>(), 
+  } else if (arges[0]->get_type().is_signed() && arges[1]->get_type().is_signed()) {
+    std::unique_ptr<signed_type> common{
+      signed_common_type(static_cast<signed_type const &>(arges[0]->get_type()), 
+      static_cast<signed_type const &>(arges[1]->get_type()))
+    };
+
+    llvm::Value *l = may_SExt(*arges[0], *common);  
+    llvm::Value *r = may_SExt(*arges[1], *common);
+  
+    return std::make_unique<build_prvalue_variable>(std::make_unique<bool_type_t>(), 
       Builder->CreateICmpNE(l, r));
-    }       
-    
+  } else if (arges[0]->get_type().is_unsigned() && arges[1]->get_type().is_unsigned()) {
+    std::unique_ptr<unsigned_type> common{
+      unsigned_common_type(static_cast<unsigned_type const &>(arges[0]->get_type()), 
+      static_cast<unsigned_type const &>(arges[1]->get_type()))
+    };
+
+    llvm::Value *l = may_ZExt(*arges[0], *common);  
+    llvm::Value *r = may_ZExt(*arges[1], *common);
+  
+    return std::make_unique<build_prvalue_variable>(std::make_unique<bool_type_t>(), 
+      Builder->CreateICmpNE(l, r));
   } else {
   return nullptr;
   }
@@ -682,9 +833,12 @@ build_bitwise_and_exp(base_build &build, bitwise_and_exp const &ast) {
       build_expression(build, ast.get_lhs()),
       build_expression(build, ast.get_rhs()),
   };
-
+  std::array<std::reference_wrapper<build_type const>, 2> types{
+    std::ref(arges[0]->get_type()),
+    std::ref(arges[1]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator&"s, arges.begin(), arges.end());
+      function_lookup(build, "operator&"s, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 2> args_Value{
@@ -696,13 +850,16 @@ build_bitwise_and_exp(base_build &build, bitwise_and_exp const &ast) {
         func->get_type().get_return_type().clone(),
         Builder->CreateCall(func->get_type().get_llvm_type(), func->get_value(), args_Value,
                             "call_operator&"));
-  } else if (auto [l,r, id] = usual_arithmetic_conversions(*arges[0], *arges[1]); 
-             l != nullptr){
-    if (id->is_unsigned()) {
-      return std::make_unique<build_prvalue_variable>(std::move(id), 
-      Builder->CreateAnd(l, r));
-    }         
-    
+  } else if (arges[0]->get_type().is_unsigned() && arges[1]->get_type().is_unsigned()) {
+    std::unique_ptr<unsigned_type> common{
+      unsigned_common_type(static_cast<unsigned_type const&>(arges[0]->get_type()),
+      static_cast<unsigned_type const &>(arges[1]->get_type()))};
+
+    llvm::Value *l = may_ZExt(*arges[0], *common);  
+    llvm::Value *r = may_ZExt(*arges[1], *common);
+  
+    return std::make_unique<build_prvalue_variable>(std::move(common), 
+    Builder->CreateAnd(l, r));
   } else {
     return nullptr;
   }
@@ -713,9 +870,12 @@ build_bitwise_xor_exp(base_build &build, bitwise_xor_exp const &ast) {
       build_expression(build, ast.get_lhs()),
       build_expression(build, ast.get_rhs()),
   };
-
+  std::array<std::reference_wrapper<build_type const>, 2> types{
+    std::ref(arges[0]->get_type()),
+    std::ref(arges[1]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator^"s, arges.begin(), arges.end());
+      function_lookup(build, "operator^"s, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 2> args_Value{
@@ -727,14 +887,17 @@ build_bitwise_xor_exp(base_build &build, bitwise_xor_exp const &ast) {
         func->get_type().get_return_type().clone(),
         Builder->CreateCall(func->get_type().get_llvm_type(), func->get_value(), args_Value,
                             "call_operator^"));
-  } else if (auto [l,r, id] = usual_arithmetic_conversions(*arges[0], *arges[1]); 
-             l != nullptr){
-    if (id->is_unsigned()) {
-      return std::make_unique<build_prvalue_variable>(std::move(id), 
-      Builder->CreateXor(l, r));
-    }         
-    
-  } else {
+  } else if (arges[0]->get_type().is_unsigned() && arges[1]->get_type().is_unsigned()) {
+    std::unique_ptr<unsigned_type> common{
+      unsigned_common_type(static_cast<unsigned_type const&>(arges[0]->get_type()),
+      static_cast<unsigned_type const &>(arges[1]->get_type()))};
+
+    llvm::Value *l = may_ZExt(*arges[0], *common);  
+    llvm::Value *r = may_ZExt(*arges[1], *common);
+  
+    return std::make_unique<build_prvalue_variable>(std::move(common), 
+    Builder->CreateXor(l, r));
+  }  else {
     return nullptr;
   }
 }
@@ -744,9 +907,12 @@ build_bitwise_or_exp(base_build &build, bitwise_or_exp const &ast) {
       build_expression(build, ast.get_lhs()),
       build_expression(build, ast.get_rhs()),
   };
-
+  std::array<std::reference_wrapper<build_type const>, 2> types{
+    std::ref(arges[0]->get_type()),
+    std::ref(arges[1]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator|"s, arges.begin(), arges.end());
+      function_lookup(build, "operator|"s, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 2> args_Value{
@@ -758,14 +924,17 @@ build_bitwise_or_exp(base_build &build, bitwise_or_exp const &ast) {
         func->get_type().get_return_type().clone(),
         Builder->CreateCall(func->get_type().get_llvm_type(), func->get_value(), args_Value,
                             "call_operator|"));
-  } else if (auto [l,r, id] = usual_arithmetic_conversions(*arges[0], *arges[1]); 
-             l != nullptr){
-    if (id->is_unsigned()) {
-      return std::make_unique<build_prvalue_variable>(std::move(id), 
-      Builder->CreateOr(l, r));
-    }         
-    
-  } else {
+  } else if (arges[0]->get_type().is_unsigned() && arges[1]->get_type().is_unsigned()) {
+    std::unique_ptr<unsigned_type> common{
+      unsigned_common_type(static_cast<unsigned_type const&>(arges[0]->get_type()),
+      static_cast<unsigned_type const &>(arges[1]->get_type()))};
+
+    llvm::Value *l = may_ZExt(*arges[0], *common);  
+    llvm::Value *r = may_ZExt(*arges[1], *common);
+  
+    return std::make_unique<build_prvalue_variable>(std::move(common), 
+    Builder->CreateOr(l, r));
+  }  else {
     return nullptr;
   }
 }
@@ -775,9 +944,12 @@ build_logical_and_exp(base_build &build, logical_and_exp const &ast) {
       build_expression(build, ast.get_lhs()),
       build_expression(build, ast.get_rhs()),
   };
-
+  std::array<std::reference_wrapper<build_type const>, 2> types{
+    std::ref(arges[0]->get_type()),
+    std::ref(arges[1]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator&&"s, arges.begin(), arges.end());
+      function_lookup(build, "operator&&"s, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 2> args_Value{
@@ -802,9 +974,12 @@ build_logical_or_exp(base_build &build, logical_or_exp const &ast) {
       build_expression(build, ast.get_lhs()),
       build_expression(build, ast.get_rhs()),
   };
-
+  std::array<std::reference_wrapper<build_type const>, 2> types{
+    std::ref(arges[0]->get_type()),
+    std::ref(arges[1]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator||"s, arges.begin(), arges.end());
+      function_lookup(build, "operator||"s, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 2> args_Value{
@@ -827,10 +1002,11 @@ build_logical_or_exp(base_build &build, logical_or_exp const &ast) {
 std::unique_ptr<build_variable>
 build_logical_not_exp(base_build &build, logical_not_exp const &ast) {
   std::array<std::unique_ptr<build_variable>, 1> arges{build_expression(build, ast.get_arg())};
-  
+    std::array<std::reference_wrapper<build_type const>, 1> types{
+    std::ref(arges[0]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator!"s, arges.begin(), arges.end());
-
+      function_lookup(build, "operator!"s, types);
   if (func != nullptr) {
     std::array<llvm::Value *, 1> args_Value{
         arges[0]->get_value(),
@@ -852,9 +1028,11 @@ build_logical_not_exp(base_build &build, logical_not_exp const &ast) {
 std::unique_ptr<build_variable>
 build_bitwise_not_exp(base_build &build, bitwise_not_exp const &ast) {
   std::array<std::unique_ptr<build_variable>, 1> arges{build_expression(build, ast.get_arg())};
-  
+    std::array<std::reference_wrapper<build_type const>, 1> types{
+    std::ref(arges[0]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator~"s, arges.begin(), arges.end());
+      function_lookup(build, "operator~"s, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 1> args_Value{
@@ -1043,9 +1221,12 @@ build_left_shift_exp(base_build &build, left_shift_exp const &ast) {
       build_expression(build, ast.get_lhs()),
       build_expression(build, ast.get_rhs()),
   };
-
+  std::array<std::reference_wrapper<build_type const>, 2> types{
+    std::ref(arges[0]->get_type()),
+    std::ref(arges[1]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator<<"sv, arges.begin(), arges.end());
+      function_lookup(build, "operator<<"sv, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 2> args_Value;
@@ -1054,13 +1235,26 @@ std::transform(arges.begin(), arges.end(), args_Value.begin(), get_value);
         func->get_type().get_return_type().clone(),
         Builder->CreateCall(func->get_type().get_llvm_type(), func->get_value(), args_Value,
                             "call_operator<<"));
-  } else if (auto [l,r, id] = usual_arithmetic_conversions(*arges[0], *arges[1]); 
-             l != nullptr){
-    if (id->is_integral()) {
-      return std::make_unique<build_prvalue_variable>(std::move(id), 
-      Builder->CreateShl(l, r));
-    }         
-    
+  } else if (arges[0]->get_type().is_signed() && arges[1]->get_type().is_signed()) {
+    std::unique_ptr<signed_type> common{
+      signed_common_type(static_cast<signed_type const&>(arges[0]->get_type()), 
+      static_cast<signed_type const&>(arges[1]->get_type()))
+    };
+    llvm::Value *l = may_SExt(*arges[0], *common);  
+    llvm::Value *r = may_SExt(*arges[1], *common);
+  
+    return std::make_unique<build_prvalue_variable>(std::move(common), 
+    Builder->CreateShl(l, r));
+  } else if (arges[0]->get_type().is_unsigned() && arges[1]->get_type().is_unsigned()) {
+    std::unique_ptr<unsigned_type> common{
+      unsigned_common_type(static_cast<unsigned_type const&>(arges[0]->get_type()),
+      static_cast<unsigned_type const &>(arges[1]->get_type()))};
+
+    llvm::Value *l = may_ZExt(*arges[0], *common);  
+    llvm::Value *r = may_ZExt(*arges[1], *common);
+  
+    return std::make_unique<build_prvalue_variable>(std::move(common), 
+    Builder->CreateShl(l, r));
   } else {
   return nullptr;
   }
@@ -1072,9 +1266,12 @@ build_right_shift_exp(base_build &build, right_shift_exp const &ast) {
       build_expression(build, ast.get_lhs()),
       build_expression(build, ast.get_rhs()),
   };
-
+  std::array<std::reference_wrapper<build_type const>, 2> types{
+    std::ref(arges[0]->get_type()),
+    std::ref(arges[1]->get_type()),
+  };
   reference_ptr<function_build> func =
-      function_lookup(build, "operator>>"sv, arges.begin(), arges.end());
+      function_lookup(build, "operator>>"sv, types);
 
   if (func != nullptr) {
     std::array<llvm::Value *, 2> args_Value;
@@ -1083,18 +1280,26 @@ std::transform(arges.begin(), arges.end(), args_Value.begin(), get_value);
         func->get_type().get_return_type().clone(),
         Builder->CreateCall(func->get_type().get_llvm_type(), func->get_value(), args_Value,
                             "call_operator>>"));
-  } else if (auto [l,r, id] = usual_arithmetic_conversions(*arges[0], *arges[1]); 
-             l != nullptr){
-    if (id->is_signed()) {
-      return std::make_unique<build_prvalue_variable>(std::move(id), 
-      Builder->CreateAShr(l, r));
-    } else if (id->is_unsigned()) {
-      return std::make_unique<build_prvalue_variable>(std::move(id), 
-      Builder->CreateLShr(l, r));
-    } else {
-    return nullptr;
-    }      
-    
+  } else if (arges[0]->get_type().is_signed() && arges[1]->get_type().is_signed()) {
+    std::unique_ptr<signed_type> common{
+      signed_common_type(static_cast<signed_type const&>(arges[0]->get_type()),
+      static_cast<signed_type const &>(arges[1]->get_type()))};
+
+    llvm::Value *l = may_SExt(*arges[0], *common);  
+    llvm::Value *r = may_SExt(*arges[1], *common);
+  
+    return std::make_unique<build_prvalue_variable>(std::move(common), 
+    Builder->CreateAShr(l, r));
+  } else if (arges[0]->get_type().is_unsigned() && arges[1]->get_type().is_unsigned()) {
+    std::unique_ptr<unsigned_type> common{
+      unsigned_common_type(static_cast<unsigned_type const&>(arges[0]->get_type()),
+      static_cast<unsigned_type const &>(arges[1]->get_type()))};
+
+    llvm::Value *l = may_ZExt(*arges[0], *common);  
+    llvm::Value *r = may_ZExt(*arges[1], *common);
+  
+    return std::make_unique<build_prvalue_variable>(std::move(common), 
+    Builder->CreateLShr(l, r));
   } else {
   return nullptr;
   }

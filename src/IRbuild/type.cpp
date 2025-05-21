@@ -474,5 +474,168 @@ bool operator==(build_type const &lhs, build_type const &rhs) {
 bool operator!=(build_type const &lhs, build_type const &rhs) {
   return lhs.decorated_name() != rhs.decorated_name();
 }
+inline namespace primary {
 
+inline namespace floating_pointer {  
+std::unique_ptr<floating_pointer_type>
+FP_common_type(floating_pointer_type const &lhs,
+               floating_pointer_type const &rhs) {
+  static FPICR type[5][5]{
+      {
+       FPICR::F16,
+       FPICR::F32,
+       FPICR::F64,
+       FPICR::F128,
+       },
+      {
+       FPICR::F32,
+       FPICR::F32,
+       FPICR::F64,
+       FPICR::F128,
+       },
+      {
+       FPICR::F64,
+       FPICR::F64,
+       FPICR::F64,
+       FPICR::F128,
+       },
+      {
+       FPICR::F128,
+       FPICR::F128,
+       FPICR::F128,
+       FPICR::F128,
+       },
+  };
+
+  switch (type[static_cast<std::size_t>(lhs.get_conversion_rank())]
+              [static_cast<std::size_t>(rhs.get_conversion_rank())]) {
+  case FPICR::F16:
+    return std::make_unique<f16_type_t>();
+  case FPICR::F32:
+    return std::make_unique<f32_type_t>();
+  case FPICR::F64:
+    return std::make_unique<f64_type_t>();
+  case FPICR::F128:
+    return std::make_unique<f128_type_t>();
+  default:
+    return nullptr;
+  }
+}
+}
+
+inline namespace integral {
+std::unique_ptr<signed_type> signed_common_type(signed_type const &lhs,
+                                                signed_type const &rhs) {
+  static SICR const type[5][5]{
+      {
+       SICR::I8,
+       SICR::I16,
+       SICR::I32,
+       SICR::I64,
+       SICR::I128,
+       },
+      {
+       SICR::I16,
+       SICR::I16,
+       SICR::I32,
+       SICR::I64,
+       SICR::I128,
+       },
+      {
+       SICR::I32,
+       SICR::I32,
+       SICR::I32,
+       SICR::I64,
+       SICR::I128,
+       },
+      {
+       SICR::I64,
+       SICR::I64,
+       SICR::I64,
+       SICR::I64,
+       SICR::I128,
+       },
+      {
+       SICR::I128,
+       SICR::I128,
+       SICR::I128,
+       SICR::I128,
+       SICR::I128,
+       },
+  };
+
+  switch (type[static_cast<std::size_t>(lhs.get_conversion_rank())]
+              [static_cast<std::size_t>(rhs.get_conversion_rank())]) {
+  case SICR::I8:
+    return std::make_unique<i8_type_t>();
+  case SICR::I16:
+    return std::make_unique<i16_type_t>();
+  case SICR::I32:
+    return std::make_unique<i32_type_t>();
+  case SICR::I64:
+    return std::make_unique<i64_type_t>();
+    // case SICR::I128:
+    //   return std::make_unique<i1288_type_t>();
+  default:;
+    return nullptr;
+  }
+}
+std::unique_ptr<unsigned_type> unsigned_common_type(unsigned_type const &lhs,
+                                                    unsigned_type const &rhs) {
+  static UICR type[5][5]{
+      {
+       UICR::U8,
+       UICR::U16,
+       UICR::U32,
+       UICR::U64,
+       UICR::U128,
+       },
+      {
+       UICR::U16,
+       UICR::U16,
+       UICR::U32,
+       UICR::U64,
+       UICR::U128,
+       },
+      {
+       UICR::U32,
+       UICR::U32,
+       UICR::U32,
+       UICR::U64,
+       UICR::U128,
+       },
+      {
+       UICR::U64,
+       UICR::U64,
+       UICR::U64,
+       UICR::U64,
+       UICR::U128,
+       },
+      {
+       UICR::U128,
+       UICR::U128,
+       UICR::U128,
+       UICR::U128,
+       UICR::U128,
+       },
+  };
+
+  switch (type[static_cast<std::size_t>(lhs.get_conversion_rank())]
+              [static_cast<std::size_t>(rhs.get_conversion_rank())]) {
+  case UICR::U8:
+    return std::make_unique<u8_type_t>();
+  case UICR::U16:
+    return std::make_unique<u16_type_t>();
+  case UICR::U32:
+    return std::make_unique<u32_type_t>();
+  case UICR::U64:
+    return std::make_unique<u64_type_t>();
+    // case UICR::U128:
+    //   return std::make_unique<u128_type_t>();
+  default:;
+    return nullptr;
+  }
+}
+}
+}
 } // namespace pache

@@ -45,14 +45,14 @@ add_executable(${PROJECT_NAME}
                 IRbuild
 )
 
-
+set(CMAKE_CXX_STANDARD 20)
 # 添加编译参数
 target_compile_options(${PROJECT_NAME} PUBLIC
     -Wall                  # 启用所有警告
 #    -Wextra                # 启用额外的警告
     -Wpedantic             # 启用严格的警告
 #    -O2                    # 优化级别 2
-#    -std=c++17             # 使用 C++17 标准
+#    -std=c++2a             # 使用 C++20 标准
 #    -pthread               # 启用线程支持
     -g
 )

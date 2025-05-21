@@ -15,7 +15,7 @@ BLANK                 [ \t]
 NEW_LINE              [\n]
 HORIZONTAL_WHITESPACE [ \f\r\t\v]*
 
-
+%x MULTI_LINE
 %x BINARY
 %x OCTAL
 %x DECIMAL
@@ -34,6 +34,13 @@ HORIZONTAL_WHITESPACE [ \f\r\t\v]*
   // Code run each time yylex is called.
   loc.step ();
 %}
+<INITIAL>"/*" {
+  BEGIN(MULTI_LINE);
+}
+<MULTI_LINE>"*/" {
+  BEGIN(INITIAL);
+}
+<MULTI_LINE>. {}
 <EXPLICIT_WHITESPCE>{WHITESPACE} { return pache::parser::make_WHITESPACE(loc); }
 <INITIAL>{WHITESPACE} {
   //BEGIN(EXPLICIT_WHITESPCE);

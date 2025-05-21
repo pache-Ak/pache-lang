@@ -9,6 +9,7 @@
 #include "type.h"
 #include "variable.h"
 #include <memory>
+#include <span>
 #include <unordered_map>
 #include <vector>
 
@@ -91,11 +92,10 @@ ADL(base_build const &build, std::string_view function_name, Iterator begin,
 // args:
 // 1.
 // 2. function name
-// 3. 4. the range of arguments build_variable ptr
-template <class Iterator>
+// 3.the range of arguments build_typet ptr
 reference_ptr<function_build>
-function_lookup(base_build const &build, std::string_view name, Iterator begin,
-                Iterator end);
+function_lookup(base_build const &build, std::string_view name,
+     std::span<std::reference_wrapper<build_type const>> types);
 std::unique_ptr<build_variable>
 build_dot_exp(base_build &build, dot_exp const &ast);
 } // namespace pache
